@@ -1,0 +1,6360 @@
+{
+  "type": "FeatureCollection",
+  "name": "candidate crown peaks",
+  "meaning": "Local maxima of historical CHMv2 predicted canopy height. Not trees, species labels or field-verified crowns.",
+  "source": {
+    "path": "openpalm-ai/apps/web/public/analysis/mission/upm-chmv2-native.json",
+    "fileSha256": "7930932fdd4220a9176a1e803e01b01e2d4a0e11afb76265270902fc1dcbf2b4",
+    "sourceSubsetSha256": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+    "sourceDate": "2019-10-23",
+    "crs": "EPSG:3857",
+    "sourceTileUrl": "https://dataforgood-fb-data.s3.amazonaws.com/forests/v2/global/dinov3_global_chm_v2_ml3/chm/1322320223.tif"
+  },
+  "detector": {
+    "version": "openpalm-tree-peaks-v1",
+    "minHeightM": 5,
+    "minDistanceM": 6,
+    "smoothing": "mean3x3",
+    "exclusionMinHeightM": 15,
+    "exclusionMinAreaM2": 100
+  },
+  "stats": {
+    "count": 170,
+    "localMaximaInsideExclusions": 109,
+    "validAreaHa": 4.038923579891327,
+    "canopyAreaHa": 1.6060665697226533,
+    "perHectareOfValidArea": 42.09042251910448,
+    "perHectareOfCanopyArea": 105.84866356402449,
+    "nearestNeighbourM": {
+      "n": 170,
+      "min": 6.081647715574759,
+      "p10": 6.081652516729698,
+      "p25": 6.746985256101645,
+      "median": 7.543360859732737,
+      "p75": 8.983318010852836,
+      "p90": 10.734394244731108,
+      "max": 27.458226988336857,
+      "mean": 8.327991211743132,
+      "histogram1m": {
+        "6-7": 61,
+        "7-8": 33,
+        "8-9": 33,
+        "9-10": 20,
+        "10-11": 11,
+        "11-12": 5,
+        "14-15": 1,
+        "15-16": 1,
+        "16-17": 2,
+        "18-19": 1,
+        "24-25": 1,
+        "27-28": 1
+      }
+    }
+  },
+  "exclusions": [
+    {
+      "cells": 568,
+      "areaM2": 808.0133542522104,
+      "rows": [
+        125,
+        168
+      ],
+      "cols": [
+        152,
+        167
+      ]
+    }
+  ],
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.7206686735153,
+          2.9842434678264538
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 1,
+        "heightM": 9,
+        "smoothedHeightM": 8.5,
+        "wgs84": [
+          101.7206686735153,
+          2.9842434678264538
+        ],
+        "epsg3857": [
+          11323493.039887019,
+          332354.7677910646
+        ],
+        "nativeRow": 0,
+        "nativeCol": 17,
+        "nearestNeighbourM": 11.927089255708932,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.7207759618759,
+          2.9842434678264538
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 2,
+        "heightM": 8,
+        "smoothedHeightM": 6.833333333333333,
+        "wgs84": [
+          101.7207759618759,
+          2.9842434678264538
+        ],
+        "epsg3857": [
+          11323504.983172689,
+          332354.7677910646
+        ],
+        "nativeRow": 0,
+        "nativeCol": 27,
+        "nearestNeighbourM": 11.927089255708932,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72111928462981,
+          2.9842434678264538
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 3,
+        "heightM": 9,
+        "smoothedHeightM": 8.166666666666666,
+        "wgs84": [
+          101.72111928462981,
+          2.9842434678264538
+        ],
+        "epsg3857": [
+          11323543.201686831,
+          332354.7677910646
+        ],
+        "nativeRow": 0,
+        "nativeCol": 59,
+        "nearestNeighbourM": 16.740468652451874,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72052919864653,
+          2.984147039243074
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 4,
+        "heightM": 13,
+        "smoothedHeightM": 12.11111111111111,
+        "wgs84": [
+          101.72052919864653,
+          2.984147039243074
+        ],
+        "epsg3857": [
+          11323477.513615647,
+          332344.018833962
+        ],
+        "nativeRow": 9,
+        "nativeCol": 4,
+        "nearestNeighbourM": 18.51582370780117,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72129094600677,
+          2.9841256106678404
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 5,
+        "heightM": 10,
+        "smoothedHeightM": 9.555555555555555,
+        "wgs84": [
+          101.72129094600677,
+          2.9841256106678404
+        ],
+        "epsg3857": [
+          11323562.310943902,
+          332341.63017682807
+        ],
+        "nativeRow": 11,
+        "nativeCol": 75,
+        "nearestNeighbourM": 8.433726638003458,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72121584415434,
+          2.9841148963800643
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 6,
+        "heightM": 11,
+        "smoothedHeightM": 11,
+        "wgs84": [
+          101.72121584415434,
+          2.9841148963800643
+        ],
+        "epsg3857": [
+          11323553.950643932,
+          332340.4358482611
+        ],
+        "nativeRow": 12,
+        "nativeCol": 68,
+        "nearestNeighbourM": 8.433726638003458,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72069013118742,
+          2.984104182092187
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 7,
+        "heightM": 5,
+        "smoothedHeightM": 5,
+        "wgs84": [
+          101.72069013118742,
+          2.984104182092187
+        ],
+        "epsg3857": [
+          11323495.428544153,
+          332339.24151969416
+        ],
+        "nativeRow": 13,
+        "nativeCol": 19,
+        "nearestNeighbourM": 6.9546293525171325,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72113001346588,
+          2.984093467804208
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 8,
+        "heightM": 11,
+        "smoothedHeightM": 10.777777777777779,
+        "wgs84": [
+          101.72113001346588,
+          2.984093467804208
+        ],
+        "epsg3857": [
+          11323544.396015398,
+          332338.0471911272
+        ],
+        "nativeRow": 14,
+        "nativeCol": 60,
+        "nearestNeighbourM": 9.835331006087117,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72074377536772,
+          2.984072039227931
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 9,
+        "heightM": 5,
+        "smoothedHeightM": 5,
+        "wgs84": [
+          101.72074377536772,
+          2.984072039227931
+        ],
+        "epsg3857": [
+          11323501.400186988,
+          332335.6585339933
+        ],
+        "nativeRow": 16,
+        "nativeCol": 24,
+        "nearestNeighbourM": 6.9546293525171325,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72143042087554,
+          2.984072039227931
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 10,
+        "heightM": 10,
+        "smoothedHeightM": 10,
+        "wgs84": [
+          101.72143042087554,
+          2.984072039227931
+        ],
+        "epsg3857": [
+          11323577.837215273,
+          332335.6585339933
+        ],
+        "nativeRow": 16,
+        "nativeCol": 88,
+        "nearestNeighbourM": 8.43372704907077,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72150552272797,
+          2.984061324939621
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 11,
+        "heightM": 10,
+        "smoothedHeightM": 10,
+        "wgs84": [
+          101.72150552272797,
+          2.984061324939621
+        ],
+        "epsg3857": [
+          11323586.197515242,
+          332334.46420542634
+        ],
+        "nativeRow": 17,
+        "nativeCol": 95,
+        "nearestNeighbourM": 8.348963860745336,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72158062458037,
+          2.984061324939621
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 12,
+        "heightM": 10,
+        "smoothedHeightM": 9.555555555555555,
+        "wgs84": [
+          101.72158062458037,
+          2.984061324939621
+        ],
+        "epsg3857": [
+          11323594.557815209,
+          332334.46420542634
+        ],
+        "nativeRow": 17,
+        "nativeCol": 102,
+        "nearestNeighbourM": 7.543355051200638,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72134459018706,
+          2.9840506106512215
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 13,
+        "heightM": 11,
+        "smoothedHeightM": 10.88888888888889,
+        "wgs84": [
+          101.72134459018706,
+          2.9840506106512215
+        ],
+        "epsg3857": [
+          11323568.282586737,
+          332333.2698768594
+        ],
+        "nativeRow": 18,
+        "nativeCol": 80,
+        "nearestNeighbourM": 9.83533139139652,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72119438648222,
+          2.984029182074118
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 14,
+        "heightM": 9,
+        "smoothedHeightM": 8.666666666666666,
+        "wgs84": [
+          101.72119438648222,
+          2.984029182074118
+        ],
+        "epsg3857": [
+          11323551.561986798,
+          332330.8812197255
+        ],
+        "nativeRow": 20,
+        "nativeCol": 66,
+        "nearestNeighbourM": 6.954629894708074,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.7219454050064,
+          2.984029182074118
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 15,
+        "heightM": 11,
+        "smoothedHeightM": 10.222222222222221,
+        "wgs84": [
+          101.7219454050064,
+          2.984029182074118
+        ],
+        "epsg3857": [
+          11323635.164986486,
+          332330.8812197255
+        ],
+        "nativeRow": 20,
+        "nativeCol": 136,
+        "nearestNeighbourM": 9.615928696445811,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72177374362944,
+          2.9840184677854005
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 16,
+        "heightM": 13,
+        "smoothedHeightM": 12,
+        "wgs84": [
+          101.72177374362944,
+          2.9840184677854005
+        ],
+        "epsg3857": [
+          11323616.055729415,
+          332329.6868911585
+        ],
+        "nativeRow": 21,
+        "nativeCol": 120,
+        "nearestNeighbourM": 9.541673357883809,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72185957431793,
+          2.9840184677854005
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 17,
+        "heightM": 11,
+        "smoothedHeightM": 11,
+        "wgs84": [
+          101.72185957431793,
+          2.9840184677854005
+        ],
+        "epsg3857": [
+          11323625.610357951,
+          332329.6868911585
+        ],
+        "nativeRow": 21,
+        "nativeCol": 128,
+        "nearestNeighbourM": 8.433727706366819,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72219216823578,
+          2.9840184677854005
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 18,
+        "heightM": 6,
+        "smoothedHeightM": 5.777777777777778,
+        "wgs84": [
+          101.72219216823578,
+          2.9840184677854005
+        ],
+        "epsg3857": [
+          11323662.634543527,
+          332329.6868911585
+        ],
+        "nativeRow": 21,
+        "nativeCol": 159,
+        "nearestNeighbourM": 27.458226988336857,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72109782695769,
+          2.9839970392076602
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 19,
+        "heightM": 12,
+        "smoothedHeightM": 11.333333333333334,
+        "wgs84": [
+          101.72109782695769,
+          2.9839970392076602
+        ],
+        "epsg3857": [
+          11323540.813029697,
+          332327.2982340246
+        ],
+        "nativeRow": 23,
+        "nativeCol": 57,
+        "nearestNeighbourM": 8.00093673239381,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72155916690825,
+          2.9839970392076602
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 20,
+        "heightM": 12,
+        "smoothedHeightM": 11.666666666666666,
+        "wgs84": [
+          101.72155916690825,
+          2.9839970392076602
+        ],
+        "epsg3857": [
+          11323592.169158075,
+          332327.2982340246
+        ],
+        "nativeRow": 23,
+        "nativeCol": 100,
+        "nearestNeighbourM": 7.254966822167171,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.7214947938919,
+          2.983986324918625
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 21,
+        "heightM": 11,
+        "smoothedHeightM": 11,
+        "wgs84": [
+          101.7214947938919,
+          2.983986324918625
+        ],
+        "epsg3857": [
+          11323585.003186675,
+          332326.10390545765
+        ],
+        "nativeRow": 24,
+        "nativeCol": 94,
+        "nearestNeighbourM": 6.4229357900890225,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72122657299039,
+          2.983975610629488
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 22,
+        "heightM": 10,
+        "smoothedHeightM": 9.88888888888889,
+        "wgs84": [
+          101.72122657299039,
+          2.983975610629488
+        ],
+        "epsg3857": [
+          11323555.1449725,
+          332324.9095768907
+        ],
+        "nativeRow": 25,
+        "nativeCol": 69,
+        "nearestNeighbourM": 6.081647715574759,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72141969203949,
+          2.983975610629488
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 23,
+        "heightM": 10,
+        "smoothedHeightM": 10,
+        "wgs84": [
+          101.72141969203949,
+          2.983975610629488
+        ],
+        "epsg3857": [
+          11323576.642886706,
+          332324.9095768907
+        ],
+        "nativeRow": 25,
+        "nativeCol": 87,
+        "nearestNeighbourM": 7.6370654766045725,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72172009944916,
+          2.983943467761479
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 24,
+        "heightM": 14,
+        "smoothedHeightM": 13.333333333333334,
+        "wgs84": [
+          101.72172009944916,
+          2.983943467761479
+        ],
+        "epsg3857": [
+          11323610.08408658,
+          332321.32659118983
+        ],
+        "nativeRow": 28,
+        "nativeCol": 115,
+        "nearestNeighbourM": 10.260072576764136,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72184884548187,
+          2.983943467761479
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 25,
+        "heightM": 11,
+        "smoothedHeightM": 11,
+        "wgs84": [
+          101.72184884548187,
+          2.983943467761479
+        ],
+        "epsg3857": [
+          11323624.416029384,
+          332321.32659118983
+        ],
+        "nativeRow": 28,
+        "nativeCol": 127,
+        "nearestNeighbourM": 8.0009371215144,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72074377536772,
+          2.9839327534719216
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 26,
+        "heightM": 11,
+        "smoothedHeightM": 10.222222222222221,
+        "wgs84": [
+          101.72074377536772,
+          2.9839327534719216
+        ],
+        "epsg3857": [
+          11323501.400186988,
+          332320.1322626229
+        ],
+        "nativeRow": 29,
+        "nativeCol": 24,
+        "nearestNeighbourM": 15.505219432509223,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72106564044951,
+          2.9839327534719216
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 27,
+        "heightM": 10,
+        "smoothedHeightM": 10,
+        "wgs84": [
+          101.72106564044951,
+          2.9839327534719216
+        ],
+        "epsg3857": [
+          11323537.230043996,
+          332320.1322626229
+        ],
+        "nativeRow": 29,
+        "nativeCol": 54,
+        "nearestNeighbourM": 8.00093673239381,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72151625156403,
+          2.9839327534719216
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 28,
+        "heightM": 12,
+        "smoothedHeightM": 12,
+        "wgs84": [
+          101.72151625156403,
+          2.9839327534719216
+        ],
+        "epsg3857": [
+          11323587.391843809,
+          332320.1322626229
+        ],
+        "nativeRow": 29,
+        "nativeCol": 96,
+        "nearestNeighbourM": 6.081647834412785,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72123730182646,
+          2.9839220391822754
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 29,
+        "heightM": 10,
+        "smoothedHeightM": 10,
+        "wgs84": [
+          101.72123730182646,
+          2.9839220391822754
+        ],
+        "epsg3857": [
+          11323556.339301066,
+          332318.9379340559
+        ],
+        "nativeRow": 30,
+        "nativeCol": 70,
+        "nearestNeighbourM": 6.081647715574759,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72146260738373,
+          2.9839220391822754
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 30,
+        "heightM": 12,
+        "smoothedHeightM": 11.11111111111111,
+        "wgs84": [
+          101.72146260738373,
+          2.9839220391822754
+        ],
+        "epsg3857": [
+          11323581.420200974,
+          332318.9379340559
+        ],
+        "nativeRow": 30,
+        "nativeCol": 91,
+        "nearestNeighbourM": 6.081647834412785,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72135531902313,
+          2.9839113248925155
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 31,
+        "heightM": 12,
+        "smoothedHeightM": 12,
+        "wgs84": [
+          101.72135531902313,
+          2.9839113248925155
+        ],
+        "epsg3857": [
+          11323569.476915304,
+          332317.74360548897
+        ],
+        "nativeRow": 31,
+        "nativeCol": 81,
+        "nearestNeighbourM": 7.543356080628145,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72117292881012,
+          2.9839006106026527
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 32,
+        "heightM": 11,
+        "smoothedHeightM": 10.444444444444445,
+        "wgs84": [
+          101.72117292881012,
+          2.9839006106026527
+        ],
+        "epsg3857": [
+          11323549.173329666,
+          332316.549276922
+        ],
+        "nativeRow": 32,
+        "nativeCol": 64,
+        "nearestNeighbourM": 7.543355858571376,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72195613384247,
+          2.983889896312676
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 33,
+        "heightM": 10,
+        "smoothedHeightM": 10,
+        "wgs84": [
+          101.72195613384247,
+          2.983889896312676
+        ],
+        "epsg3857": [
+          11323636.359315053,
+          332315.35494835506
+        ],
+        "nativeRow": 33,
+        "nativeCol": 137,
+        "nearestNeighbourM": 8.000937512291761,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72180593013763,
+          2.98387918202261
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 34,
+        "heightM": 12,
+        "smoothedHeightM": 11.444444444444445,
+        "wgs84": [
+          101.72180593013763,
+          2.98387918202261
+        ],
+        "epsg3857": [
+          11323619.638715116,
+          332314.1606197881
+        ],
+        "nativeRow": 34,
+        "nativeCol": 123,
+        "nearestNeighbourM": 8.348965244270392,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72188103199004,
+          2.98387918202261
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 35,
+        "heightM": 10,
+        "smoothedHeightM": 10,
+        "wgs84": [
+          101.72188103199004,
+          2.98387918202261
+        ],
+        "epsg3857": [
+          11323627.999015084,
+          332314.1606197881
+        ],
+        "nativeRow": 34,
+        "nativeCol": 130,
+        "nearestNeighbourM": 7.254967778061473,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.7216557264328,
+          2.9838684677324294
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 36,
+        "heightM": 11,
+        "smoothedHeightM": 11,
+        "wgs84": [
+          101.7216557264328,
+          2.9838684677324294
+        ],
+        "epsg3857": [
+          11323602.918115178,
+          332312.96629122115
+        ],
+        "nativeRow": 35,
+        "nativeCol": 109,
+        "nearestNeighbourM": 8.600749561331465,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72139823436737,
+          2.9838577534421473
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 37,
+        "heightM": 10,
+        "smoothedHeightM": 10,
+        "wgs84": [
+          101.72139823436737,
+          2.9838577534421473
+        ],
+        "epsg3857": [
+          11323574.254229572,
+          332311.7719626542
+        ],
+        "nativeRow": 36,
+        "nativeCol": 85,
+        "nearestNeighbourM": 6.081648249379371,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72124803066251,
+          2.9838470391517635
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 38,
+        "heightM": 10,
+        "smoothedHeightM": 9.555555555555555,
+        "wgs84": [
+          101.72124803066251,
+          2.9838470391517635
+        ],
+        "epsg3857": [
+          11323557.533629633,
+          332310.57763408724
+        ],
+        "nativeRow": 37,
+        "nativeCol": 71,
+        "nearestNeighbourM": 8.433728446248272,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72133386135101,
+          2.9838470391517635
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 39,
+        "heightM": 10,
+        "smoothedHeightM": 10,
+        "wgs84": [
+          101.72133386135101,
+          2.9838470391517635
+        ],
+        "epsg3857": [
+          11323567.08825817,
+          332310.57763408724
+        ],
+        "nativeRow": 37,
+        "nativeCol": 79,
+        "nearestNeighbourM": 7.254967743344383,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72145187854765,
+          2.9838470391517635
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 40,
+        "heightM": 11,
+        "smoothedHeightM": 11,
+        "wgs84": [
+          101.72145187854765,
+          2.9838470391517635
+        ],
+        "epsg3857": [
+          11323580.225872407,
+          332310.57763408724
+        ],
+        "nativeRow": 37,
+        "nativeCol": 90,
+        "nearestNeighbourM": 6.081648249379371,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72153770923613,
+          2.9838470391517635
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 41,
+        "heightM": 13,
+        "smoothedHeightM": 13,
+        "wgs84": [
+          101.72153770923613,
+          2.9838470391517635
+        ],
+        "epsg3857": [
+          11323589.780500941,
+          332310.57763408724
+        ],
+        "nativeRow": 37,
+        "nativeCol": 98,
+        "nearestNeighbourM": 9.54167484416646,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72192394733428,
+          2.9838256105706904
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 42,
+        "heightM": 10,
+        "smoothedHeightM": 10,
+        "wgs84": [
+          101.72192394733428,
+          2.9838256105706904
+        ],
+        "epsg3857": [
+          11323632.776329352,
+          332308.18897695333
+        ],
+        "nativeRow": 39,
+        "nativeCol": 134,
+        "nearestNeighbourM": 6.081648425395015,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72187030315399,
+          2.9838148962799886
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 43,
+        "heightM": 10,
+        "smoothedHeightM": 10,
+        "wgs84": [
+          101.72187030315399,
+          2.9838148962799886
+        ],
+        "epsg3857": [
+          11323626.804686518,
+          332306.9946483864
+        ],
+        "nativeRow": 40,
+        "nativeCol": 129,
+        "nearestNeighbourM": 6.081648425395015,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72161281108856,
+          2.983804181989185
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 44,
+        "heightM": 11,
+        "smoothedHeightM": 11,
+        "wgs84": [
+          101.72161281108856,
+          2.983804181989185
+        ],
+        "epsg3857": [
+          11323598.14080091,
+          332305.8003198194
+        ],
+        "nativeRow": 41,
+        "nativeCol": 105,
+        "nearestNeighbourM": 8.600749561331465,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72105491161345,
+          2.9837934676982796
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 45,
+        "heightM": 10,
+        "smoothedHeightM": 9.333333333333334,
+        "wgs84": [
+          101.72105491161345,
+          2.9837934676982796
+        ],
+        "epsg3857": [
+          11323536.03571543,
+          332304.60599125247
+        ],
+        "nativeRow": 42,
+        "nativeCol": 53,
+        "nearestNeighbourM": 9.08340441008828,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72198832035063,
+          2.9837934676982796
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 46,
+        "heightM": 9,
+        "smoothedHeightM": 9,
+        "wgs84": [
+          101.72198832035063,
+          2.9837934676982796
+        ],
+        "epsg3857": [
+          11323639.942300754,
+          332304.60599125247
+        ],
+        "nativeRow": 42,
+        "nativeCol": 140,
+        "nearestNeighbourM": 8.00093786347164,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72145187854765,
+          2.983782753407272
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 47,
+        "heightM": 12,
+        "smoothedHeightM": 12,
+        "wgs84": [
+          101.72145187854765,
+          2.983782753407272
+        ],
+        "epsg3857": [
+          11323580.225872407,
+          332303.4116626855
+        ],
+        "nativeRow": 43,
+        "nativeCol": 90,
+        "nearestNeighbourM": 6.954631386253085,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72130167484282,
+          2.983772039116151
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 48,
+        "heightM": 11,
+        "smoothedHeightM": 10.88888888888889,
+        "wgs84": [
+          101.72130167484282,
+          2.983772039116151
+        ],
+        "epsg3857": [
+          11323563.505272469,
+          332302.21733411856
+        ],
+        "nativeRow": 44,
+        "nativeCol": 76,
+        "nearestNeighbourM": 7.637066890989854,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72113001346588,
+          2.9837613248249264
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 49,
+        "heightM": 10,
+        "smoothedHeightM": 9.777777777777779,
+        "wgs84": [
+          101.72113001346588,
+          2.9837613248249264
+        ],
+        "epsg3857": [
+          11323544.396015398,
+          332301.0230055516
+        ],
+        "nativeRow": 45,
+        "nativeCol": 60,
+        "nearestNeighbourM": 8.600750399660578,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72150552272797,
+          2.983750610533614
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 50,
+        "heightM": 11,
+        "smoothedHeightM": 11,
+        "wgs84": [
+          101.72150552272797,
+          2.983750610533614
+        ],
+        "epsg3857": [
+          11323586.197515242,
+          332299.82867698465
+        ],
+        "nativeRow": 46,
+        "nativeCol": 95,
+        "nearestNeighbourM": 6.954631386253085,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72182738780975,
+          2.983750610533614
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 51,
+        "heightM": 9,
+        "smoothedHeightM": 9,
+        "wgs84": [
+          101.72182738780975,
+          2.983750610533614
+        ],
+        "epsg3857": [
+          11323622.02737225,
+          332299.82867698465
+        ],
+        "nativeRow": 46,
+        "nativeCol": 125,
+        "nearestNeighbourM": 8.4337295134788,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72190248966216,
+          2.983739896242174
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 52,
+        "heightM": 11,
+        "smoothedHeightM": 10.666666666666666,
+        "wgs84": [
+          101.72190248966216,
+          2.983739896242174
+        ],
+        "epsg3857": [
+          11323630.387672218,
+          332298.6343484177
+        ],
+        "nativeRow": 47,
+        "nativeCol": 132,
+        "nearestNeighbourM": 8.4337295134788,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72158062458037,
+          2.9837291819506455
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 53,
+        "heightM": 13,
+        "smoothedHeightM": 12.555555555555555,
+        "wgs84": [
+          101.72158062458037,
+          2.9837291819506455
+        ],
+        "epsg3857": [
+          11323594.557815209,
+          332297.44001985074
+        ],
+        "nativeRow": 48,
+        "nativeCol": 102,
+        "nearestNeighbourM": 7.156256901806492,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72164499759673,
+          2.9837291819506455
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 54,
+        "heightM": 12,
+        "smoothedHeightM": 12,
+        "wgs84": [
+          101.72164499759673,
+          2.9837291819506455
+        ],
+        "epsg3857": [
+          11323601.723786611,
+          332297.44001985074
+        ],
+        "nativeRow": 48,
+        "nativeCol": 108,
+        "nearestNeighbourM": 7.156256901806492,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72134459018706,
+          2.983718467659002
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 55,
+        "heightM": 11,
+        "smoothedHeightM": 11,
+        "wgs84": [
+          101.72134459018706,
+          2.983718467659002
+        ],
+        "epsg3857": [
+          11323568.282586737,
+          332296.2456912838
+        ],
+        "nativeRow": 49,
+        "nativeCol": 80,
+        "nearestNeighbourM": 7.156256971558317,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72140896320342,
+          2.983718467659002
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 56,
+        "heightM": 12,
+        "smoothedHeightM": 11.666666666666666,
+        "wgs84": [
+          101.72140896320342,
+          2.983718467659002
+        ],
+        "epsg3857": [
+          11323575.448558139,
+          332296.2456912838
+        ],
+        "nativeRow": 49,
+        "nativeCol": 86,
+        "nearestNeighbourM": 6.422937355246713,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72174155712128,
+          2.983718467659002
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 57,
+        "heightM": 9,
+        "smoothedHeightM": 8.88888888888889,
+        "wgs84": [
+          101.72174155712128,
+          2.983718467659002
+        ],
+        "epsg3857": [
+          11323612.472743714,
+          332296.2456912838
+        ],
+        "nativeRow": 49,
+        "nativeCol": 117,
+        "nearestNeighbourM": 10.190514245523095,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72117292881012,
+          2.98369703907541
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 58,
+        "heightM": 10,
+        "smoothedHeightM": 10,
+        "wgs84": [
+          101.72117292881012,
+          2.98369703907541
+        ],
+        "epsg3857": [
+          11323549.173329666,
+          332293.85703414987
+        ],
+        "nativeRow": 51,
+        "nativeCol": 64,
+        "nearestNeighbourM": 8.000938916037757,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72109782695769,
+          2.9836863247834615
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 59,
+        "heightM": 10,
+        "smoothedHeightM": 10,
+        "wgs84": [
+          101.72109782695769,
+          2.9836863247834615
+        ],
+        "epsg3857": [
+          11323540.813029697,
+          332292.6627055829
+        ],
+        "nativeRow": 52,
+        "nativeCol": 57,
+        "nearestNeighbourM": 6.4229375430562285,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.7213875055313,
+          2.9836648961992456
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 60,
+        "heightM": 11,
+        "smoothedHeightM": 11,
+        "wgs84": [
+          101.7213875055313,
+          2.9836648961992456
+        ],
+        "epsg3857": [
+          11323573.059901005,
+          332290.274048449
+        ],
+        "nativeRow": 54,
+        "nativeCol": 84,
+        "nearestNeighbourM": 6.422937355246713,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72187030315399,
+          2.9836648961992456
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 61,
+        "heightM": 12,
+        "smoothedHeightM": 11.222222222222221,
+        "wgs84": [
+          101.72187030315399,
+          2.9836648961992456
+        ],
+        "epsg3857": [
+          11323626.804686518,
+          332290.274048449
+        ],
+        "nativeRow": 54,
+        "nativeCol": 129,
+        "nearestNeighbourM": 8.000939149986634,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72162353992461,
+          2.983654181906979
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 62,
+        "heightM": 14,
+        "smoothedHeightM": 13.11111111111111,
+        "wgs84": [
+          101.72162353992461,
+          2.983654181906979
+        ],
+        "epsg3857": [
+          11323599.335129477,
+          332289.07971988205
+        ],
+        "nativeRow": 55,
+        "nativeCol": 106,
+        "nearestNeighbourM": 6.9546322673108865,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72130167484282,
+          2.9836434676146104
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 63,
+        "heightM": 10,
+        "smoothedHeightM": 9.88888888888889,
+        "wgs84": [
+          101.72130167484282,
+          2.9836434676146104
+        ],
+        "epsg3857": [
+          11323563.505272469,
+          332287.8853913151
+        ],
+        "nativeRow": 56,
+        "nativeCol": 76,
+        "nearestNeighbourM": 8.68305686850401,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72147333621979,
+          2.9836434676146104
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 64,
+        "heightM": 14,
+        "smoothedHeightM": 13.777777777777779,
+        "wgs84": [
+          101.72147333621979,
+          2.9836434676146104
+        ],
+        "epsg3857": [
+          11323582.61452954,
+          332287.8853913151
+        ],
+        "nativeRow": 56,
+        "nativeCol": 92,
+        "nearestNeighbourM": 9.835335034418623,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72107636928557,
+          2.98363275332214
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 65,
+        "heightM": 10,
+        "smoothedHeightM": 10,
+        "wgs84": [
+          101.72107636928557,
+          2.98363275332214
+        ],
+        "epsg3857": [
+          11323538.424372563,
+          332286.69106274814
+        ],
+        "nativeRow": 57,
+        "nativeCol": 55,
+        "nearestNeighbourM": 6.4229375430562285,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72114074230193,
+          2.98363275332214
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 66,
+        "heightM": 10,
+        "smoothedHeightM": 10,
+        "wgs84": [
+          101.72114074230193,
+          2.98363275332214
+        ],
+        "epsg3857": [
+          11323545.590343965,
+          332286.69106274814
+        ],
+        "nativeRow": 57,
+        "nativeCol": 61,
+        "nearestNeighbourM": 7.15625752956394,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72122657299039,
+          2.983622039029555
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 67,
+        "heightM": 9,
+        "smoothedHeightM": 9,
+        "wgs84": [
+          101.72122657299039,
+          2.983622039029555
+        ],
+        "epsg3857": [
+          11323555.1449725,
+          332285.4967341812
+        ],
+        "nativeRow": 58,
+        "nativeCol": 69,
+        "nearestNeighbourM": 8.68305686850401,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72198832035063,
+          2.9836113247368816
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 68,
+        "heightM": 11,
+        "smoothedHeightM": 11,
+        "wgs84": [
+          101.72198832035063,
+          2.9836113247368816
+        ],
+        "epsg3857": [
+          11323639.942300754,
+          332284.30240561423
+        ],
+        "nativeRow": 59,
+        "nativeCol": 140,
+        "nearestNeighbourM": 7.254969369768499,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72159135341644,
+          2.9836006104440926
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 69,
+        "heightM": 13,
+        "smoothedHeightM": 12.555555555555555,
+        "wgs84": [
+          101.72159135341644,
+          2.9836006104440926
+        ],
+        "epsg3857": [
+          11323595.752143776,
+          332283.1080770473
+        ],
+        "nativeRow": 60,
+        "nativeCol": 103,
+        "nearestNeighbourM": 6.9546322673108865,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72183811664581,
+          2.9836006104440926
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 70,
+        "heightM": 12,
+        "smoothedHeightM": 11.777777777777779,
+        "wgs84": [
+          101.72183811664581,
+          2.9836006104440926
+        ],
+        "epsg3857": [
+          11323623.221700817,
+          332283.1080770473
+        ],
+        "nativeRow": 60,
+        "nativeCol": 126,
+        "nearestNeighbourM": 8.000939149986634,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72192394733428,
+          2.9836006104440926
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 71,
+        "heightM": 11,
+        "smoothedHeightM": 11,
+        "wgs84": [
+          101.72192394733428,
+          2.9836006104440926
+        ],
+        "epsg3857": [
+          11323632.776329352,
+          332283.1080770473
+        ],
+        "nativeRow": 60,
+        "nativeCol": 134,
+        "nearestNeighbourM": 7.254969369768499,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72166645526885,
+          2.9835898961512024
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 72,
+        "heightM": 13,
+        "smoothedHeightM": 12.444444444444445,
+        "wgs84": [
+          101.72166645526885,
+          2.9835898961512024
+        ],
+        "epsg3857": [
+          11323604.112443745,
+          332281.9137484803
+        ],
+        "nativeRow": 61,
+        "nativeCol": 110,
+        "nearestNeighbourM": 8.00093969590957,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72135531902313,
+          2.983579181858198
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 73,
+        "heightM": 10,
+        "smoothedHeightM": 10,
+        "wgs84": [
+          101.72135531902313,
+          2.983579181858198
+        ],
+        "epsg3857": [
+          11323569.476915304,
+          332280.7194199133
+        ],
+        "nativeRow": 62,
+        "nativeCol": 81,
+        "nearestNeighbourM": 6.74698476291652,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72111928462981,
+          2.983568467565104
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 74,
+        "heightM": 11,
+        "smoothedHeightM": 11,
+        "wgs84": [
+          101.72111928462981,
+          2.983568467565104
+        ],
+        "epsg3857": [
+          11323543.201686831,
+          332279.52509134635
+        ],
+        "nativeRow": 63,
+        "nativeCol": 59,
+        "nearestNeighbourM": 7.543357992340438,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72118365764615,
+          2.983547038978586
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 75,
+        "heightM": 11,
+        "smoothedHeightM": 11,
+        "wgs84": [
+          101.72118365764615,
+          2.983547038978586
+        ],
+        "epsg3857": [
+          11323550.367658231,
+          332277.13643421244
+        ],
+        "nativeRow": 65,
+        "nativeCol": 65,
+        "nearestNeighbourM": 7.25496997016303,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72139823436737,
+          2.9835363246851743
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 76,
+        "heightM": 12,
+        "smoothedHeightM": 11.555555555555555,
+        "wgs84": [
+          101.72139823436737,
+          2.9835363246851743
+        ],
+        "epsg3857": [
+          11323574.254229572,
+          332275.9421056455
+        ],
+        "nativeRow": 66,
+        "nativeCol": 85,
+        "nearestNeighbourM": 6.74698476291652,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72158062458037,
+          2.9835363246851743
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 77,
+        "heightM": 13,
+        "smoothedHeightM": 13,
+        "wgs84": [
+          101.72158062458037,
+          2.9835363246851743
+        ],
+        "epsg3857": [
+          11323594.557815209,
+          332275.9421056455
+        ],
+        "nativeRow": 66,
+        "nativeCol": 102,
+        "nearestNeighbourM": 6.08165002768989,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72178447246552,
+          2.9835363246851743
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 78,
+        "heightM": 13,
+        "smoothedHeightM": 12.777777777777779,
+        "wgs84": [
+          101.72178447246552,
+          2.9835363246851743
+        ],
+        "epsg3857": [
+          11323617.250057982,
+          332275.9421056455
+        ],
+        "nativeRow": 66,
+        "nativeCol": 121,
+        "nearestNeighbourM": 7.543358507226994,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72163426876068,
+          2.9835256103916477
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 79,
+        "heightM": 13,
+        "smoothedHeightM": 13,
+        "wgs84": [
+          101.72163426876068,
+          2.9835256103916477
+        ],
+        "epsg3857": [
+          11323600.529458044,
+          332274.74777707853
+        ],
+        "nativeRow": 67,
+        "nativeCol": 107,
+        "nearestNeighbourM": 6.08165002768989,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72152698040009,
+          2.9835148960980327
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 80,
+        "heightM": 12,
+        "smoothedHeightM": 12,
+        "wgs84": [
+          101.72152698040009,
+          2.9835148960980327
+        ],
+        "epsg3857": [
+          11323588.586172376,
+          332273.5534485116
+        ],
+        "nativeRow": 68,
+        "nativeCol": 97,
+        "nearestNeighbourM": 6.422938324074363,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72172009944916,
+          2.9835148960980327
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 81,
+        "heightM": 13,
+        "smoothedHeightM": 12.222222222222221,
+        "wgs84": [
+          101.72172009944916,
+          2.9835148960980327
+        ],
+        "epsg3857": [
+          11323610.08408658,
+          332273.5534485116
+        ],
+        "nativeRow": 68,
+        "nativeCol": 115,
+        "nearestNeighbourM": 6.746985157466314,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72187030315399,
+          2.9835148960980327
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 82,
+        "heightM": 12,
+        "smoothedHeightM": 12,
+        "wgs84": [
+          101.72187030315399,
+          2.9835148960980327
+        ],
+        "epsg3857": [
+          11323626.804686518,
+          332273.5534485116
+        ],
+        "nativeRow": 68,
+        "nativeCol": 129,
+        "nearestNeighbourM": 6.422938544672928,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72195613384247,
+          2.9835148960980327
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 83,
+        "heightM": 12,
+        "smoothedHeightM": 12,
+        "wgs84": [
+          101.72195613384247,
+          2.9835148960980327
+        ],
+        "epsg3857": [
+          11323636.359315053,
+          332273.5534485116
+        ],
+        "nativeRow": 68,
+        "nativeCol": 137,
+        "nearestNeighbourM": 9.541677727200668,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72117292881012,
+          2.9834827532165376
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 84,
+        "heightM": 12,
+        "smoothedHeightM": 12,
+        "wgs84": [
+          101.72117292881012,
+          2.9834827532165376
+        ],
+        "epsg3857": [
+          11323549.173329666,
+          332269.9704628107
+        ],
+        "nativeRow": 71,
+        "nativeCol": 64,
+        "nearestNeighbourM": 6.954633351830359,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72147333621979,
+          2.9834827532165376
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 85,
+        "heightM": 13,
+        "smoothedHeightM": 13,
+        "wgs84": [
+          101.72147333621979,
+          2.9834827532165376
+        ],
+        "epsg3857": [
+          11323582.61452954,
+          332269.9704628107
+        ],
+        "nativeRow": 71,
+        "nativeCol": 92,
+        "nearestNeighbourM": 6.954633080866301,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.7217630147934,
+          2.983472038922503
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 86,
+        "heightM": 12,
+        "smoothedHeightM": 12,
+        "wgs84": [
+          101.7217630147934,
+          2.983472038922503
+        ],
+        "epsg3857": [
+          11323614.861400848,
+          332268.77613424376
+        ],
+        "nativeRow": 72,
+        "nativeCol": 119,
+        "nearestNeighbourM": 6.746985157466314,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72160208225249,
+          2.9834613246283532
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 87,
+        "heightM": 13,
+        "smoothedHeightM": 13,
+        "wgs84": [
+          101.72160208225249,
+          2.9834613246283532
+        ],
+        "epsg3857": [
+          11323596.946472343,
+          332267.5818056768
+        ],
+        "nativeRow": 73,
+        "nativeCol": 104,
+        "nearestNeighbourM": 6.4229387639962034,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72184884548187,
+          2.9834613246283532
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 88,
+        "heightM": 14,
+        "smoothedHeightM": 13.444444444444445,
+        "wgs84": [
+          101.72184884548187,
+          2.9834613246283532
+        ],
+        "epsg3857": [
+          11323624.416029384,
+          332267.5818056768
+        ],
+        "nativeRow": 73,
+        "nativeCol": 127,
+        "nearestNeighbourM": 6.422938544672928,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72137677669525,
+          2.983450610334114
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 89,
+        "heightM": 11,
+        "smoothedHeightM": 11,
+        "wgs84": [
+          101.72137677669525,
+          2.983450610334114
+        ],
+        "epsg3857": [
+          11323571.865572438,
+          332266.38747710985
+        ],
+        "nativeRow": 74,
+        "nativeCol": 83,
+        "nearestNeighbourM": 6.746985552007638,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72152698040009,
+          2.983450610334114
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 90,
+        "heightM": 13,
+        "smoothedHeightM": 13,
+        "wgs84": [
+          101.72152698040009,
+          2.983450610334114
+        ],
+        "epsg3857": [
+          11323588.586172376,
+          332266.38747710985
+        ],
+        "nativeRow": 74,
+        "nativeCol": 97,
+        "nearestNeighbourM": 6.9546332842097,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.7216557264328,
+          2.9834398960397484
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 91,
+        "heightM": 13,
+        "smoothedHeightM": 13,
+        "wgs84": [
+          101.7216557264328,
+          2.9834398960397484
+        ],
+        "epsg3857": [
+          11323602.918115178,
+          332265.1931485429
+        ],
+        "nativeRow": 75,
+        "nativeCol": 109,
+        "nearestNeighbourM": 6.4229387639962034,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72114074230193,
+          2.983429181745293
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 92,
+        "heightM": 12,
+        "smoothedHeightM": 12,
+        "wgs84": [
+          101.72114074230193,
+          2.983429181745293
+        ],
+        "epsg3857": [
+          11323545.590343965,
+          332263.99881997594
+        ],
+        "nativeRow": 76,
+        "nativeCol": 61,
+        "nearestNeighbourM": 6.954633351830359,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72195613384247,
+          2.9834184674507367
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 93,
+        "heightM": 14,
+        "smoothedHeightM": 14,
+        "wgs84": [
+          101.72195613384247,
+          2.9834184674507367
+        ],
+        "epsg3857": [
+          11323636.359315053,
+          332262.804491409
+        ],
+        "nativeRow": 77,
+        "nativeCol": 137,
+        "nearestNeighbourM": 6.422939014388283,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72141969203949,
+          2.9834077531560648
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 94,
+        "heightM": 12,
+        "smoothedHeightM": 12,
+        "wgs84": [
+          101.72141969203949,
+          2.9834077531560648
+        ],
+        "epsg3857": [
+          11323576.642886706,
+          332261.61016284203
+        ],
+        "nativeRow": 78,
+        "nativeCol": 87,
+        "nearestNeighbourM": 6.081650738960651,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72213852405547,
+          2.9834077531560648
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 95,
+        "heightM": 7,
+        "smoothedHeightM": 6.444444444444445,
+        "wgs84": [
+          101.72213852405547,
+          2.9834077531560648
+        ],
+        "epsg3857": [
+          11323656.662900692,
+          332261.61016284203
+        ],
+        "nativeRow": 78,
+        "nativeCol": 154,
+        "nearestNeighbourM": 16.2226082426691,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72147333621979,
+          2.9833970388612916
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 96,
+        "heightM": 12,
+        "smoothedHeightM": 12,
+        "wgs84": [
+          101.72147333621979,
+          2.9833970388612916
+        ],
+        "epsg3857": [
+          11323582.61452954,
+          332260.4158342751
+        ],
+        "nativeRow": 79,
+        "nativeCol": 92,
+        "nearestNeighbourM": 6.081650738960651,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.7217308282852,
+          2.9833970388612916
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 97,
+        "heightM": 15,
+        "smoothedHeightM": 14,
+        "wgs84": [
+          101.7217308282852,
+          2.9833970388612916
+        ],
+        "epsg3857": [
+          11323611.278415147,
+          332260.4158342751
+        ],
+        "nativeRow": 79,
+        "nativeCol": 116,
+        "nearestNeighbourM": 9.083407242811642,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72190248966216,
+          2.9833970388612916
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 98,
+        "heightM": 14,
+        "smoothedHeightM": 13.666666666666666,
+        "wgs84": [
+          101.72190248966216,
+          2.9833970388612916
+        ],
+        "epsg3857": [
+          11323630.387672218,
+          332260.4158342751
+        ],
+        "nativeRow": 79,
+        "nativeCol": 132,
+        "nearestNeighbourM": 6.422939014388283,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72158062458037,
+          2.983386324566417
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 99,
+        "heightM": 14,
+        "smoothedHeightM": 13.444444444444445,
+        "wgs84": [
+          101.72158062458037,
+          2.983386324566417
+        ],
+        "epsg3857": [
+          11323594.557815209,
+          332259.2215057081
+        ],
+        "nativeRow": 80,
+        "nativeCol": 102,
+        "nearestNeighbourM": 8.68305851838835,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72182738780975,
+          2.9833756102714406
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 100,
+        "heightM": 13,
+        "smoothedHeightM": 12.555555555555555,
+        "wgs84": [
+          101.72182738780975,
+          2.9833756102714406
+        ],
+        "epsg3857": [
+          11323622.02737225,
+          332258.02717714116
+        ],
+        "nativeRow": 81,
+        "nativeCol": 125,
+        "nearestNeighbourM": 8.683058813146504,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.7216557264328,
+          2.983364895976349
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 101,
+        "heightM": 16,
+        "smoothedHeightM": 15.222222222222221,
+        "wgs84": [
+          101.7216557264328,
+          2.983364895976349
+        ],
+        "epsg3857": [
+          11323602.918115178,
+          332256.8328485742
+        ],
+        "nativeRow": 82,
+        "nativeCol": 109,
+        "nearestNeighbourM": 8.348968866903707,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72124803066251,
+          2.983354181681169
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 102,
+        "heightM": 11,
+        "smoothedHeightM": 11,
+        "wgs84": [
+          101.72124803066251,
+          2.983354181681169
+        ],
+        "epsg3857": [
+          11323557.533629633,
+          332255.63852000725
+        ],
+        "nativeRow": 83,
+        "nativeCol": 71,
+        "nearestNeighbourM": 8.433732554821901,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.7219454050064,
+          2.983354181681169
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 103,
+        "heightM": 13,
+        "smoothedHeightM": 13,
+        "wgs84": [
+          101.7219454050064,
+          2.983354181681169
+        ],
+        "epsg3857": [
+          11323635.164986486,
+          332255.63852000725
+        ],
+        "nativeRow": 83,
+        "nativeCol": 136,
+        "nearestNeighbourM": 6.746985880785606,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72117292881012,
+          2.9833434673858745
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 104,
+        "heightM": 13,
+        "smoothedHeightM": 12.666666666666666,
+        "wgs84": [
+          101.72117292881012,
+          2.9833434673858745
+        ],
+        "epsg3857": [
+          11323549.173329666,
+          332254.4441914403
+        ],
+        "nativeRow": 84,
+        "nativeCol": 64,
+        "nearestNeighbourM": 6.081651212485155,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72144114971161,
+          2.9833220387949666
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 105,
+        "heightM": 11,
+        "smoothedHeightM": 11,
+        "wgs84": [
+          101.72144114971161,
+          2.9833220387949666
+        ],
+        "epsg3857": [
+          11323579.03154384,
+          332252.0555343064
+        ],
+        "nativeRow": 86,
+        "nativeCol": 89,
+        "nearestNeighbourM": 9.08340786249377,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72202050685883,
+          2.9833220387949666
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 106,
+        "heightM": 14,
+        "smoothedHeightM": 13.777777777777779,
+        "wgs84": [
+          101.72202050685883,
+          2.9833220387949666
+        ],
+        "epsg3857": [
+          11323643.525286455,
+          332252.0555343064
+        ],
+        "nativeRow": 86,
+        "nativeCol": 143,
+        "nearestNeighbourM": 6.422939671423174,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72154843807218,
+          2.9833113244993674
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 107,
+        "heightM": 13,
+        "smoothedHeightM": 13,
+        "wgs84": [
+          101.72154843807218,
+          2.9833113244993674
+        ],
+        "epsg3857": [
+          11323590.974829508,
+          332250.86120573943
+        ],
+        "nativeRow": 87,
+        "nativeCol": 99,
+        "nearestNeighbourM": 6.954634436287745,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72118365764615,
+          2.983289895907836
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 108,
+        "heightM": 12,
+        "smoothedHeightM": 12,
+        "wgs84": [
+          101.72118365764615,
+          2.983289895907836
+        ],
+        "epsg3857": [
+          11323550.367658231,
+          332248.4725486055
+        ],
+        "nativeRow": 89,
+        "nativeCol": 65,
+        "nearestNeighbourM": 6.081651212485155,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72129094600677,
+          2.983279181611918
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 109,
+        "heightM": 11,
+        "smoothedHeightM": 11,
+        "wgs84": [
+          101.72129094600677,
+          2.983279181611918
+        ],
+        "epsg3857": [
+          11323562.310943902,
+          332247.27822003857
+        ],
+        "nativeRow": 90,
+        "nativeCol": 75,
+        "nearestNeighbourM": 7.637070314892895,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72163426876068,
+          2.983279181611918
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 110,
+        "heightM": 13,
+        "smoothedHeightM": 13,
+        "wgs84": [
+          101.72163426876068,
+          2.983279181611918
+        ],
+        "epsg3857": [
+          11323600.529458044,
+          332247.27822003857
+        ],
+        "nativeRow": 90,
+        "nativeCol": 107,
+        "nearestNeighbourM": 6.42293982813779,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72113001346588,
+          2.9832684673158987
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 111,
+        "heightM": 13,
+        "smoothedHeightM": 13,
+        "wgs84": [
+          101.72113001346588,
+          2.9832684673158987
+        ],
+        "epsg3857": [
+          11323544.396015398,
+          332246.0838914716
+        ],
+        "nativeRow": 91,
+        "nativeCol": 60,
+        "nearestNeighbourM": 6.42293976381594,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.7219990491867,
+          2.9832684673158987
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 112,
+        "heightM": 13,
+        "smoothedHeightM": 13,
+        "wgs84": [
+          101.7219990491867,
+          2.9832684673158987
+        ],
+        "epsg3857": [
+          11323641.13662932,
+          332246.0838914716
+        ],
+        "nativeRow": 91,
+        "nativeCol": 141,
+        "nearestNeighbourM": 6.422939671423174,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72158062458037,
+          2.983257753019777
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 113,
+        "heightM": 14,
+        "smoothedHeightM": 13.222222222222221,
+        "wgs84": [
+          101.72158062458037,
+          2.983257753019777
+        ],
+        "epsg3857": [
+          11323594.557815209,
+          332244.88956290466
+        ],
+        "nativeRow": 92,
+        "nativeCol": 102,
+        "nearestNeighbourM": 6.42293982813779,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72192394733428,
+          2.983257753019777
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 114,
+        "heightM": 12,
+        "smoothedHeightM": 11.555555555555555,
+        "wgs84": [
+          101.72192394733428,
+          2.983257753019777
+        ],
+        "epsg3857": [
+          11323632.776329352,
+          332244.88956290466
+        ],
+        "nativeRow": 92,
+        "nativeCol": 134,
+        "nearestNeighbourM": 8.433733214198082,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72141969203949,
+          2.9832363244271902
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 115,
+        "heightM": 10,
+        "smoothedHeightM": 9.777777777777779,
+        "wgs84": [
+          101.72141969203949,
+          2.9832363244271902
+        ],
+        "epsg3857": [
+          11323576.642886706,
+          332242.50090577075
+        ],
+        "nativeRow": 94,
+        "nativeCol": 87,
+        "nearestNeighbourM": 9.61593563380701,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72117292881012,
+          2.9832256101307504
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 116,
+        "heightM": 12,
+        "smoothedHeightM": 12,
+        "wgs84": [
+          101.72117292881012,
+          2.9832256101307504
+        ],
+        "epsg3857": [
+          11323549.173329666,
+          332241.3065772038
+        ],
+        "nativeRow": 95,
+        "nativeCol": 64,
+        "nearestNeighbourM": 6.422940139381212,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72133386135101,
+          2.9832256101307504
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 117,
+        "heightM": 10,
+        "smoothedHeightM": 10,
+        "wgs84": [
+          101.72133386135101,
+          2.9832256101307504
+        ],
+        "epsg3857": [
+          11323567.08825817,
+          332241.3065772038
+        ],
+        "nativeRow": 95,
+        "nativeCol": 79,
+        "nearestNeighbourM": 7.637070314892895,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72110855579375,
+          2.9832041815375527
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 118,
+        "heightM": 13,
+        "smoothedHeightM": 13,
+        "wgs84": [
+          101.72110855579375,
+          2.9832041815375527
+        ],
+        "epsg3857": [
+          11323542.007358264,
+          332238.9179200699
+        ],
+        "nativeRow": 97,
+        "nativeCol": 58,
+        "nearestNeighbourM": 7.543360491876309,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72122657299039,
+          2.9832041815375527
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 119,
+        "heightM": 12,
+        "smoothedHeightM": 12,
+        "wgs84": [
+          101.72122657299039,
+          2.9832041815375527
+        ],
+        "epsg3857": [
+          11323555.1449725,
+          332238.9179200699
+        ],
+        "nativeRow": 97,
+        "nativeCol": 69,
+        "nearestNeighbourM": 6.422940139381212,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72164499759673,
+          2.983193467240808
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 120,
+        "heightM": 12,
+        "smoothedHeightM": 12,
+        "wgs84": [
+          101.72164499759673,
+          2.983193467240808
+        ],
+        "epsg3857": [
+          11323601.723786611,
+          332237.72359150293
+        ],
+        "nativeRow": 98,
+        "nativeCol": 108,
+        "nearestNeighbourM": 9.615935586494713,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72196686267851,
+          2.983193467240808
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 121,
+        "heightM": 12,
+        "smoothedHeightM": 12,
+        "wgs84": [
+          101.72196686267851,
+          2.983193467240808
+        ],
+        "epsg3857": [
+          11323637.55364362,
+          332237.72359150293
+        ],
+        "nativeRow": 98,
+        "nativeCol": 138,
+        "nearestNeighbourM": 7.543360859732737,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72155916690825,
+          2.983172038646987
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 122,
+        "heightM": 13,
+        "smoothedHeightM": 13,
+        "wgs84": [
+          101.72155916690825,
+          2.983172038646987
+        ],
+        "epsg3857": [
+          11323592.169158075,
+          332235.334934369
+        ],
+        "nativeRow": 100,
+        "nativeCol": 100,
+        "nearestNeighbourM": 8.000942736888286,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72203123569487,
+          2.983172038646987
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 123,
+        "heightM": 15,
+        "smoothedHeightM": 14.444444444444445,
+        "wgs84": [
+          101.72203123569487,
+          2.983172038646987
+        ],
+        "epsg3857": [
+          11323644.719615022,
+          332235.334934369
+        ],
+        "nativeRow": 100,
+        "nativeCol": 144,
+        "nearestNeighbourM": 7.543360859732737,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72146260738373,
+          2.9831613243499113
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 124,
+        "heightM": 11,
+        "smoothedHeightM": 11,
+        "wgs84": [
+          101.72146260738373,
+          2.9831613243499113
+        ],
+        "epsg3857": [
+          11323581.420200974,
+          332234.14060580207
+        ],
+        "nativeRow": 101,
+        "nativeCol": 91,
+        "nearestNeighbourM": 9.615935914589732,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72120511531827,
+          2.983129181458086
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 125,
+        "heightM": 13,
+        "smoothedHeightM": 12.88888888888889,
+        "wgs84": [
+          101.72120511531827,
+          2.983129181458086
+        ],
+        "epsg3857": [
+          11323552.756315365,
+          332230.5576201012
+        ],
+        "nativeRow": 104,
+        "nativeCol": 67,
+        "nearestNeighbourM": 6.081652279942525,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72125875949858,
+          2.9831184671606032
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 126,
+        "heightM": 12,
+        "smoothedHeightM": 12,
+        "wgs84": [
+          101.72125875949858,
+          2.9831184671606032
+        ],
+        "epsg3857": [
+          11323558.7279582,
+          332229.36329153425
+        ],
+        "nativeRow": 105,
+        "nativeCol": 72,
+        "nearestNeighbourM": 6.081652279942525,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72159135341644,
+          2.9831077528630057
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 127,
+        "heightM": 13,
+        "smoothedHeightM": 13,
+        "wgs84": [
+          101.72159135341644,
+          2.9831077528630057
+        ],
+        "epsg3857": [
+          11323595.752143776,
+          332228.1689629673
+        ],
+        "nativeRow": 106,
+        "nativeCol": 103,
+        "nearestNeighbourM": 6.081652516729698,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72141969203949,
+          2.9830863242675054
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 128,
+        "heightM": 14,
+        "smoothedHeightM": 13.88888888888889,
+        "wgs84": [
+          101.72141969203949,
+          2.9830863242675054
+        ],
+        "epsg3857": [
+          11323576.642886706,
+          332225.7803058334
+        ],
+        "nativeRow": 108,
+        "nativeCol": 87,
+        "nearestNeighbourM": 9.541681448632417,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72150552272797,
+          2.9830863242675054
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 129,
+        "heightM": 14,
+        "smoothedHeightM": 13.666666666666666,
+        "wgs84": [
+          101.72150552272797,
+          2.9830863242675054
+        ],
+        "epsg3857": [
+          11323586.197515242,
+          332225.7803058334
+        ],
+        "nativeRow": 108,
+        "nativeCol": 95,
+        "nearestNeighbourM": 9.083410251148035,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72111928462981,
+          2.9830648956715984
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 130,
+        "heightM": 11,
+        "smoothedHeightM": 11,
+        "wgs84": [
+          101.72111928462981,
+          2.9830648956715984
+        ],
+        "epsg3857": [
+          11323543.201686831,
+          332223.3916486995
+        ],
+        "nativeRow": 110,
+        "nativeCol": 59,
+        "nearestNeighbourM": 8.348971428412273,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72119438648222,
+          2.9830648956715984
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 131,
+        "heightM": 13,
+        "smoothedHeightM": 12.444444444444445,
+        "wgs84": [
+          101.72119438648222,
+          2.9830648956715984
+        ],
+        "epsg3857": [
+          11323551.561986798,
+          332223.3916486995
+        ],
+        "nativeRow": 110,
+        "nativeCol": 66,
+        "nearestNeighbourM": 7.254972727928658,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72126948833464,
+          2.983054181373492
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 132,
+        "heightM": 14,
+        "smoothedHeightM": 13.11111111111111,
+        "wgs84": [
+          101.72126948833464,
+          2.983054181373492
+        ],
+        "epsg3857": [
+          11323559.922286768,
+          332222.1973201325
+        ],
+        "nativeRow": 111,
+        "nativeCol": 73,
+        "nearestNeighbourM": 6.422941236233675,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72158062458037,
+          2.983054181373492
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 133,
+        "heightM": 12,
+        "smoothedHeightM": 12,
+        "wgs84": [
+          101.72158062458037,
+          2.983054181373492
+        ],
+        "epsg3857": [
+          11323594.557815209,
+          332222.1973201325
+        ],
+        "nativeRow": 111,
+        "nativeCol": 102,
+        "nearestNeighbourM": 6.081652516729698,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72204196453092,
+          2.9830327527769485
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 134,
+        "heightM": 15,
+        "smoothedHeightM": 14.666666666666666,
+        "wgs84": [
+          101.72204196453092,
+          2.9830327527769485
+        ],
+        "epsg3857": [
+          11323645.913943589,
+          332219.8086629986
+        ],
+        "nativeRow": 113,
+        "nativeCol": 145,
+        "nearestNeighbourM": 7.543362109096683,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72124803066251,
+          2.9830006098813575
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 135,
+        "heightM": 13,
+        "smoothedHeightM": 13,
+        "wgs84": [
+          101.72124803066251,
+          2.9830006098813575
+        ],
+        "epsg3857": [
+          11323557.533629633,
+          332216.22567729774
+        ],
+        "nativeRow": 116,
+        "nativeCol": 71,
+        "nearestNeighbourM": 6.422941236233675,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72116219997405,
+          2.9829898955826155
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 136,
+        "heightM": 14,
+        "smoothedHeightM": 13.11111111111111,
+        "wgs84": [
+          101.72116219997405,
+          2.9829898955826155
+        ],
+        "epsg3857": [
+          11323547.9790011,
+          332215.0313487308
+        ],
+        "nativeRow": 117,
+        "nativeCol": 63,
+        "nearestNeighbourM": 9.083410605881022,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72154843807218,
+          2.9829898955826155
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 137,
+        "heightM": 11,
+        "smoothedHeightM": 11,
+        "wgs84": [
+          101.72154843807218,
+          2.9829898955826155
+        ],
+        "epsg3857": [
+          11323590.974829508,
+          332215.0313487308
+        ],
+        "nativeRow": 117,
+        "nativeCol": 99,
+        "nearestNeighbourM": 6.954636401868489,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72202050685883,
+          2.9829684669848247
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 138,
+        "heightM": 16,
+        "smoothedHeightM": 15.11111111111111,
+        "wgs84": [
+          101.72202050685883,
+          2.9829684669848247
+        ],
+        "epsg3857": [
+          11323643.525286455,
+          332212.6426915969
+        ],
+        "nativeRow": 119,
+        "nativeCol": 143,
+        "nearestNeighbourM": 7.543362109096683,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72160208225249,
+          2.982957752685777
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 139,
+        "heightM": 14,
+        "smoothedHeightM": 13.444444444444445,
+        "wgs84": [
+          101.72160208225249,
+          2.982957752685777
+        ],
+        "epsg3857": [
+          11323596.946472343,
+          332211.4483630299
+        ],
+        "nativeRow": 120,
+        "nativeCol": 104,
+        "nearestNeighbourM": 6.954636401868489,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72222435474396,
+          2.9828827525894788
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 140,
+        "heightM": 14,
+        "smoothedHeightM": 14,
+        "wgs84": [
+          101.72222435474396,
+          2.9828827525894788
+        ],
+        "epsg3857": [
+          11323666.217529228,
+          332203.0880630612
+        ],
+        "nativeRow": 127,
+        "nativeCol": 162,
+        "nearestNeighbourM": 24.588353880592773,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72166645526885,
+          2.982861323989602
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 141,
+        "heightM": 9,
+        "smoothedHeightM": 8.88888888888889,
+        "wgs84": [
+          101.72166645526885,
+          2.982861323989602
+        ],
+        "epsg3857": [
+          11323604.112443745,
+          332200.69940592727
+        ],
+        "nativeRow": 129,
+        "nativeCol": 110,
+        "nearestNeighbourM": 7.543363138465791,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72150552272797,
+          2.9828398953893185
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 142,
+        "heightM": 9,
+        "smoothedHeightM": 8.666666666666666,
+        "wgs84": [
+          101.72150552272797,
+          2.9828398953893185
+        ],
+        "epsg3857": [
+          11323586.197515242,
+          332198.31074879336
+        ],
+        "nativeRow": 131,
+        "nativeCol": 95,
+        "nearestNeighbourM": 10.734394033678026,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72160208225249,
+          2.9828398953893185
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 143,
+        "heightM": 11,
+        "smoothedHeightM": 10.555555555555555,
+        "wgs84": [
+          101.72160208225249,
+          2.9828398953893185
+        ],
+        "epsg3857": [
+          11323596.946472343,
+          332198.31074879336
+        ],
+        "nativeRow": 131,
+        "nativeCol": 104,
+        "nearestNeighbourM": 7.543363138465791,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72122657299039,
+          2.9828184667886024
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 144,
+        "heightM": 7,
+        "smoothedHeightM": 6.888888888888889,
+        "wgs84": [
+          101.72122657299039,
+          2.9828184667886024
+        ],
+        "epsg3857": [
+          11323555.1449725,
+          332195.92209165945
+        ],
+        "nativeRow": 133,
+        "nativeCol": 69,
+        "nearestNeighbourM": 10.734394244731108,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72132313251495,
+          2.9828184667886024
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 145,
+        "heightM": 7,
+        "smoothedHeightM": 6.333333333333333,
+        "wgs84": [
+          101.72132313251495,
+          2.9828184667886024
+        ],
+        "epsg3857": [
+          11323565.893929603,
+          332195.92209165945
+        ],
+        "nativeRow": 133,
+        "nativeCol": 78,
+        "nearestNeighbourM": 10.734394244731108,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72183811664581,
+          2.9827541809839477
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 146,
+        "heightM": 8,
+        "smoothedHeightM": 7.444444444444445,
+        "wgs84": [
+          101.72183811664581,
+          2.9827541809839477
+        ],
+        "epsg3857": [
+          11323623.221700817,
+          332188.7561202577
+        ],
+        "nativeRow": 139,
+        "nativeCol": 126,
+        "nearestNeighbourM": 10.996248342448286,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72091543674468,
+          2.9827113237787617
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 147,
+        "heightM": 12,
+        "smoothedHeightM": 11.777777777777779,
+        "wgs84": [
+          101.72091543674468,
+          2.9827113237787617
+        ],
+        "epsg3857": [
+          11323520.509444058,
+          332183.9788059899
+        ],
+        "nativeRow": 143,
+        "nativeCol": 40,
+        "nearestNeighbourM": 10.800453782102378,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72105491161345,
+          2.9827113237787617
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 148,
+        "heightM": 11,
+        "smoothedHeightM": 10.666666666666666,
+        "wgs84": [
+          101.72105491161345,
+          2.9827113237787617
+        ],
+        "epsg3857": [
+          11323536.03571543,
+          332183.9788059899
+        ],
+        "nativeRow": 143,
+        "nativeCol": 53,
+        "nearestNeighbourM": 8.433737651867158,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72081887722014,
+          2.9827006094772077
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 149,
+        "heightM": 14,
+        "smoothedHeightM": 13.88888888888889,
+        "wgs84": [
+          101.72081887722014,
+          2.9827006094772077
+        ],
+        "epsg3857": [
+          11323509.760486957,
+          332182.78447742295
+        ],
+        "nativeRow": 144,
+        "nativeCol": 31,
+        "nearestNeighbourM": 10.800453782102378,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72118365764615,
+          2.9826684665719094
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 150,
+        "heightM": 5,
+        "smoothedHeightM": 4.444444444444445,
+        "wgs84": [
+          101.72118365764615,
+          2.9826684665719094
+        ],
+        "epsg3857": [
+          11323550.367658231,
+          332179.2014917221
+        ],
+        "nativeRow": 147,
+        "nativeCol": 65,
+        "nearestNeighbourM": 8.433737814572895,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72160208225249,
+          2.9826684665719094
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 151,
+        "heightM": 8,
+        "smoothedHeightM": 8,
+        "wgs84": [
+          101.72160208225249,
+          2.9826684665719094
+        ],
+        "epsg3857": [
+          11323596.946472343,
+          332179.2014917221
+        ],
+        "nativeRow": 147,
+        "nativeCol": 104,
+        "nearestNeighbourM": 6.954638434847731,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72192394733428,
+          2.9826684665719094
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 152,
+        "heightM": 8,
+        "smoothedHeightM": 7,
+        "wgs84": [
+          101.72192394733428,
+          2.9826684665719094
+        ],
+        "epsg3857": [
+          11323632.776329352,
+          332179.2014917221
+        ],
+        "nativeRow": 147,
+        "nativeCol": 134,
+        "nearestNeighbourM": 7.254975589538083,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72110855579375,
+          2.982657752269923
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 153,
+        "heightM": 12,
+        "smoothedHeightM": 11.666666666666666,
+        "wgs84": [
+          101.72110855579375,
+          2.982657752269923
+        ],
+        "epsg3857": [
+          11323542.007358264,
+          332178.0071631551
+        ],
+        "nativeRow": 148,
+        "nativeCol": 58,
+        "nearestNeighbourM": 8.433737651867158,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72166645526885,
+          2.982657752269923
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 154,
+        "heightM": 9,
+        "smoothedHeightM": 9,
+        "wgs84": [
+          101.72166645526885,
+          2.982657752269923
+        ],
+        "epsg3857": [
+          11323604.112443745,
+          332178.0071631551
+        ],
+        "nativeRow": 148,
+        "nativeCol": 110,
+        "nearestNeighbourM": 7.254975591372898,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72185957431793,
+          2.982657752269923
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 155,
+        "heightM": 6,
+        "smoothedHeightM": 5.666666666666667,
+        "wgs84": [
+          101.72185957431793,
+          2.982657752269923
+        ],
+        "epsg3857": [
+          11323625.610357951,
+          332178.0071631551
+        ],
+        "nativeRow": 148,
+        "nativeCol": 128,
+        "nearestNeighbourM": 7.156264084583688,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72175228595732,
+          2.9826470379678476
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 156,
+        "heightM": 10,
+        "smoothedHeightM": 9.666666666666666,
+        "wgs84": [
+          101.72175228595732,
+          2.9826470379678476
+        ],
+        "epsg3857": [
+          11323613.667072281,
+          332176.81283458817
+        ],
+        "nativeRow": 149,
+        "nativeCol": 118,
+        "nearestNeighbourM": 9.61594069369987,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72154843807218,
+          2.98263632366567
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 157,
+        "heightM": 9,
+        "smoothedHeightM": 9,
+        "wgs84": [
+          101.72154843807218,
+          2.98263632366567
+        ],
+        "epsg3857": [
+          11323590.974829508,
+          332175.6185060212
+        ],
+        "nativeRow": 150,
+        "nativeCol": 99,
+        "nearestNeighbourM": 6.954638434847731,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72185957431793,
+          2.9825934664558917
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 158,
+        "heightM": 6,
+        "smoothedHeightM": 5.666666666666667,
+        "wgs84": [
+          101.72185957431793,
+          2.9825934664558917
+        ],
+        "epsg3857": [
+          11323625.610357951,
+          332170.8411917534
+        ],
+        "nativeRow": 154,
+        "nativeCol": 128,
+        "nearestNeighbourM": 7.156264084583688,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72108709812163,
+          2.9825720378503666
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 159,
+        "heightM": 11,
+        "smoothedHeightM": 10.222222222222221,
+        "wgs84": [
+          101.72108709812163,
+          2.9825720378503666
+        ],
+        "epsg3857": [
+          11323539.61870113,
+          332168.4525346195
+        ],
+        "nativeRow": 156,
+        "nativeCol": 56,
+        "nearestNeighbourM": 9.835344331040588,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72146260738373,
+          2.9825506092444343
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 160,
+        "heightM": 9,
+        "smoothedHeightM": 8.555555555555555,
+        "wgs84": [
+          101.72146260738373,
+          2.9825506092444343
+        ],
+        "epsg3857": [
+          11323581.420200974,
+          332166.0638774856
+        ],
+        "nativeRow": 158,
+        "nativeCol": 91,
+        "nearestNeighbourM": 11.92710820213111,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.7217308282852,
+          2.9825506092444343
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 161,
+        "heightM": 13,
+        "smoothedHeightM": 12.11111111111111,
+        "wgs84": [
+          101.7217308282852,
+          2.9825506092444343
+        ],
+        "epsg3857": [
+          11323611.278415147,
+          332166.0638774856
+        ],
+        "nativeRow": 158,
+        "nativeCol": 116,
+        "nearestNeighbourM": 10.996249413864904,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72162353992461,
+          2.982529180638082
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 162,
+        "heightM": 13,
+        "smoothedHeightM": 12.777777777777779,
+        "wgs84": [
+          101.72162353992461,
+          2.982529180638082
+        ],
+        "epsg3857": [
+          11323599.335129477,
+          332163.67522035167
+        ],
+        "nativeRow": 160,
+        "nativeCol": 106,
+        "nearestNeighbourM": 11.807234783350681,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72125875949858,
+          2.9825077520313097
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 163,
+        "heightM": 6,
+        "smoothedHeightM": 5.888888888888889,
+        "wgs84": [
+          101.72125875949858,
+          2.9825077520313097
+        ],
+        "epsg3857": [
+          11323558.7279582,
+          332161.28656321776
+        ],
+        "nativeRow": 162,
+        "nativeCol": 72,
+        "nearestNeighbourM": 7.254976828054634,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72187030315399,
+          2.9824863234241303
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 164,
+        "heightM": 9,
+        "smoothedHeightM": 8.333333333333334,
+        "wgs84": [
+          101.72187030315399,
+          2.9824863234241303
+        ],
+        "epsg3857": [
+          11323626.804686518,
+          332158.89790608385
+        ],
+        "nativeRow": 164,
+        "nativeCol": 129,
+        "nearestNeighbourM": 10.667930196550465,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72154843807218,
+          2.9824541805125606
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 165,
+        "heightM": 9,
+        "smoothedHeightM": 8.666666666666666,
+        "wgs84": [
+          101.72154843807218,
+          2.9824541805125606
+        ],
+        "epsg3857": [
+          11323590.974829508,
+          332155.314920383
+        ],
+        "nativeRow": 167,
+        "nativeCol": 99,
+        "nearestNeighbourM": 9.61594247195422,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72110855579375,
+          2.9824434662085
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 166,
+        "heightM": 12,
+        "smoothedHeightM": 11.5,
+        "wgs84": [
+          101.72110855579375,
+          2.9824434662085
+        ],
+        "epsg3857": [
+          11323542.007358264,
+          332154.120591816
+        ],
+        "nativeRow": 168,
+        "nativeCol": 58,
+        "nearestNeighbourM": 14.509953231993219,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72126948833464,
+          2.9824434662085
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 167,
+        "heightM": 5,
+        "smoothedHeightM": 4.166666666666667,
+        "wgs84": [
+          101.72126948833464,
+          2.9824434662085
+        ],
+        "epsg3857": [
+          11323559.922286768,
+          332154.120591816
+        ],
+        "nativeRow": 168,
+        "nativeCol": 73,
+        "nearestNeighbourM": 7.254976828054634,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72146260738373,
+          2.9824434662085
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 168,
+        "heightM": 8,
+        "smoothedHeightM": 7.5,
+        "wgs84": [
+          101.72146260738373,
+          2.9824434662085
+        ],
+        "epsg3857": [
+          11323581.420200974,
+          332154.120591816
+        ],
+        "nativeRow": 168,
+        "nativeCol": 91,
+        "nearestNeighbourM": 9.61594247195422,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72177374362944,
+          2.9824434662085
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 169,
+        "heightM": 7,
+        "smoothedHeightM": 6.166666666666667,
+        "wgs84": [
+          101.72177374362944,
+          2.9824434662085
+        ],
+        "epsg3857": [
+          11323616.055729415,
+          332154.120591816
+        ],
+        "nativeRow": 168,
+        "nativeCol": 120,
+        "nearestNeighbourM": 11.746839610770246,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101.72195613384247,
+          2.9824434662085
+        ]
+      },
+      "properties": {
+        "kind": "candidate crown peak",
+        "id": 170,
+        "heightM": 5,
+        "smoothedHeightM": 3.1666666666666665,
+        "wgs84": [
+          101.72195613384247,
+          2.9824434662085
+        ],
+        "epsg3857": [
+          11323636.359315053,
+          332154.120591816
+        ],
+        "nativeRow": 168,
+        "nativeCol": 137,
+        "nearestNeighbourM": 10.667930196550465,
+        "sourceId": "75a5030819ff3d6bf45a5ba7e2888a13fcebb69ae286f81581686c3749b88cec",
+        "sourceDate": "2019-10-23",
+        "detector": {
+          "version": "openpalm-tree-peaks-v1",
+          "minHeightM": 5,
+          "minDistanceM": 6,
+          "smoothing": "mean3x3",
+          "exclusionMinHeightM": 15,
+          "exclusionMinAreaM2": 100
+        }
+      }
+    }
+  ]
+}
