@@ -20,6 +20,7 @@ export interface Message {
   replay?: boolean;
   model?: string;
   requestId?: string;
+  agent?: import("../geo/mapAgent").AgentChatMeta;
   sample?: true;
 }
 
@@ -108,11 +109,26 @@ export interface Item {
   sample?: true;
 }
 
+export interface SavedMap {
+  id: string;
+  name: string;
+  center: [number, number];
+  zoom: number;
+  basemap: "esri" | "google";
+  /** Saved study-area outline and default SAM input. */
+  boundary?: import("geojson").Polygon;
+  /** Selected SAM region; may be smaller than the study area. */
+  area?: import("geojson").Polygon;
+}
+
 export interface LabState {
   schemaVersion: number;
   sessions: Session[];
   batches: Batch[];
   items: Item[];
+  /** Optional so exports made before saved maps remain readable. */
+  maps?: SavedMap[];
+  activeMapId?: string;
 }
 
 export const emptyState = (): LabState => ({

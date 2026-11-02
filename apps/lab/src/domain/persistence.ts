@@ -1,4 +1,5 @@
 import { itemErrors } from "./validate";
+import { savedMapError } from "./maps";
 import { emptyState, SCHEMA_VERSION, type LabState } from "./types";
 
 export const STORAGE_KEY = "lab.state";
@@ -25,6 +26,19 @@ export function parseState(raw: unknown): ParseResult {
     return { ok: false, errors: ["sessions, batches and items must all be arrays."] };
   const state = raw as unknown as LabState;
   const errors: string[] = [];
+  if (state.maps !== undefined) {
+    if (!Array.isArray(state.maps)) errors.push("maps must be an array.");
+    else {
+      const mapIds = new Set<string>();
+      for (const map of state.maps) {
+        const error = savedMapError(map);
+        if (error) errors.push(error);
+        else if (mapIds.has(map.id)) errors.push(`Duplicate map id ${map.id}.`);
+        else mapIds.add(map.id);
+      }
+    }
+  }
+  if (state.activeMapId !== undefined && (typeof state.activeMapId !== "string" || (state.activeMapId !== "upm" && (!Array.isArray(state.maps) || !state.maps.some((map) => map?.id === state.activeMapId))))) errors.push("The active map is missing.");
   const batchIds = new Set(state.batches.map((b) => b?.id));
   const ids = new Set<string>();
   for (const i of state.items) {
@@ -39,7 +53,7 @@ export function parseState(raw: unknown): ParseResult {
   }
   if (state.sessions.filter((s) => s?.endedAt === undefined).length > 1) errors.push("More than one session is open.");
   if (errors.length) return { ok: false, errors };
-  return { ok: true, state: { schemaVersion: SCHEMA_VERSION, sessions: state.sessions, batches: state.batches, items: state.items } };
+  return { ok: true, state: { schemaVersion: SCHEMA_VERSION, sessions: state.sessions, batches: state.batches, items: state.items, ...(state.maps !== undefined ? { maps: state.maps } : {}), ...(state.activeMapId !== undefined ? { activeMapId: state.activeMapId } : {}) } };
 }
 
 export function exportJson(state: LabState, now: string = new Date().toISOString()): string {

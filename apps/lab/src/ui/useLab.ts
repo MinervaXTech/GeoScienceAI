@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { loadState, saveState } from "../domain/persistence";
+import { withDefaultMapAreas } from "../domain/maps";
 import type { LabState } from "../domain/types";
 
 export interface Notice {
@@ -13,10 +14,10 @@ export interface Notice {
  * saved state that failed to load is not overwritten until the user acts.
  */
 export function useLab() {
-  const initial = useRef(loadState());
-  const [state, setState] = useState<LabState>(initial.current.state);
+  const [initial] = useState(() => { const saved = loadState(); return { ...saved, state: withDefaultMapAreas({ ...saved.state, sessions: saved.state.sessions.map(session => ({ ...session, messages: session.messages.map(message => message.agent?.status === "running" ? { ...message, text: message.text || "Interrupted by page reload. Completed changes are retained; no automatic retry was sent.", agent: { ...message.agent, status: "cancelled" as const, steps: message.agent.steps.map(step => step.status === "running" ? { ...step, status: "error" as const, result: { error: "Interrupted by page reload." } } : step) } } : message) })) }) }; });
+  const [state, setState] = useState<LabState>(initial.state);
   const [notice, setNotice] = useState<Notice | null>(
-    initial.current.warning ? { kind: "error", text: initial.current.warning } : null,
+    initial.warning ? { kind: "error", text: initial.warning } : null,
   );
   const ref = useRef(state);
   const touched = useRef(false);

@@ -10,6 +10,8 @@ import { RoadmapCard } from "./RoadmapCard";
 
 afterEach(cleanup);
 
+const agent = { configured: true, model: "muse-spark-1.3" as const, setModel() {}, phase: "", busy: false, async send() {}, cancel() {} };
+
 describe("roadmap", () => {
   it("has no link, input, button or select, so it cannot be activated", () => {
     const { container } = render(<RoadmapCard />);
@@ -42,7 +44,7 @@ describe("chat on a read-only session", () => {
   const props = { state, sessionId: "sample-session-3", onSelect() {}, onNewSession() {}, onMode() {}, onSend() {}, onSave() {} };
 
   it("shows no composer, shows verdict chips only for validated messages, and offers Save to notes", () => {
-    render(<ChatPanel {...props} />);
+    render(<ChatPanel agent={agent} {...props} />);
     expect(screen.queryByLabelText("Message")).toBeNull();
     expect(screen.getByText("Read-only session")).toBeTruthy();
     expect(screen.getAllByText(/validator verdict/i)).toHaveLength(4);
@@ -53,7 +55,7 @@ describe("chat on a read-only session", () => {
 
   it("saves from the chooser with the chosen batch and type", () => {
     const calls: unknown[] = [];
-    render(<ChatPanel {...props} onSave={(i) => calls.push(i)} />);
+    render(<ChatPanel agent={agent} {...props} onSave={(i) => calls.push(i)} />);
     fireEvent.click(screen.getAllByRole("button", { name: "Save to notes" })[0]!);
     const form = screen.getByText("Batch").closest("form")!;
     fireEvent.change(within(form).getByLabelText("Type"), { target: { value: "finding" } });
@@ -84,7 +86,7 @@ describe("two axes in the table", () => {
   it("shows Not run and no chip for an unvalidated model message", () => {
     const state = loadSampleData(emptyState());
     const s = { ...state, sessions: state.sessions.map((x) => (x.id === "sample-session-1" ? { ...x, messages: [{ ...x.messages[1]!, id: "m-x", validation: undefined }] } : x)) };
-    const { container } = render(<ChatPanel state={s} sessionId="sample-session-1" onSelect={() => {}} onNewSession={() => {}} onMode={() => {}} onSend={() => {}} onSave={() => {}} />);
+    const { container } = render(<ChatPanel agent={agent} state={s} sessionId="sample-session-1" onSelect={() => {}} onNewSession={() => {}} onMode={() => {}} onSend={() => {}} onSave={() => {}} />);
     expect(container.textContent).toContain("Citation check: Not run");
     expect(container.querySelector(".verdict")).toBeNull();
   });

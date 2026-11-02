@@ -12,15 +12,24 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@meta-sam/parser": "^0.1.0",
+    "d3-contour": "^4.0.2",
+    "geotiff": "^3.0.5",
     "maplibre-gl": "^6.16.0",
+    "pngjs": "^7.0.0",
+    "polygon-clipping": "^0.15.7",
     "proj4": "^2.22.0",
     "react": "^19.3.1",
-    "react-dom": "^19.3.1"
+    "react-dom": "^19.3.1",
+    "react-markdown": "^10.1.0",
+    "remark-gfm": "^4.0.1"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.5",
     "@testing-library/react": "^16.3.3",
+    "@types/d3-contour": "^3.0.6",
     "@types/node": "^26.6.6",
+    "@types/pngjs": "^6.0.5",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "@vitejs/plugin-react": "^6.1.2",
