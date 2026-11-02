@@ -268,7 +268,7 @@ td.pending { color: var(--red); font-weight: 700; }
 .chat-log .empty { padding: 16px; }
 .msg { padding: 12px 16px; border-bottom: 1px solid var(--line); display: grid; gap: 4px; }
 .msg.model { background: var(--panel); }
-.msg header { display: flex; align-items: center; gap: 8px; }
+.msg header { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 .msg p { white-space: pre-wrap; }
 .chat-markdown { min-width: 0; line-height: 1.5; overflow-wrap: anywhere; }
 .chat-markdown > * + * { margin-top: 10px; }
@@ -581,3 +581,17 @@ table.items td, table.items tbody th { font-size: 12px; }
   .map-frame > .satellite-map { flex: 1; min-height: 0; }
   .map-frame > .google-attribution, .map-frame > .map-status, .map-frame > .sam-draw-tools { flex: none; }
 }
+
+.session-actions { display: grid; gap: 8px; }
+.session-action-buttons { display: flex; flex-wrap: wrap; gap: 6px; }
+.session-rename, .session-delete { display: grid; gap: 8px; padding: 10px; border: 1px solid var(--line); background: var(--panel); font-size: 12px; overflow-wrap: anywhere; }
+.session-rename label { display: block; }
+.session-rename input { width: 100%; min-width: 0; padding: 6px 8px; border: 1px solid var(--ink); }
+
+.muse-model-guide { margin: 0; padding-left: 18px; }
+.muse-model-guide li + li { margin-top: 2px; }
+.message-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; }
+.message-edit { display: grid; gap: 8px; margin-top: 4px; }
+.message-edit label { font-size: 12px; font-weight: 700; }
+.message-edit textarea, .message-copy-fallback textarea { width: 100%; min-height: 80px; max-height: 240px; resize: vertical; padding: 8px; border: 1px solid var(--ink); background: #fff; }
+.message-copy-fallback { flex-basis: 100%; display: grid; gap: 6px; }

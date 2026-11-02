@@ -3,7 +3,7 @@ import { costReadout } from "../domain/config";
 import { exportJson, importJson } from "../domain/persistence";
 import { noFilters, type Filters, type Sort } from "../domain/query";
 import { hasSampleData, loadSampleData } from "../domain/sample";
-import { addBatch, currentSession, newSession, registerSnapshot, saveMessageToNotes, sendMessage, setReview, setSessionMode } from "../domain/store";
+import { addBatch, currentSession, deleteSession, editMessage, newSession, renameSession, registerSnapshot, saveMessageToNotes, sendMessage, setReview, setSessionMode } from "../domain/store";
 import { emptyState, type SavedMap } from "../domain/types";
 import type { Polygon } from "geojson";
 import { UPM_MAP } from "../geo/maps";
@@ -333,7 +333,15 @@ export function App() {
             const out = run((s) => newSession(s, currentSession(s)?.mode ?? "take-notes"));
             if (out) setViewSession(out.session.id);
           }}
+          onRenameSession={(id, title) => { if (!chat.busy) apply(s => renameSession(s, id, title)); }}
+          onDeleteSession={(id) => {
+            if (chat.busy) return;
+            apply(s => deleteSession(s, id));
+            setViewSession(undefined);
+            setNotice({ kind: "info", text: "Session deleted. Notes already saved have been kept." });
+          }}
           onMode={(id, mode) => apply((s) => setSessionMode(s, id, mode))}
+          onEditMessage={(id, messageId, text) => { if (!chat.busy) apply(s => editMessage(s, id, messageId, text)); }}
           onSend={(id, text, useAgent) => { const session = state.sessions.find(s => s.id === id); if (!session || session.endedAt || chat.busy) return; apply(s => sendMessage(s, id, text)); if (useAgent) void chat.send(session, text); }}
           onSave={(input) => {
             const out = run((s) => saveMessageToNotes(s, input));

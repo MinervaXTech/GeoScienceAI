@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { exportJson, importJson, loadState, parseState, saveState, STORAGE_KEY, type StorageLike } from "./persistence";
-import { SESSION_IMPORT, currentSession, newSession, saveMessageToNotes, sendMessage, setSessionMode, isReadOnly, savedTo, SAVE_TYPES } from "./store";
+import { SESSION_IMPORT, currentSession, deleteSession, editMessage, newSession, renameSession, saveMessageToNotes, sendMessage, setSessionMode, isReadOnly, savedTo, SAVE_TYPES } from "./store";
 import { loadSampleData } from "./sample";
 import { statusOf } from "./query";
 import { emptyState } from "./types";
@@ -138,5 +138,62 @@ describe("sessions and save to notes", () => {
     const out = sendMessage(s.state, s.session.id, "  hello  ");
     expect(out.sessions[0]!.messages).toEqual([expect.objectContaining({ role: "researcher", text: "hello" })]);
     expect(sendMessage(out, s.session.id, "   ")).toBe(out);
+  });
+});
+
+
+describe("session management", () => {
+  it("renames ended sessions and their default import batch while preserving messages and custom batches", () => {
+    const first = newSession(emptyState());
+    let state = sendMessage(first.state, first.session.id, "Keep this note");
+    const message = state.sessions[0]!.messages[0]!;
+    state = saveMessageToNotes(state, { sessionId: first.session.id, messageId: message.id, batchId: SESSION_IMPORT, type: "note" }).state;
+    state = newSession(state).state;
+    const renamed = renameSession(state, first.session.id, "  Palm survey  ");
+    expect(renamed.sessions[0]).toMatchObject({ title: "Palm survey", endedAt: expect.any(String), messages: [message] });
+    expect(renamed.batches[0]!.name).toBe("Palm survey import");
+    const custom = { ...state, batches: state.batches.map(b => ({ ...b, name: "My notes" })) };
+    expect(renameSession(custom, first.session.id, "Survey").batches[0]!.name).toBe("My notes");
+    expect(renameSession(state, first.session.id, "   ")).toBe(state);
+    expect(importJson(exportJson(renamed))).toEqual({ ok: true, state: renamed });
+  });
+
+  it("deletes only the selected session, retains saved notes and leaves ended sessions closed", () => {
+    const first = newSession(emptyState());
+    let state = sendMessage(first.state, first.session.id, "Saved independently");
+    const message = state.sessions[0]!.messages[0]!;
+    state = saveMessageToNotes(state, { sessionId: first.session.id, messageId: message.id, batchId: SESSION_IMPORT, type: "note" }).state;
+    const second = newSession(state);
+    const removed = deleteSession(second.state, first.session.id);
+    expect(removed.sessions.map(s => s.id)).toEqual([second.session.id]);
+    expect(removed.items).toEqual(second.state.items);
+    expect(removed.batches).toEqual(second.state.batches);
+    expect(importJson(exportJson(removed))).toEqual({ ok: true, state: removed });
+    expect(currentSession(deleteSession(second.state, second.session.id))).toBeUndefined();
+    expect(deleteSession(removed, second.session.id).sessions).toEqual([]);
+    expect(deleteSession(removed, "missing")).toBe(removed);
+    expect(newSession(removed).session.title).toBe("Session 3");
+  });
+});
+
+
+describe("message editing", () => {
+  it("persists edits to a current researcher message while retaining replies and saved notes", () => {
+    const created = newSession(emptyState());
+    let state = sendMessage(created.state, created.session.id, "Original question");
+    const message = state.sessions[0]!.messages[0]!;
+    state = saveMessageToNotes(state, { sessionId: created.session.id, messageId: message.id, batchId: SESSION_IMPORT, type: "note" }).state;
+    const reply = { id: "reply", role: "model" as const, text: "Original reply", createdAt: message.createdAt };
+    state = { ...state, sessions: state.sessions.map(s => ({ ...s, messages: [...s.messages, reply] })) };
+    const edited = editMessage(state, created.session.id, message.id, "  Revised question  ");
+    expect(edited.sessions[0]!.messages[0]).toMatchObject({ id: message.id, text: "Revised question", editedAt: expect.any(String), createdAt: message.createdAt });
+    expect(edited.sessions[0]!.messages[1]).toBe(reply);
+    expect(edited.items).toBe(state.items);
+    expect(edited.items[0]!.body).toBe("Original question");
+    expect(importJson(exportJson(edited))).toEqual({ ok: true, state: edited });
+    expect(editMessage(state, created.session.id, reply.id, "Changed AI reply")).toBe(state);
+    expect(editMessage(state, created.session.id, message.id, "   ")).toBe(state);
+    const ended = newSession(state).state;
+    expect(editMessage(ended, created.session.id, message.id, "Changed old chat")).toBe(ended);
   });
 });

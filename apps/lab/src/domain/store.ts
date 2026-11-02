@@ -57,7 +57,7 @@ export function addBatch(state: LabState, input: Pick<Batch, "name" | "kind" | "
 export const currentSession = (state: LabState): Session | undefined => state.sessions.find((s) => s.endedAt === undefined);
 export const isReadOnly = (s: Session): boolean => s.endedAt !== undefined;
 
-const sessionNumber = (state: LabState) => state.sessions.length + 1;
+const sessionNumber = (state: LabState) => Math.max(0, ...state.sessions.map(s => Number(/^Session (\d+)$/.exec(s.title)?.[1]) || 0)) + 1;
 
 /** Ends the open session, if any, and starts a new thread. */
 export function newSession(state: LabState, mode: Mode = "take-notes", clock: Clock = systemClock): { state: LabState; session: Session } {
@@ -74,6 +74,24 @@ export function setSessionMode(state: LabState, sessionId: string, mode: Mode): 
   return { ...state, sessions: state.sessions.map((x) => (x.id === sessionId ? { ...x, mode } : x)) };
 }
 
+/** Titles can be edited even after a session has ended. */
+export function renameSession(state: LabState, sessionId: string, title: string): LabState {
+  const name = title.trim();
+  const session = state.sessions.find(s => s.id === sessionId);
+  if (!session || !name || name === session.title) return state;
+  return {
+    ...state,
+    sessions: state.sessions.map(s => s.id === sessionId ? { ...s, title: name } : s),
+    batches: state.batches.map(b => b.kind === "session" && b.source === sessionId && b.name === sessionImportName(session) ? { ...b, name: `${name} import` } : b),
+  };
+}
+
+/** Saved notes and their source identifiers survive deletion of the chat. */
+export function deleteSession(state: LabState, sessionId: string): LabState {
+  if (!state.sessions.some(s => s.id === sessionId)) return state;
+  return { ...state, sessions: state.sessions.filter(s => s.id !== sessionId) };
+}
+
 /** Sending adds the researcher's message only. No model call is made in this phase. */
 export function sendMessage(state: LabState, sessionId: string, text: string, clock: Clock = systemClock): LabState {
   const body = text.trim();
@@ -81,6 +99,15 @@ export function sendMessage(state: LabState, sessionId: string, text: string, cl
   if (!body || !s || isReadOnly(s)) return state;
   const message: Message = { id: clock.id("msg"), role: "researcher", text: body, createdAt: clock.now() };
   return { ...state, sessions: state.sessions.map((x) => (x.id === sessionId ? { ...x, messages: [...x.messages, message] } : x)) };
+}
+
+/** Edits a researcher's text without rerunning tools or changing saved notes. */
+export function editMessage(state: LabState, sessionId: string, messageId: string, text: string, clock: Clock = systemClock): LabState {
+  const body = text.trim();
+  const session = state.sessions.find(s => s.id === sessionId);
+  const message = session?.messages.find(m => m.id === messageId);
+  if (!body || !session || isReadOnly(session) || message?.role !== "researcher" || message.text === body) return state;
+  return { ...state, sessions: state.sessions.map(s => s.id === sessionId ? { ...s, messages: s.messages.map(m => m.id === messageId ? { ...m, text: body, editedAt: clock.now() } : m) } : s) };
 }
 
 export const sessionImportName = (s: Session) => `${s.title} import`;

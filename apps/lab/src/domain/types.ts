@@ -14,6 +14,7 @@ export interface Message {
   role: "researcher" | "model";
   text: string;
   createdAt: string;
+  editedAt?: string;
   /** Present only when a validator ran on this message. Absent means no verdict chip. */
   validation?: { citationCheck: "pass" | "fail" };
   /** The model reply came from a saved replay, not a live call. */

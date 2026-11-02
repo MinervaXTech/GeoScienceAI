@@ -52,3 +52,35 @@ it("does not execute a duplicate paid operation in the same message", async () =
   expect(execute).toHaveBeenCalledTimes(1);
   expect(messages.at(-1)?.agent?.steps.map(step => step.status)).toEqual(["completed", "error"]);
 });
+
+
+it("Auto selects Wonder for analysis and keeps the same concrete model across actions and review", async () => {
+  const calls: { model: string }[] = [], messages: Message[] = [];
+  const execute = vi.fn().mockResolvedValue({ done: true });
+  vi.stubGlobal("fetch", vi.fn(async (url: string, init?: RequestInit) => {
+    if (url.endsWith("/status")) return Response.json({ configured: true });
+    calls.push(JSON.parse(init!.body as string));
+    return Response.json(calls.length === 1 ? { model: "muse-wonder-1.0", call: { id: "1", action: "compare_routes", parameters: {} } } : { model: "muse-wonder-1.0", text: "Routes compared." });
+  }));
+  const { result } = renderHook(() => useMapChat({ context: () => ({ mapId: "map" }), execute, cancel() {} }, (_id, message) => messages.push(message)));
+  expect(result.current.modelChoice).toBe("auto");
+  await act(() => result.current.send(session, "Compare planning routes"));
+  expect(calls.map(c => c.model)).toEqual(["muse-wonder-1.0", "muse-wonder-1.0"]);
+  expect(execute.mock.calls[0]![2]).toBe("muse-wonder-1.0");
+  expect(result.current.model).toBe("muse-wonder-1.0");
+  expect(messages.at(-1)).toMatchObject({ model: "muse-wonder-1.0", agent: { modelSelection: "auto", status: "completed" } });
+  act(() => result.current.setModel("muse-spark-1.3"));
+  act(() => result.current.setModel("auto"));
+  expect(localStorage.getItem("lab.muse.chatModel")).toBe("auto");
+});
+
+it("restores a manual model choice and rejects a mismatched response before executing any action", async () => {
+  localStorage.setItem("lab.muse.chatModel", "muse-spark-1.2");
+  const messages: Message[] = [], execute = vi.fn();
+  vi.stubGlobal("fetch", vi.fn(async (url: string) => url.endsWith("/status") ? Response.json({ configured: true }) : Response.json({ model: "muse-wonder-1.0", call: { id: "1", action: "fit_area", parameters: {} } })));
+  const { result } = renderHook(() => useMapChat({ context: () => ({ mapId: "map" }), execute, cancel() {} }, (_id, message) => messages.push(message)));
+  expect(result.current.modelChoice).toBe("muse-spark-1.2");
+  await act(() => result.current.send(session, "Analyze this area"));
+  expect(execute).not.toHaveBeenCalled();
+  expect(messages.at(-1)).toMatchObject({ agent: { model: "muse-spark-1.2", status: "error" } });
+});

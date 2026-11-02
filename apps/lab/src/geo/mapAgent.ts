@@ -2,6 +2,18 @@
 export const AGENT_MODELS = ["muse-spark-1.3", "muse-spark-1.2", "muse-spark-1.1", "muse-wonder-1.0"] as const;
 export type AgentModel = typeof AGENT_MODELS[number];
 export const isAgentModel = (value: unknown): value is AgentModel => AGENT_MODELS.includes(value as AgentModel);
+export type AgentModelChoice = AgentModel | "auto";
+export const isAgentModelChoice = (value: unknown): value is AgentModelChoice => value === "auto" || isAgentModel(value);
+export const agentModelLabel = (model: AgentModel) => model.replace("muse-spark-", "Muse Spark ").replace("muse-wonder-", "Muse Wonder ");
+
+/** Local routing policy: no extra model call, and one concrete model per turn. */
+export function resolveAgentModel(choice: AgentModelChoice, text: string, previous?: AgentModel): AgentModel {
+  if (choice !== "auto") return choice;
+  const prompt = text.trim();
+  if (/\b(analy[sz]\w*|inspect\w*|compar\w*|detect\w*|diagnos\w*|reason\w*|optimi[sz]\w*|recommend\w*|trade[ -]?offs?|step[ -]by[ -]step)\b/i.test(prompt) || /\b(and then|after that|followed by)\b/i.test(prompt) || prompt.length > 500) return "muse-wonder-1.0";
+  if (/^(yes|ok(?:ay)?|go ahead|continue|proceed|do (?:it|that)|try again)[.!\s]*$/i.test(prompt) && previous) return previous;
+  return "muse-spark-1.3";
+}
 export const AGENT_ACTIONS = ["inspect_area", "open_tool", "open_sidebar", "set_basemap", "set_layer", "set_opacity", "fit_area", "polygon", "configure_planning", "generate_points", "load_matched_points", "edit_points", "undo_points", "compare_routes", "export_planning", "configure_sam", "run_sam", "use_sam_run", "configure_muse", "run_muse", "use_muse", "capture_crowns", "configure_crowns", "select_template", "use_template", "match_crowns", "detect_crowns", "apply_crown_constraints", "open_map", "add_map", "delete_map", "locate_map", "preview_earth_engine", "search_earth_engine", "cancel_operation"] as const;
 export type AgentAction = typeof AGENT_ACTIONS[number];
 export interface MapAgentCall { action: AgentAction; parameters: Record<string, unknown> }
@@ -36,4 +48,4 @@ const bool = (v: unknown) => typeof v === "boolean";
 const number = (min: number, max: number) => (v: unknown) => typeof v === "number" && Number.isFinite(v) && v >= min && v <= max;
 const string = (max: number) => (v: unknown) => typeof v === "string" && !!v.trim() && v.length <= max;
 export interface AgentTrace { action: AgentAction; parameters: Record<string, unknown>; status: "running" | "completed" | "error"; result?: unknown; at: string }
-export interface AgentChatMeta { model: AgentModel; mapId: string; status: "running" | "completed" | "error" | "cancelled"; steps: AgentTrace[]; requests: number; usage?: unknown }
+export interface AgentChatMeta { model: AgentModel; modelSelection?: AgentModelChoice; mapId: string; status: "running" | "completed" | "error" | "cancelled"; steps: AgentTrace[]; requests: number; usage?: unknown }

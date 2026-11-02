@@ -1,22 +1,27 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { AGENT_MODELS, isAgentModel, validateMapAgentCall, type AgentChatMeta, type AgentModel, type MapAgentCall, type MapAgentHandle } from "../geo/mapAgent";
+import { isAgentModelChoice, resolveAgentModel, validateMapAgentCall, type AgentChatMeta, type AgentModel, type AgentModelChoice, type MapAgentCall, type MapAgentHandle } from "../geo/mapAgent";
 import type { Message, Session } from "../domain/types";
 import type { MuseImage } from "../geo/muse";
 
 type Bridge = Pick<MapAgentHandle, "context" | "execute" | "cancel">;
 export function useMapChat(bridge: Bridge, update: (sessionId: string, message: Message) => void) {
-  const [model, setModelState] = useState<AgentModel>(() => { try { const saved = localStorage.getItem("lab.muse.chatModel"); return isAgentModel(saved) ? saved : AGENT_MODELS[0]; } catch { return AGENT_MODELS[0]; } });
+  const [modelChoice, setModelState] = useState<AgentModelChoice>(() => { try { const saved = localStorage.getItem("lab.muse.chatModel"); return isAgentModelChoice(saved) ? saved : "auto"; } catch { return "auto"; } });
+  const [autoModel, setAutoModel] = useState<AgentModel>("muse-spark-1.3");
+  const model = modelChoice === "auto" ? autoModel : modelChoice;
   const [configured, setConfigured] = useState(false), [phase, setPhase] = useState("");
   const pending = useRef<AbortController | null>(null);
   const latest = useRef({ bridge, update });
   useLayoutEffect(() => { latest.current = { bridge, update }; });
   useEffect(() => { const controller = new AbortController(); void fetch("/api/map-agent/status", { signal: controller.signal }).then(r => r.json()).then(d => { if (!controller.signal.aborted) setConfigured(d.configured === true); }).catch(() => {}); return () => { controller.abort(); pending.current?.abort(); }; }, []);
-  const setModel = (value: AgentModel) => { if (pending.current || !isAgentModel(value)) return; setModelState(value); try { localStorage.setItem("lab.muse.chatModel", value); } catch { /* session choice still works */ } };
+  const setModel = (value: AgentModelChoice) => { if (pending.current || !isAgentModelChoice(value)) return; setModelState(value); try { localStorage.setItem("lab.muse.chatModel", value); } catch { /* session choice still works */ } };
   const cancel = () => { pending.current?.abort(); latest.current.bridge.cancel(); };
   const send = async (session: Session, text: string) => {
     if (pending.current || session.endedAt || !text.trim()) return;
     const controller = new AbortController(); pending.current = controller;
-    const meta: AgentChatMeta = { model, mapId: String(latest.current.bridge.context().mapId ?? ""), status: "running", steps: [], requests: 0 };
+    const previousModel = session.messages.filter(m => m.agent).at(-1)?.agent?.model;
+    const model = resolveAgentModel(modelChoice, text, previousModel);
+    setAutoModel(model);
+    const meta: AgentChatMeta = { model, modelSelection: modelChoice, mapId: String(latest.current.bridge.context().mapId ?? ""), status: "running", steps: [], requests: 0 };
     const reply: Message = { id: `msg-${crypto.randomUUID()}`, role: "model", model, text: "", createdAt: new Date().toISOString(), agent: meta };
     const publish = () => latest.current.update(session.id, { ...reply, agent: { ...meta, steps: meta.steps.map(s => ({ ...s })) } });
     const history: unknown[] = [...session.messages.slice(-12).filter(m => m.text.trim() && m.agent?.status !== "running").map(m => ({ role: m.role === "researcher" ? "user" : "assistant", content: m.text.slice(0, 18000) })), { role: "user", content: text.trim() }];
@@ -65,6 +70,6 @@ export function useMapChat(bridge: Bridge, update: (sessionId: string, message: 
       reply.text = controller.signal.aborted ? "Stopped. Completed map changes are retained." : e instanceof Error ? e.message : "Muse chat failed."; publish();
     } finally { if (pending.current === controller) { pending.current = null; setPhase(""); } }
   };
-  return { model, setModel, configured, phase, busy: !!phase, send, cancel };
+  return { model, modelChoice, setModel, configured, phase, busy: !!phase, send, cancel };
 }
 export type MapChatController = ReturnType<typeof useMapChat>;
