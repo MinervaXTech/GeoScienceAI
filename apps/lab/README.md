@@ -2,6 +2,8 @@
 
 React + TypeScript app with local research data, Esri World Imagery by default, and optional Google satellite visualization. SAM 3.1 and Muse run only when requested. The chat sidebar can operate the selected map through validated tools.
 
+Use the **Snapshots** icon in the left sidebar to register, inspect and compare paper-unit snapshots. The panel stays available in Map, Notes and comparison views; its list scrolls within the sidebar.
+
 The chat sidebar defaults to **Muse agent**. Choose Auto or select Muse Spark 1.3, 1.2, 1.1 or Muse Wonder 1.0, then send a request such as “Hide SAM masks”, “Generate planning points using CHMv2 and SAM” or “Compare routes”. The choice is remembered and also controls Muse enhancement planning/review and crown-agent calls. Image generation remains Muse Image 1.0 and segmentation remains SAM 3.1. Available model IDs follow the [Meta model catalog](https://dev.meta.ai/docs/models); account access errors are displayed without fallback.
 
 Chat operates existing controllers for layers, opacity, basemap, polygon editing, planning settings/generation/edits/exports, route comparison, SAM runs/history, image enhancement/pyramid loading, original captures, crown templates/matching/Muse detection, Earth Engine search/preview, and saved-map navigation. Polygon corners, point edits, new-map details and Earth Engine sign-in remain manual when needed; Muse opens the appropriate mode. Map deletion opens the same typed-name dialog and cannot bypass it. **Notes only** saves messages without inference.
@@ -155,3 +157,30 @@ The canopy endpoint supplies a separate numeric `uint8-metres-base64` band: 0 is
 The SAM constraint rasterizes the union of the actual loaded segmentation polygons in geographic space, preserving holes and disconnected masks. It does not use the drawn input polygon or the masks' bounding rectangle as a substitute. These masks are intersected with the coverage area, exclusions, RGB tree-cover test and enabled height threshold. Even manual/matcher seeds must pass enabled SAM/height constraints during regeneration. Changing maps, coverage area or active guidance cancels an in-flight coverage pass. Selecting another saved SAM output does not trigger a model call; regenerate to use it.
 
 The run summary and GeoJSON record the CHMv2 clip, source date/grid resolution, height threshold, missing/low-height pixel counts, and the SAM output's source hash, timestamp, prompt and segment count. Points record `canopyHeightM`, also exported as `chmv2_height_m` in CSV and shown in map popups. Moving a point clears its old height until regeneration; edits invalidate the prior spatial coverage summary. These remain estimated centres: historical CHMv2 and SAM/RGB imagery may differ in date and resolution, and the combination is not a verified tree inventory.
+
+
+### Planning-point clusters
+
+The **Clusters** tab, beside **Planning points**, groups the current planning set locally. Choose **Target count ± tolerance** (default 50 ± 5) or a **Minimum–maximum range**, then **Draw clusters**. A feasibility preview shows the resulting cluster count and balanced sizes before running. Every point ID must appear exactly once; there is no discarded outlier/noise class. Impossible ranges are rejected with guidance to widen the limits, without creating a partial result or relaxing the requested bounds. For 3,162 points at 50 ± 5, the result is 63 groups of 50–51 points.
+
+A cancellable Web Worker recursively divides the points spatially along the widest local metric axis while reserving a feasible count for each group. It draws buffered convex envelopes, clips them to the split cells, planning polygon and exclusions, and handles single-point, two-point and collinear groups. A small 2 cm split-edge allowance handles projection precision; neighboring drawn boundaries can touch or slightly overlap, while point membership remains unique. Groups favour proximity and balanced counts, without claiming globally optimal clusters or obstacle-aware connectivity. Boundaries may have holes or disconnected pieces and are planning envelopes, not measured tree/canopy boundaries.
+
+The map shows coloured points and cluster outlines, optional cluster IDs/counts, and a group list that zooms to a chosen cluster. Output reports the assigned total, zero unassigned points, zero duplicates and the actual size range. **Download clusters GeoJSON** includes group polygons and all member point features; **Download cluster membership CSV** maps each point ID to its group and coordinates. Clusters and settings persist per map in browser storage. Editing, adding, removing or regenerating points, changing the planning polygon or changing exclusions hides old groups until rebuilt. Moving home alone does not invalidate grouping. Later size-setting changes require an explicit rebuild; failed/cancelled work keeps the last complete valid result. No SAM/Muse/model request is made for clustering.
+
+#### Grouping methods
+
+The Clusters tab has a **Grouping method** selector. All three keep every point in exactly one group within your count limits.
+
+- **Normal** (default): balanced spatial blocks of near-equal size.
+- **Elevation**: draws ordinary compact clusters, then lets points on a cluster edge prefer the touching cluster of a similar CHMv2 height. The height is read at each point's own longitude/latitude (never the height stored on the point, and never a neighbour's), averaged over its immediate surroundings because CHMv2 jumps from tree to tree. A point may only move to a cluster it touches, so nothing jumps to another area and every cluster stays one connected piece. The **Position only ↔ prefer similar height** slider sets how strongly height counts (default 1). Labels and the list show each cluster's raw CHMv2 range. If CHMv2 has no value at some points, it refuses and names how many, instead of guessing. Point coordinates are never changed by any method.
+- **Concentrated**: starts from the balanced split, then moves or swaps points between neighbouring groups so each sits with its nearest group centre. Counts may vary anywhere inside your limits.
+
+Elevation and concentrated groups can be curved or scattered, so their outlines merge a small disc around each member, not a convex hull. Outlines of different groups may overlap; membership stays unique. Settings saved before this selector existed load as Normal.
+
+#### Start points
+
+With **Pick a start point for each cluster** on (the default), every cluster gets one start point for the drone to enter at. Two rules always hold: the start is one of the cluster's own planning points on the cluster's **border** (never in the middle, so a point with at least three neighbours spread all around it is never chosen), and it is the border point **nearest the road reference**. A white ring marks each start, with its distance to the road in the cluster list and in the downloads (`is_start` column in the CSV, `clusterStart` in the GeoJSON).
+
+The app has no road layer and does not detect roads itself, so the road reference is, in order: the outlines of a loaded SAM 3.1 output whose prompt names a road, track, path or similar; the outer border of any other loaded SAM 3.1 output (the edge of tree cover); otherwise the map boundary. The panel says which one is in use and a dashed white line shows it. Loading a different SAM output marks the starts out of date until you rebuild.
+
+The optional **Pull neighbouring starts close together** rule lets a cluster take a border point up to the chosen extra distance (default 20 m) beyond its nearest-to-road point when that puts its start next to a neighbour's start, so the drone can enter several clusters from one area. Starts still stay on borders, and a cluster never exceeds that allowance.

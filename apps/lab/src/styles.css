@@ -595,3 +595,24 @@ table.items td, table.items tbody th { font-size: 12px; }
 .message-edit label { font-size: 12px; font-weight: 700; }
 .message-edit textarea, .message-copy-fallback textarea { width: 100%; min-height: 80px; max-height: 240px; resize: vertical; padding: 8px; border: 1px solid var(--ink); background: #fff; }
 .message-copy-fallback { flex-basis: 100%; display: grid; gap: 6px; }
+
+.planning-clusters-panel { display: grid; gap: 12px; padding: 12px; }
+.planning-clusters-panel h2 { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+.planning-clusters-panel > label, .cluster-settings-grid label { display: grid; gap: 4px; font-size: 12px; font-weight: 700; }
+.planning-clusters-panel select, .cluster-settings-grid input { min-width: 0; width: 100%; padding: 6px; background: #fff; border: 1px solid var(--line); }
+.cluster-settings-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.cluster-preview, .cluster-summary { padding: 10px; border: 1px solid var(--line); background: #fff; }
+.cluster-checkbox { display: flex; align-items: center; gap: 6px; font-size: 12px; }
+.cluster-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 6px; max-height: 220px; overflow-y: auto; }
+.cluster-item { display: flex; align-items: center; gap: 8px; padding: 8px; border: 1px solid var(--line); background: #fff; font-size: 12px; }
+.cluster-item:hover { border-color: var(--ink); }
+.cluster-item i { width: 10px; height: 10px; border: 1px solid #444; flex: none; }
+
+/* Stage content beside the map sidebar: the map view fills and clips; other views scroll in place. */
+.workspace-content { min-width: 0; min-height: 0; height: 100%; overflow: auto; }
+.workspace-content.is-map { overflow: hidden; display: flex; flex-direction: column; }
+.workspace-content.is-map > .map-view { flex: 1; height: auto; }
+.cluster-start-options { display: grid; gap: 8px; padding: 10px; border: 1px solid var(--line); background: #fff; min-width: 0; }
+.cluster-start-options legend { padding: 0 4px; font-size: 12px; font-weight: 700; }
+.cluster-start-options label:not(.cluster-checkbox) { display: grid; gap: 4px; font-size: 12px; font-weight: 700; }
+.cluster-start-options input[type="number"] { width: 100%; padding: 6px; border: 1px solid var(--line); }

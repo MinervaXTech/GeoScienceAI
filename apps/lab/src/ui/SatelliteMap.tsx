@@ -1,5 +1,5 @@
 import { useEffect, useImperativeHandle, useRef, useState, type RefObject } from "react";
-import type { FeatureCollection, LineString, Point, Polygon } from "geojson";
+import type { FeatureCollection, LineString, MultiPolygon, Point, Polygon } from "geojson";
 import type { ExpressionSpecification, GeoJSONSource, ImageSource, Map as MapLibreMap, RasterTileSource } from "maplibre-gl";
 import { HOME_WGS84, PEAKS, RASTER_CORNERS } from "../geo/layer";
 import type { SavedMap } from "../domain/types";
@@ -42,6 +42,9 @@ interface Props {
   planningData: FeatureCollection<Point | LineString>;
   planningShown: boolean;
   planningLabels: boolean;
+  clusterData: FeatureCollection<MultiPolygon | Point | LineString>;
+  clustersShown: boolean;
+  clusterLabels: boolean;
   planningRouteA: boolean;
   planningRouteB: boolean;
   planningEditor: { mode: PlanningEditMode; add(p: LngLat): void; move(id: string, p: LngLat): void; remove(id: string): void; setHome(p: LngLat): void; exclude(area: Polygon): void };
@@ -56,7 +59,7 @@ const viewBounds: [[number, number], [number, number]] = [
 ];
 const fitView = (map: MapLibreMap, saved: SavedMap) => saved.id === "upm" ? map.fitBounds(viewBounds, { padding: { top: 35, bottom: 55, left: 35, right: 50 }, duration: 0, maxZoom: 20 }) : saved.boundary ? map.fitBounds(areaBounds(saved.boundary), { padding: { top: 80, bottom: 60, left: 35, right: 35 }, duration: 0, maxZoom: 22 }) : map.jumpTo({ center: saved.center, zoom: saved.zoom, bearing: 0 });
 
-export function SatelliteMap({ savedMap, boundaryShown, canopyUrl, canopyCorners, canopyOpacity, routes, peakColors, peaksShown, focusRequest, basemap, captureRef, samResult, samShown, musePyramid, musePyramidShown, musePyramidOpacity, crownMatches, crownMatchesShown, crownReviewShown, estimatedCover, estimatedCoverShown, planningData, planningShown, planningLabels, planningRouteA, planningRouteB, planningEditor, samArea, samBusy, addingMap }: Props) {
+export function SatelliteMap({ savedMap, boundaryShown, canopyUrl, canopyCorners, canopyOpacity, routes, peakColors, peaksShown, focusRequest, basemap, captureRef, samResult, samShown, musePyramid, musePyramidShown, musePyramidOpacity, crownMatches, crownMatchesShown, crownReviewShown, estimatedCover, estimatedCoverShown, planningData, planningShown, planningLabels, clusterData, clustersShown, clusterLabels, planningRouteA, planningRouteB, planningEditor, samArea, samBusy, addingMap }: Props) {
   const planningState = useRef(planningEditor);
   useEffect(() => { planningState.current = planningEditor; }, [planningEditor]);
   const planningFrame = useRef(planningData);
@@ -169,12 +172,18 @@ export function SatelliteMap({ savedMap, boundaryShown, canopyUrl, canopyCorners
         m.addSource("planning-exclusion-draft", { type: "geojson", data: { type: "FeatureCollection", features: [] } });
         m.addLayer({ id: "planning-exclusion-fill", type: "fill", source: "planning-exclusion-draft", paint: { "fill-color": "#ff5e00", "fill-opacity": .2 } });
         m.addLayer({ id: "planning-exclusion-line", type: "line", source: "planning-exclusion-draft", paint: { "line-color": "#ff5e00", "line-width": 2 } });
+        m.addSource("planning-clusters", { type: "geojson", data: { type: "FeatureCollection", features: [] } });
+        m.addLayer({ id: "planning-cluster-fill", type: "fill", source: "planning-clusters", filter: ["==", ["get", "kind"], "cluster-boundary"], paint: { "fill-color": ["get", "color"], "fill-opacity": .13 } });
+        m.addLayer({ id: "planning-cluster-outline", type: "line", source: "planning-clusters", filter: ["==", ["get", "kind"], "cluster-boundary"], paint: { "line-color": ["get", "color"], "line-width": 2.5 } });
+        m.addLayer({ id: "planning-cluster-road", type: "line", source: "planning-clusters", filter: ["==", ["get", "kind"], "road-reference"], paint: { "line-color": "#ffffff", "line-width": 2, "line-dasharray": [2, 2], "line-opacity": .9 } });
         m.addSource("planning", { type: "geojson", data: { type: "FeatureCollection", features: [] } });
         for (const id of ["A", "B"]) m.addLayer({ id: `planning-route-${id}`, type: "line", source: "planning", filter: ["all", ["==", ["get", "kind"], "planning-route"], ["==", ["get", "algorithm"], id]], paint: { "line-color": id === "A" ? "#ffae00" : "#00e6ff", "line-width": 3, ...(id === "A" ? { "line-dasharray": [3, 2] } : {}) } });
-        m.addLayer({ id: "planning-points", type: "circle", source: "planning", filter: ["==", ["get", "kind"], "planning-point"], paint: { "circle-radius": ["interpolate", ["linear"], ["zoom"], 16, 2.5, 19, 4.5, 22, 6], "circle-color": ["match", ["get", "source"], "canopy-estimate", "#ffee00", "manual", "#00e6ff", "#b6ff00"], "circle-stroke-color": "#142c00", "circle-stroke-width": 1.5 } });
+        m.addLayer({ id: "planning-points", type: "circle", source: "planning", filter: ["==", ["get", "kind"], "planning-point"], paint: { "circle-radius": ["interpolate", ["linear"], ["zoom"], 16, 2.5, 19, 4.5, 22, 6], "circle-color": ["coalesce", ["get", "clusterColor"], ["match", ["get", "source"], "canopy-estimate", "#ffee00", "manual", "#00e6ff", "#b6ff00"]], "circle-stroke-color": "#142c00", "circle-stroke-width": 1.5 } });
         m.addLayer({ id: "planning-labels", type: "symbol", source: "planning", filter: ["==", ["get", "kind"], "planning-point"], layout: { "text-field": ["get", "id"], "text-size": 11, "text-offset": [0, 1.3] }, paint: { "text-color": "#fff", "text-halo-color": "#111", "text-halo-width": 2 } });
+        m.addLayer({ id: "planning-cluster-labels", type: "symbol", source: "planning-clusters", filter: ["==", ["get", "kind"], "cluster-label"], layout: { "text-field": ["get", "label"], "text-size": 13, "text-offset": [0, -1.3] }, paint: { "text-color": ["get", "color"], "text-halo-color": "#111", "text-halo-width": 2 } });
+        m.addLayer({ id: "planning-cluster-starts", type: "circle", source: "planning-clusters", filter: ["==", ["get", "kind"], "cluster-start"], paint: { "circle-radius": 6, "circle-color": "#ffffff", "circle-stroke-color": ["get", "color"], "circle-stroke-width": 3 } });
         m.addLayer({ id: "planning-home", type: "circle", source: "planning", filter: ["==", ["get", "kind"], "planning-home"], paint: { "circle-radius": 8, "circle-color": "#ffc400", "circle-stroke-color": "#111", "circle-stroke-width": 2 } });
-        m.on("click", "planning-points", (event) => { if (planningState.current.mode !== "view" || drawing.current) return; const p = event.features?.[0]?.properties; if (p) new Popup().setLngLat(event.lngLat).setText(`${p.id} · ${p.source === "canopy-estimate" ? "estimated tree centre" : "approximate crown centre"}${p.edited ? " · manually adjusted" : ""}${typeof p.canopyHeightM === "number" ? ` · CHMv2 ${p.canopyHeightM} m` : ""}`).addTo(m); });
+        m.on("click", "planning-points", (event) => { if (planningState.current.mode !== "view" || drawing.current) return; const p = event.features?.[0]?.properties; if (p) new Popup().setLngLat(event.lngLat).setText(`${p.id} · ${p.source === "canopy-estimate" ? "estimated tree centre" : "approximate crown centre"}${p.clusterId ? ` · cluster ${p.clusterId}` : ""}${p.edited ? " · manually adjusted" : ""}${typeof p.canopyHeightM === "number" ? ` · CHMv2 ${p.canopyHeightM} m` : ""}`).addTo(m); });
         m.on("click", "peaks", (event) => {
           if (drawing.current || planningState.current.mode !== "view") return;
           const p = event.features?.[0]?.properties;
@@ -418,6 +427,13 @@ export function SatelliteMap({ savedMap, boundaryShown, canopyUrl, canopyCorners
 
   useEffect(() => {
     if (!map || instance.current !== map) return;
+    (map.getSource("planning-clusters") as GeoJSONSource).setData(clusterData);
+    for (const layer of ["planning-cluster-fill", "planning-cluster-outline", "planning-cluster-road", "planning-cluster-starts"]) map.setLayoutProperty(layer, "visibility", clustersShown ? "visible" : "none");
+    map.setLayoutProperty("planning-cluster-labels", "visibility", clustersShown && clusterLabels ? "visible" : "none");
+  }, [map, clusterData, clustersShown, clusterLabels]);
+
+  useEffect(() => {
+    if (!map || instance.current !== map) return;
     if (estimatedCover) (map.getSource("estimated-tree-cover") as ImageSource).updateImage({ url: estimatedCover.maskDataUrl, coordinates: estimatedCover.corners });
     map.setPaintProperty("estimated-tree-cover", "raster-opacity", estimatedCover && estimatedCoverShown ? .7 : 0);
   }, [map, estimatedCover, estimatedCoverShown]);
@@ -429,7 +445,7 @@ export function SatelliteMap({ savedMap, boundaryShown, canopyUrl, canopyCorners
     map.setLayoutProperty("planning-labels", "visibility", planningShown && planningLabels ? "visible" : "none");
     map.setLayoutProperty("planning-route-A", "visibility", planningRouteA ? "visible" : "none");
     map.setLayoutProperty("planning-route-B", "visibility", planningRouteB ? "visible" : "none");
-  }, [map, planningData, planningShown, planningLabels, planningRouteA, planningRouteB]);
+  }, [map, planningData, planningShown, planningLabels, clusterData, clustersShown, clusterLabels, planningRouteA, planningRouteB]);
 
   useEffect(() => {
     if (!map || instance.current !== map) return;

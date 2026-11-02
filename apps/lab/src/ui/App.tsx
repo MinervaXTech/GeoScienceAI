@@ -50,7 +50,7 @@ export function App() {
   const [sidebarExpanded, setSidebarExpanded] = useState(true);
   const [sidebarTab, setSidebarTab] = useState<MapSidebarTab>("maps");
   const [layerHost, setLayerHost] = useState<HTMLDivElement | null>(null);
-  const openSidebar = (panel: MapSidebarTab) => { setSidebarTab(panel); setSidebarExpanded(true); };
+  const openSidebar = (panel: MapSidebarTab) => { setSidebarTab(panel); setSidebarExpanded(true); if (panel !== "snapshots") { setTab("map"); setComparing(false); } };
   const [addMapView, setAddMapView] = useState<Omit<SavedMap, "id" | "name"> | null>(null);
   const [addingMap, setAddingMap] = useState(false);
   const [deletedMap, setDeletedMap] = useState<{ map: SavedMap; index: number; wasActive: boolean; area: Polygon | null } | null>(null);
@@ -177,6 +177,7 @@ export function App() {
     changeAddingMap(false);
     setComparing(false);
     setTab("notes");
+    setSidebarExpanded(false);
   };
 
 
@@ -195,6 +196,35 @@ export function App() {
       await new Promise(resolve => setTimeout(resolve, 0)); return "Applied.";
     },
   }, (id, message) => apply(saved => ({ ...saved, sessions: saved.sessions.map(session => session.id === id ? { ...session, messages: session.messages.some(m => m.id === message.id) ? session.messages.map(m => m.id === message.id ? message : m) : [...session.messages, message] } : session) })));
+
+  const snapshotsPanel = (
+    <Snapshots
+      batch={scope.batch}
+      snapshots={scope.snapshots}
+      canRegister={unitsInScope}
+      selectedId={tab === "notes" ? selectedId : undefined}
+      onSelect={(id) => {
+        setSelectedId(id);
+        if (tab === "map") setTab("notes");
+        setComparing(false);
+        setSidebarExpanded(false);
+      }}
+      onRegister={() => {
+        if (!scope.batch) return;
+        const title = `Units as of ${formatDateTime(new Date().toISOString())}`;
+        const out = run((s) => registerSnapshot(s, scope.batch!.id, title));
+        if (out) {
+          setNotice({ kind: "info", text: `Registered snapshot ${out.item.snapshot?.hash} in ${scope.batch.name}.` });
+          setSelectedId(out.item.id);
+        }
+      }}
+      onCompare={() => {
+        changeAddingMap(false);
+        setPick({});
+        setComparing(true);
+      }}
+    />
+  );
 
   return (
     <div className="app">
@@ -263,63 +293,39 @@ export function App() {
           </div>
 
           <div className="stage">
-            {comparing && compareA && compareB ? (
-              <CompareView
-                snapshots={scope.snapshots}
-                a={compareA.id}
-                b={compareB.id}
-                onPick={(side, id) => setPick((p) => ({ ...p, [side]: id }))}
-                onClose={() => setComparing(false)}
-              />
-            ) : tab === "map" ? (
-              <div className={`map-layout${sidebarExpanded ? "" : " sidebar-collapsed"}`}>
-                <MapSidebar active={sidebarTab} expanded={sidebarExpanded} onOpen={openSidebar} onCollapse={() => setSidebarExpanded(false)} layerHost={setLayerHost} maps={<SavedMaps view={addMapView} onDelete={setDeleteMapId} area={samArea} adding={addingMap} onAddingChange={changeAddingMap} basemap={basemap} onBasemap={setBasemap} state={state} snapshots={allSnapshots} active={onMap} currentMapId={currentMap.id} busy={sam.busy || chat.busy} onOpenMap={openMap} onLocate={(location) => !sam.busy && (mapRef.current?.locate(location) ?? false)} onGetView={() => { const view = mapRef.current?.getView(); return view ? { ...view, basemap, ...(samArea.polygon ? { area: samArea.polygon } : {}) } : null; }} onAdd={(map) => openMap(map.id, map)} onToggle={(id) => setMapPick(onMap.includes(id) ? onMap.filter((x) => x !== id) : [...onMap, id].slice(-2))} />} />
-                <MapView agentRef={agentRef} agentModel={chat.model} layerHost={layerHost} legendHidden={addingMap} onOpenLayers={() => openSidebar("layers")} key={currentMap.id} savedMap={currentMap} mapRef={mapRef} snapshots={mapSnapshots} shown={shown} focusRequest={mapFocusRequest} basemap={basemap} onBasemap={(value) => { setBasemap(value); if (!addingMap && currentMap.id !== "upm") apply((s) => ({ ...s, maps: s.maps?.map((map) => map.id === currentMap.id ? { ...map, basemap: value } : map) })); }} sam={sam} samArea={samArea} onToggle={(i) => setShown((s) => s.map((v, k) => (k === i ? !v : v)))} />
+            <div className={`map-layout${sidebarExpanded ? "" : " sidebar-collapsed"}`}>
+              <MapSidebar active={sidebarTab} expanded={sidebarExpanded} onOpen={openSidebar} onCollapse={() => setSidebarExpanded(false)} snapshots={snapshotsPanel} layerHost={setLayerHost} maps={<SavedMaps view={addMapView} onDelete={setDeleteMapId} area={samArea} adding={addingMap} onAddingChange={changeAddingMap} basemap={basemap} onBasemap={setBasemap} state={state} snapshots={allSnapshots} active={onMap} currentMapId={currentMap.id} busy={sam.busy || chat.busy} onOpenMap={openMap} onLocate={(location) => !sam.busy && (mapRef.current?.locate(location) ?? false)} onGetView={() => { const view = mapRef.current?.getView(); return view ? { ...view, basemap, ...(samArea.polygon ? { area: samArea.polygon } : {}) } : null; }} onAdd={(map) => openMap(map.id, map)} onToggle={(id) => setMapPick(onMap.includes(id) ? onMap.filter((x) => x !== id) : [...onMap, id].slice(-2))} />} />
+              <div className={`workspace-content${tab === "map" && !comparing ? " is-map" : ""}`}>
+                {comparing && compareA && compareB ? (
+                  <CompareView
+                    snapshots={scope.snapshots}
+                    a={compareA.id}
+                    b={compareB.id}
+                    onPick={(side, id) => setPick((p) => ({ ...p, [side]: id }))}
+                    onClose={() => setComparing(false)}
+                  />
+                ) : tab === "map" ? (
+                  <MapView agentRef={agentRef} agentModel={chat.model} layerHost={layerHost} legendHidden={addingMap} onOpenLayers={() => openSidebar("layers")} key={currentMap.id} savedMap={currentMap} mapRef={mapRef} snapshots={mapSnapshots} shown={shown} focusRequest={mapFocusRequest} basemap={basemap} onBasemap={(value) => { setBasemap(value); if (!addingMap && currentMap.id !== "upm") apply((s) => ({ ...s, maps: s.maps?.map((map) => map.id === currentMap.id ? { ...map, basemap: value } : map) })); }} sam={sam} samArea={samArea} onToggle={(i) => setShown((s) => s.map((v, k) => (k === i ? !v : v)))} />
+                ) : (
+                  <NotesView
+                    state={state}
+                    filters={filters}
+                    setFilters={setFilters}
+                    sort={sort}
+                    setSort={setSort}
+                    selectedId={selectedId}
+                    onSelect={setSelectedId}
+                    onNewBatch={(input) => {
+                      const out = run((s) => addBatch(s, input));
+                      if (out) setFilters((f) => ({ ...f, batch: out.batch.id }));
+                    }}
+                    onReview={(id, review) => apply((s) => setReview(s, id, review))}
+                    onLoadSample={() => apply(loadSampleData)}
+                  />
+                )}
               </div>
-            ) : (
-              <NotesView
-                state={state}
-                filters={filters}
-                setFilters={setFilters}
-                sort={sort}
-                setSort={setSort}
-                selectedId={selectedId}
-                onSelect={setSelectedId}
-                onNewBatch={(input) => {
-                  const out = run((s) => addBatch(s, input));
-                  if (out) setFilters((f) => ({ ...f, batch: out.batch.id }));
-                }}
-                onReview={(id, review) => apply((s) => setReview(s, id, review))}
-                onLoadSample={() => apply(loadSampleData)}
-              />
-            )}
+            </div>
           </div>
-
-          <Snapshots
-            batch={scope.batch}
-            snapshots={scope.snapshots}
-            canRegister={unitsInScope}
-            selectedId={tab === "notes" ? selectedId : undefined}
-            onSelect={(id) => {
-              setSelectedId(id);
-              if (tab === "map") setTab("notes");
-              setComparing(false);
-            }}
-            onRegister={() => {
-              if (!scope.batch) return;
-              const title = `Units as of ${formatDateTime(new Date().toISOString())}`;
-              const out = run((s) => registerSnapshot(s, scope.batch!.id, title));
-              if (out) {
-                setNotice({ kind: "info", text: `Registered snapshot ${out.item.snapshot?.hash} in ${scope.batch.name}.` });
-                setSelectedId(out.item.id);
-              }
-            }}
-            onCompare={() => {
-              changeAddingMap(false);
-              setPick({});
-              setComparing(true);
-            }}
-          />
         </main>
 
         <ChatPanel

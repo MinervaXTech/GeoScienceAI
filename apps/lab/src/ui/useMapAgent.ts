@@ -11,8 +11,9 @@ import type { SamAreaController } from "./useSamArea";
 import type { MusePyramidController } from "./useMusePyramid";
 import type { EarthEngineController } from "./useEarthEngine";
 import type { MapToolId } from "./MapTools";
+import type { PlanningClustersController } from "./usePlanningClusters";
 interface Input {
-  mapId: string; mapName: string; adding: boolean; basemap: BasemapId; model: AgentModel; area: SamAreaController; planning: PlanningController; matching: CrownMatchingController; muse: MuseController; sam: SamController; pyramid: MusePyramidController; earthEngine: EarthEngineController;
+  mapId: string; mapName: string; adding: boolean; basemap: BasemapId; model: AgentModel; area: SamAreaController; planning: PlanningController; clusters: PlanningClustersController; matching: CrownMatchingController; muse: MuseController; sam: SamController; pyramid: MusePyramidController; earthEngine: EarthEngineController;
   canopy: { loading: boolean; error: string; clip: { stats: unknown } | null }; map: RefObject<SatelliteMapHandle | null>; planningScope: "map" | "selection";
   layers: Record<string, boolean>; setLayer(name: string, value: boolean): void; setOpacity(name: string, value: number): void;
   openTool(id: MapToolId | null): void; onBasemap(value: BasemapId): void; setPlanningScope(value: "map" | "selection"): void; setMuseSource(value: "esri" | "earth-engine"): void;
@@ -28,6 +29,7 @@ export function useMapAgent(ref: RefObject<MapAgentHandle | null>, input: Input)
       return { mapId: i.mapId, mapName: i.mapName, basemap: i.basemap, addingMap: i.adding, polygon: { selected: !!i.area.polygon, drawing: i.area.drawing, editing: i.area.editing, usingDefault: i.area.usingDefault, corners: i.area.polygon ? i.area.polygon.coordinates[0]!.length - 1 : i.area.vertices.length, error: i.area.error, area: i.area.polygon },
         layers: i.layers, canopy: { loading: i.canopy.loading, loaded: !!i.canopy.clip, stats: i.canopy.clip?.stats, error: i.canopy.error },
         planning: { points: p.set?.points.length ?? 0, stale: p.stale, busy: p.busy, error: p.error, scope: i.planningScope, spacingM: p.treeSpacing, sensitivity: p.sensitivity, useChmv2: p.useChmv2, useSam: p.useSam, minimumHeightM: p.minimumHeightM, routes: p.routes ? { A: p.routes.A.lengthM, B: p.routes.B.lengthM } : null },
+        clusters: !p.stale && i.clusters.result ? { count: i.clusters.result.clusters.length, totalAssigned: i.clusters.result.clusters.reduce((n, c) => n + c.pointIds.length, 0), unassigned: 0, settings: i.clusters.result.settings, groups: i.clusters.result.clusters.slice(0, 100).map(c => ({ id: c.id, points: c.pointIds.length })) } : null,
         sam: { configured: i.sam.configured, busy: i.sam.busy, prompt: i.sam.prompt, segments: i.sam.result?.objects, error: i.sam.error, runs: i.sam.logs.filter(r => r.mapId === i.mapId).slice(0, 12).map(r => ({ id: r.id, prompt: r.prompt, status: r.status, segments: r.decoding.displayedSegments })) },
         muse: { configured: i.muse.configured, busy: i.muse.busy, objective: i.muse.objective, method: i.muse.method, result: i.muse.result ? { id: i.muse.result.id, status: i.muse.result.status, analysis: i.muse.result.analysis } : null, pyramidLoaded: !!i.pyramid.layer, error: i.muse.error || i.pyramid.error },
         crowns: { busy: c.busy, error: c.error, image: c.image ? { source: c.image.source, width: c.image.width, height: c.image.height, matchesSelection: samePolygon(c.image.area, i.area.polygon) } : null, sample: c.sample, settings: c.settings, candidates: c.result?.matches.length ?? 0, goal: c.agentGoal, rounds: c.agentMaxRounds, templates: c.templateHistory.slice(0, 15).map(t => ({ id: t.id, sample: t.sample, status: t.status, candidates: t.candidates })) },

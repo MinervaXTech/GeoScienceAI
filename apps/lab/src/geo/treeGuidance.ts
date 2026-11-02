@@ -24,6 +24,18 @@ export function alignedCanopyHeights(frame: SamFrame, clip: CanopyClip): Float32
   }
   return output;
 }
+/** CHMv2 height in metres at each lng/lat, read from the numeric band. Null where CHMv2 has no value (255, or outside the clip). */
+export function sampleCanopyHeights(clip: CanopyClip, coordinates: [number, number][]): (number | null)[] {
+  if (!clip.heightData || clip.heightData.encoding !== "uint8-metres-base64" || !Number.isInteger(clip.width) || !Number.isInteger(clip.height) || clip.width < 1 || clip.height < 1 || clip.width > 2048 || clip.height > 2048) throw Error("CHMv2 numeric heights are unavailable. Reload canopy data for this area.");
+  const bytes = atob(clip.heightData.data);
+  if (bytes.length !== clip.width * clip.height) throw Error("CHMv2 numeric height dimensions do not match its frame.");
+  return coordinates.map((coordinate) => {
+    const [x, y] = lngLatToImagePixel(clip, coordinate), col = Math.floor(x), row = Math.floor(y);
+    if (!Number.isFinite(col) || !Number.isFinite(row) || col < 0 || row < 0 || col >= clip.width || row >= clip.height) return null;
+    const value = bytes.charCodeAt(row * clip.width + col);
+    return value === 255 ? null : value;
+  });
+}
 /** Rasterize the UNION of actual SAM output polygons. Even-odd scan lines keep
  * interior holes empty; a different output polygon can occupy another's hole. */
 export function samCoverageMask(frame: SamFrame, regions: FeatureCollection<MultiPolygon>): Uint8Array {

@@ -21,9 +21,9 @@ export function Snapshots({ batch, snapshots, canRegister, onRegister, onCompare
   return (
     <section className="snapshots" aria-label="Snapshots">
       <header>
-        <h2>Snapshots</h2>
+        <h3>{batch?.name ?? "Paper snapshots"}</h3>
         <span className="sub">
-          {snapshots.length} registered{batch ? ` · ${batch.name}` : ""}
+          {snapshots.length} registered
         </span>
         {snapshots.some((s) => s.sample) && <SampleBadge />}
         <span className="spacer" />

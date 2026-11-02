@@ -1,5 +1,5 @@
 import { useRef, type ReactNode } from "react";
-export type MapToolId = "planning" | "sam" | "muse" | "crowns";
+export type MapToolId = "planning" | "clusters" | "sam" | "muse" | "crowns";
 export interface MapToolPanel { id: MapToolId; label: string; status?: string; content: ReactNode }
 
 export function MapTools({ panels, active, onChange }: { panels: MapToolPanel[]; active: MapToolId | null; onChange(id: MapToolId | null): void }) {

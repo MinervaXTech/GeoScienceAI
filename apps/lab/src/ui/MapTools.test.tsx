@@ -11,6 +11,7 @@ function Fixture() {
   const [active, setActive] = useState<MapToolId | null>("planning");
   return <MapTools active={active} onChange={setActive} panels={[
     { id: "planning", label: "Planning points", content: <p>Planning controls</p> },
+    { id: "clusters", label: "Clusters", content: <p>Cluster controls</p> },
     { id: "sam", label: "SAM 3.1", status: "1 segment", content: <Draft /> },
     { id: "muse", label: "Muse map agent", content: <p>Muse controls</p> },
     { id: "crowns", label: "Crown detection", content: <p>Crown controls</p> },
@@ -41,7 +42,7 @@ it("supports arrow-key, Home and End navigation with a single keyboard tab stop"
   render(<Fixture />);
   const planning = screen.getByRole("tab", { name: "Planning points" });
   planning.focus(); fireEvent.keyDown(planning, { key: "ArrowRight" });
-  expect(document.activeElement).toBe(screen.getByRole("tab", { name: "SAM 3.1" }));
+  expect(document.activeElement).toBe(screen.getByRole("tab", { name: "Clusters" }));
   fireEvent.keyDown(document.activeElement!, { key: "End" });
   expect(document.activeElement).toBe(screen.getByRole("tab", { name: "Crown detection" }));
   fireEvent.keyDown(document.activeElement!, { key: "Home" });

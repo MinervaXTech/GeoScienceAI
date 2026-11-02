@@ -25,6 +25,10 @@ import { CANOPY_GRADIENT } from "../geo/canopy";
 import { useEarthEngine } from "./useEarthEngine";
 import { usePlanningPoints, type PlanningEditMode } from "./usePlanningPoints";
 import { PlanningPointsPanel } from "./PlanningPointsPanel";
+import { PlanningClustersPanel } from "./PlanningClustersPanel";
+import { usePlanningClusters } from "./usePlanningClusters";
+import { roadReference } from "../geo/roadReference";
+import { clusterAssignments, clusterFocusArea, planningClusterFeatures } from "../geo/planningClusters";
 import { MapTools, type MapToolId } from "./MapTools";
 import { useMapAgent } from "./useMapAgent";
 import type { AgentModel, MapAgentHandle } from "../geo/mapAgent";
@@ -74,7 +78,16 @@ export function MapView({ agentRef, agentModel, savedMap, mapRef, layerHost, leg
   const [planningScope, setPlanningScope] = useState<"map" | "selection">("map");
   const planningArea = planningScope === "map" ? savedMap.boundary ?? samArea.polygon : samArea.polygon;
   const planning = usePlanningPoints(savedMap.id, planningArea, sam.result);
-  const planningData = useMemo(() => planningFeatures(planning.set, planning.routes), [planning.set, planning.routes]);
+  const road = useMemo(() => planning.set ? roadReference(planning.set.area, sam.result, savedMap.id) : null, [planning.set, sam.result, savedMap.id]);
+  const clusters = usePlanningClusters(savedMap.id, planning.set, road);
+  const clusterResult = planning.stale ? null : clusters.result;
+  const clusterData = useMemo(() => planningClusterFeatures(clusterResult, road), [clusterResult, road]);
+  const planningData = useMemo(() => {
+    const data = planningFeatures(planning.set, planning.routes);
+    const membership = clusterAssignments(clusters.shown ? clusterResult : null);
+    for (const feature of data.features) if (feature.properties?.kind === "planning-point") Object.assign(feature.properties, membership.get(feature.properties.id));
+    return data;
+  }, [planning.set, planning.routes, clusters.shown, clusterResult]);
   const planningBlocked = legendHidden || sam.busy || samArea.drawing;
   const setPlanningMode = planning.setMode;
   useEffect(() => { if (planningBlocked) setPlanningMode("view"); }, [planningBlocked, setPlanningMode]);
@@ -143,9 +156,9 @@ export function MapView({ agentRef, agentModel, savedMap, mapRef, layerHost, leg
         return layer;
       }); };
   useMapAgent(agentRef, {
-    mapId: savedMap.id, mapName: savedMap.name, adding: legendHidden, basemap, model: agentModel, area: samArea, planning, matching, muse, sam, pyramid: musePyramid, earthEngine, canopy, map: mapRef, planningScope,
-    layers: { canopy: canopyShown, boundary: boundaryShown, ...(isUpm ? { peaks: peaksShown } : {}), ...(sam.result ? { sam: sam.shown } : {}), ...(musePyramid.layer ? { muse: musePyramid.shown } : {}), ...(matching.result ? { crowns: matching.shown } : {}), ...(matching.areaReview ? { review: matching.reviewShown } : {}), ...(planning.set ? { points: planning.shown, labels: planning.labels, cover: planning.coverShown } : {}), ...(planning.routes ? { route_a: planning.showA, route_b: planning.showB } : {}) },
-    setLayer(name, value) { const setters: Record<string, (value: boolean) => void> = { canopy: setCanopyShown, peaks: setPeaksShown, boundary: setBoundaryShown, sam: sam.setShown, muse: musePyramid.setShown, crowns: matching.setShown, review: matching.setReviewShown, points: planning.setShown, labels: planning.setLabels, cover: planning.setCoverShown, route_a: planning.setShowA, route_b: planning.setShowB }; setters[name]?.(value); },
+    mapId: savedMap.id, mapName: savedMap.name, adding: legendHidden, basemap, model: agentModel, area: samArea, planning, clusters, matching, muse, sam, pyramid: musePyramid, earthEngine, canopy, map: mapRef, planningScope,
+    layers: { canopy: canopyShown, boundary: boundaryShown, ...(isUpm ? { peaks: peaksShown } : {}), ...(sam.result ? { sam: sam.shown } : {}), ...(musePyramid.layer ? { muse: musePyramid.shown } : {}), ...(matching.result ? { crowns: matching.shown } : {}), ...(matching.areaReview ? { review: matching.reviewShown } : {}), ...(planning.set ? { points: planning.shown, labels: planning.labels, cover: planning.coverShown } : {}), ...(clusterResult ? { clusters: clusters.shown } : {}), ...(planning.routes ? { route_a: planning.showA, route_b: planning.showB } : {}) },
+    setLayer(name, value) { const setters: Record<string, (value: boolean) => void> = { canopy: setCanopyShown, peaks: setPeaksShown, boundary: setBoundaryShown, sam: sam.setShown, muse: musePyramid.setShown, crowns: matching.setShown, review: matching.setReviewShown, points: planning.setShown, labels: planning.setLabels, cover: planning.setCoverShown, clusters: clusters.setShown, route_a: planning.setShowA, route_b: planning.setShowB }; setters[name]?.(value); },
     setOpacity(name, value) { if (name === "canopy") setCanopyOpacity(value); else musePyramid.setOpacity(value); },
     openTool: setActiveTool, onBasemap, setPlanningScope, setMuseSource: setChosenMuseSource, cover: coverPoints, runSam, runMuse, captureCrowns, useMuse: loadMuseLayer,
     async inspect(signal) {
@@ -161,7 +174,7 @@ export function MapView({ agentRef, agentModel, savedMap, mapRef, layerHost, leg
   return (
     <section className={`map-view${activeTool ? "" : " tools-collapsed"}`} aria-label="Map">
       <div className="map-frame">
-        <SatelliteMap savedMap={savedMap} boundaryShown={boundaryShown} canopyUrl={canopyShown && !legendHidden ? canopy.clip?.imageDataUrl ?? null : null} canopyCorners={canopy.clip?.corners ?? null} canopyOpacity={canopyShown ? canopyOpacity / 100 : 0} routes={routeData} peakColors={peakColors} peaksShown={isUpm && peaksShown} focusRequest={focusRequest} basemap={basemap} captureRef={mapRef} samResult={sam.result} samShown={sam.shown} musePyramid={musePyramid.layer} musePyramidShown={musePyramid.shown && !legendHidden} musePyramidOpacity={musePyramid.opacity / 100} crownMatches={crownData} crownMatchesShown={matching.shown && !legendHidden} crownReviewShown={matching.reviewShown && !legendHidden} estimatedCover={planning.set?.coverage ?? null} estimatedCoverShown={planning.coverShown && !legendHidden} planningData={planningData} planningShown={planning.shown && !legendHidden} planningLabels={planning.labels} planningRouteA={planning.showA && !legendHidden} planningRouteB={planning.showB && !legendHidden} planningEditor={{ mode: planningBlocked || planning.stale ? "view" : planning.mode, add: planning.add, move: planning.move, remove: planning.remove, setHome: planning.setHome, exclude: planning.exclude }} samArea={samArea} samBusy={sam.busy} addingMap={legendHidden} />
+        <SatelliteMap savedMap={savedMap} boundaryShown={boundaryShown} canopyUrl={canopyShown && !legendHidden ? canopy.clip?.imageDataUrl ?? null : null} canopyCorners={canopy.clip?.corners ?? null} canopyOpacity={canopyShown ? canopyOpacity / 100 : 0} routes={routeData} peakColors={peakColors} peaksShown={isUpm && peaksShown} focusRequest={focusRequest} basemap={basemap} captureRef={mapRef} samResult={sam.result} samShown={sam.shown} musePyramid={musePyramid.layer} musePyramidShown={musePyramid.shown && !legendHidden} musePyramidOpacity={musePyramid.opacity / 100} crownMatches={crownData} crownMatchesShown={matching.shown && !legendHidden} crownReviewShown={matching.reviewShown && !legendHidden} estimatedCover={planning.set?.coverage ?? null} estimatedCoverShown={planning.coverShown && !legendHidden} planningData={planningData} planningShown={planning.shown && !legendHidden} planningLabels={planning.labels} clusterData={clusterData} clustersShown={clusters.shown && !legendHidden && !!clusterResult} clusterLabels={clusters.labels} planningRouteA={planning.showA && !legendHidden} planningRouteB={planning.showB && !legendHidden} planningEditor={{ mode: planningBlocked || planning.stale ? "view" : planning.mode, add: planning.add, move: planning.move, remove: planning.remove, setHome: planning.setHome, exclude: planning.exclude }} samArea={samArea} samBusy={sam.busy} addingMap={legendHidden} />
 
         {planning.mode !== "view" && !planningBlocked && !planning.stale && <div className="map-planning-tools" role="region" aria-label="Planning point edit tools"><strong>{planning.mode === "add" ? "Click visible crowns to add points" : planning.mode === "move" ? "Drag points to crown centres" : planning.mode === "delete" ? "Click points to delete them" : planning.mode === "exclude" ? "Drag a box over an empty region" : "Click the home / start location"}</strong><div className="sam-actions"><button className="btn small" onClick={() => planning.setMode("view")}>Finish point editing</button><button className="btn small" disabled={!planning.canUndo} onClick={planning.undo}>Undo point edit</button></div>{planning.error && <p className="sam-error">{planning.error}</p>}</div>}
         {layerHost && legendHidden && createPortal(<p className="hint">Finish adding the map to manage its layers. Choose the satellite basemap in the Maps tab.</p>, layerHost)}
@@ -237,6 +250,7 @@ export function MapView({ agentRef, agentModel, savedMap, mapRef, layerHost, leg
             <label className="legend-route"><input type="checkbox" checked={matching.shown} onChange={(event) => matching.setShown(event.target.checked)} /><i className="crown-match-swatch" aria-hidden="true" />Show crown matches</label>
           </>}
           {planning.set && <><hr /><h3>Planning points <span className="badge plain">{planning.set.points.length} approximate centres</span></h3><label className="legend-route"><input type="checkbox" checked={planning.shown} onChange={(e) => planning.setShown(e.target.checked)} />Show planning centres</label>{planning.routes && <><label className="legend-route"><input type="checkbox" checked={planning.showA} onChange={(e) => planning.setShowA(e.target.checked)} />Planning route A</label><label className="legend-route"><input type="checkbox" checked={planning.showB} onChange={(e) => planning.setShowB(e.target.checked)} />Planning route B</label></>}</>}
+          {clusterResult && <><hr /><h3>Planning clusters <span className="badge plain">{clusterResult.clusters.length} groups</span></h3><label className="legend-route"><input type="checkbox" checked={clusters.shown} onChange={e => clusters.setShown(e.target.checked)} />Show planning clusters</label></>}
           {matching.areaReview && <><hr /><h3>Crown area review</h3><label className="legend-route"><input type="checkbox" checked={matching.reviewShown} onChange={(event) => matching.setReviewShown(event.target.checked)} />Show crown area review</label><p className="hint">Orange: unreviewed or missed · Purple: uncertain · Green: accounted for · Grey: genuine gap.</p></>}
           <hr />
           <p className="hint">{savedMap.boundary ? "The cyan outline is the saved map boundary. Use it for SAM or draw a smaller region." : "Draw a cyan polygon to choose the SAM input area."} Results appear in the output panel below.</p>
@@ -258,6 +272,9 @@ export function MapView({ agentRef, agentModel, savedMap, mapRef, layerHost, leg
       <MapTools active={activeTool} onChange={setActiveTool} panels={[
         { id: "planning", label: "Planning points", status: planning.busy ? "Working" : planning.set ? `${planning.set.points.length} points` : undefined, content: (
           <PlanningPointsPanel planning={planning} matches={matching.result} scope={planningScope} onScope={setPlanningScope} onCover={() => { void coverPoints(); }} available={!!planningArea && !samArea.drawing} blocked={planningBlocked} onMode={editPlanning} />
+        ) },
+        { id: "clusters", label: "Clusters", status: clusters.busy ? "Grouping" : clusterResult ? `${clusterResult.clusters.length} clusters` : undefined, content: (
+          <PlanningClustersPanel road={road} clusters={{ ...clusters, result: clusterResult, stale: clusters.stale || (planning.stale && !!clusters.result) }} points={planning.set} blocked={planningBlocked || planning.busy || planning.stale || planning.mode !== "view"} onGenerate={() => { planning.setShown(true); clusters.generate(); }} onFocus={cluster => { mapRef.current?.fitArea(clusterFocusArea(cluster)); }} />
         ) },
         { id: "sam", label: "SAM 3.1", status: sam.loadingRunId ? "Loading" : sam.busy ? "Running" : sam.result ? plural(sam.result.objects, "segment") : sam.configured ? "Ready" : "Not configured", content: (
           <section className="sam-workspace" aria-label="SAM 3.1 workspace">

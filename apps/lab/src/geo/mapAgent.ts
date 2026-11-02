@@ -28,8 +28,8 @@ export function validateMapAgentCall(value: unknown): MapAgentCall {
   if (!object(value) || Object.keys(value).some(k => !["action", "parameters"].includes(k)) || !AGENT_ACTIONS.includes(value.action as AgentAction) || !object(value.parameters)) throw Error("Unknown map action or invalid arguments.");
   const p = value.parameters, a = value.action as AgentAction;
   const schemas: Record<AgentAction, Record<string, (v: unknown) => boolean>> = {
-    inspect_area: {}, open_tool: { tab: choice("planning", "sam", "muse", "crowns", "hide") }, open_sidebar: { tab: choice("maps", "layers", "collapse") },
-    set_basemap: { value: choice("esri", "google") }, set_layer: { layer: choice("canopy", "peaks", "boundary", "sam", "muse", "crowns", "review", "points", "labels", "cover", "route_a", "route_b"), shown: bool }, set_opacity: { layer: choice("canopy", "muse"), value: number(0, 100) }, fit_area: {},
+    inspect_area: {}, open_tool: { tab: choice("planning", "clusters", "sam", "muse", "crowns", "hide") }, open_sidebar: { tab: choice("maps", "layers", "snapshots", "collapse") },
+    set_basemap: { value: choice("esri", "google") }, set_layer: { layer: choice("canopy", "peaks", "boundary", "sam", "muse", "crowns", "review", "points", "labels", "cover", "clusters", "route_a", "route_b"), shown: bool }, set_opacity: { layer: choice("canopy", "muse"), value: number(0, 100) }, fit_area: {},
     polygon: { operation: choice("draw", "edit", "finish", "cancel", "undo", "clear") },
     configure_planning: { scope: choice("map", "selection"), spacingM: number(2, 50), sensitivity: number(0, 1), useChmv2: bool, useSam: bool, minimumHeightM: number(0, 254) },
     generate_points: {}, load_matched_points: {}, edit_points: { mode: choice("view", "add", "move", "delete", "home", "exclude") }, undo_points: {}, compare_routes: {}, export_planning: { format: choice("csv", "geojson", "svg") },
