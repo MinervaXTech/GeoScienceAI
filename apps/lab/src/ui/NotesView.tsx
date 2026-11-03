@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, type CSSProperties } from "react";
 import { classify, implementationStatus, LABEL_TEXT, STATUS_TEXT } from "../domain/labelRule";
 import { batchOverview, noFilters, queryItems, sortText, statusOf, type Filters, type Sort, type SortKey } from "../domain/query";
 import { NO_IMPLEMENTATION, REGISTRY, isRegistered } from "../domain/registry";
@@ -8,6 +8,9 @@ import type { Batch, CitationCheck, ImplStatus, Item, ItemType, Label, LabState,
 import { CheckCell, ImplChip, LabelChip, SampleBadge, VerdictLine } from "./Badges";
 import { fmtNum, formatDate, formatDateTime, MODE_TEXT, plural } from "./format";
 import { LineageView } from "./LineageView";
+import { ChatMarkdown } from "./ChatMarkdown";
+import { ResizeHandle } from "./ResizeHandle";
+import { clampDetail, defaultDetailHeight, DETAIL_KEY_STEP, DETAIL_MIN_HEIGHT, loadDetailLayout, maxDetailHeight, saveDetailLayout, type DetailLayout } from "./detailDock";
 import { RoadmapCard } from "./RoadmapCard";
 
 const TYPE_TEXT: Record<ItemType, string> = { paper: "Paper", unit: "Unit", finding: "Finding", snapshot: "Snapshot", note: "Note" };
@@ -28,6 +31,8 @@ interface Props {
 }
 
 export function NotesView(p: Props) {
+  const [layout, setLayout] = useState(() => loadDetailLayout(window.innerHeight));
+  const changeLayout = (patch: Partial<DetailLayout>) => { const next = clampDetail({ ...layout, ...patch }, window.innerHeight); setLayout(next); saveDetailLayout(next); };
   const { state, filters, setFilters, sort, setSort } = p;
   const [mode, setMode] = useState<"table" | "lineage">("table");
   const [lsel, setLsel] = useState<string | undefined>();
@@ -80,7 +85,7 @@ export function NotesView(p: Props) {
   };
 
   return (
-    <section className={`notes${mode === "lineage" ? " lineage-mode" : ""}`} aria-label="Notes">
+    <section className={`notes dock-${layout.dock}${mode === "lineage" ? " lineage-mode" : ""}`} style={{ "--detail-height": `${layout.height}px` } as CSSProperties} aria-label="Notes">
       {mode === "table" && <BatchList state={state} filters={filters} setBatch={(id) => set("batch", id ?? "")} onNewBatch={p.onNewBatch} />}
 
       <div className="table-col">
@@ -251,7 +256,7 @@ export function NotesView(p: Props) {
       </>)}
       </div>
 
-      <DetailPane state={state} item={selected} onReview={p.onReview} onSelect={p.onSelect} />
+      <DetailPane state={state} item={selected} onReview={p.onReview} onSelect={p.onSelect} layout={layout} onLayout={changeLayout} />
     </section>
   );
 }
@@ -323,10 +328,31 @@ function BatchList({ state, filters, setBatch, onNewBatch }: { state: LabState; 
   );
 }
 
-function DetailPane({ state, item, onReview, onSelect }: { state: LabState; item: Item | undefined; onReview(id: string, r: Review): void; onSelect(id: string): void }) {
+function NoteBody({ text }: { text: string }) {
+  const [raw, setRaw] = useState(false);
+  return (
+    <div className="note-body">
+      <div className="toggle small" role="group" aria-label="Note view">
+        <button type="button" aria-pressed={!raw} onClick={() => setRaw(false)}>Preview</button>
+        <button type="button" aria-pressed={raw} onClick={() => setRaw(true)}>Raw</button>
+      </div>
+      {raw ? <p className="body">{text}</p> : <ChatMarkdown text={text} />}
+    </div>
+  );
+}
+
+function DetailPane({ state, item, onReview, onSelect, layout, onLayout }: { state: LabState; item: Item | undefined; onReview(id: string, r: Review): void; onSelect(id: string): void; layout: DetailLayout; onLayout(patch: Partial<DetailLayout>): void }) {
+  const bottom = layout.dock === "bottom";
+  const handle = bottom ? (
+    <ResizeHandle axis="y" value={layout.height} min={DETAIL_MIN_HEIGHT} max={maxDetailHeight(window.innerHeight)} step={DETAIL_KEY_STEP} label="Resize detail height" className="detail-resizer"
+      onChange={height => onLayout({ height })} onReset={() => onLayout({ height: defaultDetailHeight(window.innerHeight) })} />
+  ) : null;
+  const dockButton = (
+    <button type="button" className="btn small dock-toggle" onClick={() => onLayout({ dock: bottom ? "right" : "bottom" })} title={bottom ? "Show the detail beside the table" : "Show the detail below the table"}>{bottom ? "Move to side" : "Move to bottom"}</button>
+  );
   if (!item) {
     return (
-      <aside className="detail" aria-label="Detail">
+      <aside className="detail is-empty" aria-label="Detail">
         <p className="empty">Select a row to see its detail.</p>
       </aside>
     );
@@ -338,9 +364,13 @@ function DetailPane({ state, item, onReview, onSelect }: { state: LabState; item
 
   return (
     <aside className="detail" aria-label="Detail">
-      <p className="eyebrow">
-        {TYPE_TEXT[item.type]} · {batch?.name}
-      </p>
+      {handle}
+      <div className="detail-top">
+        <p className="eyebrow">
+          {TYPE_TEXT[item.type]} · {batch?.name}
+        </p>
+        {dockButton}
+      </div>
       <h2>{item.title}</h2>
       <div className="badges">
         {item.sample && <SampleBadge />}
@@ -354,7 +384,7 @@ function DetailPane({ state, item, onReview, onSelect }: { state: LabState; item
         {item.type === "paper" && <PaperDetail state={state} item={item} />}
         {item.type === "unit" && <UnitDetail item={item} paper={paper} />}
         {item.type === "snapshot" && <SnapshotDetail item={item} />}
-        {(item.type === "finding" || item.type === "note") && <p className="body">{item.body}</p>}
+        {(item.type === "finding" || item.type === "note") && <NoteBody key={item.id} text={item.body ?? ""} />}
 
         {item.source && (
           <dl className="fields source">

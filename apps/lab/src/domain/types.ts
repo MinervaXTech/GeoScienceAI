@@ -9,12 +9,27 @@ export type ImplStatus = "runnable" | "spec-only";
 export type CitationCheck = "pass" | "fail" | "not-run";
 export type Review = "pending" | "reviewed";
 
+/** A file added to a researcher message. Images are stored as scaled JPEG data URLs, text files as their (capped) text. */
+export interface Attachment {
+  id: string;
+  name: string;
+  kind: "image" | "text" | "pdf";
+  mime: string;
+  size: number;
+  dataUrl?: string;
+  text?: string;
+  truncated?: true;
+  sha256?: string;
+}
+
 export interface Message {
   id: string;
   role: "researcher" | "model";
   text: string;
   createdAt: string;
   editedAt?: string;
+  attachments?: Attachment[];
+  knowledge?: import("./knowledge").KnowledgeCapture;
   /** Present only when a validator ran on this message. Absent means no verdict chip. */
   validation?: { citationCheck: "pass" | "fail" };
   /** The model reply came from a saved replay, not a live call. */

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { exportJson, importJson, loadState, parseState, saveState, STORAGE_KEY, type StorageLike } from "./persistence";
-import { SESSION_IMPORT, currentSession, deleteSession, editMessage, newSession, renameSession, saveMessageToNotes, sendMessage, setSessionMode, isReadOnly, savedTo, SAVE_TYPES } from "./store";
+import { SESSION_IMPORT, currentSession, deleteSession, editMessage, newSession, renameSession, resumeSession, saveMessageToNotes, sendMessage, setSessionMode, isReadOnly, savedTo, SAVE_TYPES } from "./store";
 import { loadSampleData } from "./sample";
 import { statusOf } from "./query";
 import { emptyState } from "./types";
@@ -195,5 +195,23 @@ describe("message editing", () => {
     expect(editMessage(state, created.session.id, message.id, "   ")).toBe(state);
     const ended = newSession(state).state;
     expect(editMessage(ended, created.session.id, message.id, "Changed old chat")).toBe(ended);
+  });
+});
+
+describe("resuming a session", () => {
+  it("reopens an ended session, ends the open one, and accepts messages again", () => {
+    const first = newSession(emptyState());
+    let state = sendMessage(first.state, first.session.id, "hello");
+    const second = newSession(state);
+    state = resumeSession(second.state, first.session.id);
+    expect(state.sessions.filter(x => x.endedAt === undefined).map(x => x.id)).toEqual([first.session.id]);
+    expect(isReadOnly(state.sessions.find(x => x.id === second.session.id)!)).toBe(true);
+    state = sendMessage(state, first.session.id, "again");
+    expect(state.sessions.find(x => x.id === first.session.id)!.messages.map(m => m.text)).toEqual(["hello", "again"]);
+  });
+
+  it("leaves sample sessions read-only", () => {
+    const state = { ...emptyState(), sessions: [{ id: "s", title: "Sample", createdAt: "2026-01-01T00:00:00Z", endedAt: "2026-01-01T01:00:00Z", mode: "take-notes" as const, sample: true as const, messages: [] }] };
+    expect(resumeSession(state, "s")).toBe(state);
   });
 });

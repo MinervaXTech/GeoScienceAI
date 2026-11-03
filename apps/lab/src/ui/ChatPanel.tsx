@@ -1,8 +1,12 @@
 import { useEffect, useRef, useState } from "react";
 import { isReadOnly, SAVE_TYPES, SESSION_IMPORT, savedTo, sessionBatch, sessionImportName } from "../domain/store";
-import type { ItemType, LabState, Message, Mode, Session } from "../domain/types";
+import { CHAT_DEFAULT_WIDTH, CHAT_KEY_STEP, CHAT_MIN_WIDTH } from "./chatSize";
+import { ATTACH_ACCEPT, MAX_ATTACHMENTS, readAttachment } from "../domain/attachments";
+import type { Attachment, ItemType, LabState, Message, Mode, Session } from "../domain/types";
 import { AGENT_MODELS, agentModelLabel, type AgentModelChoice } from "../geo/mapAgent";
 import type { MapChatController } from "./useMapChat";
+import { KnowledgeOffer } from "./KnowledgeOffer";
+import type { KnowledgeCapture } from "../domain/knowledge";
 import { ChatMarkdown } from "./ChatMarkdown";
 import { SampleBadge, VerdictLine } from "./Badges";
 import { formatDateTime, formatSessionTime, MODE_TEXT, plural } from "./format";
@@ -13,17 +17,23 @@ interface Props {
   sessionId: string | undefined;
   expanded?: boolean;
   onToggleExpanded?(): void;
+  width?: number;
+  onResize?(width: number): void;
+  full?: boolean;
+  onToggleFull?(): void;
   onSelect(id: string): void;
   onNewSession(): void;
+  onResumeSession?(id: string): void;
   onRenameSession(id: string, title: string): void;
   onDeleteSession(id: string): void;
   onMode(sessionId: string, mode: Mode): void;
-  onSend(sessionId: string, text: string, useAgent: boolean): void;
+  onSend(sessionId: string, text: string, useAgent: boolean, attachments?: Attachment[]): void;
+  onKnowledgeChange?(sessionId: string, messageId: string, value: KnowledgeCapture): void;
   onEditMessage(sessionId: string, messageId: string, text: string): void;
   onSave(input: { sessionId: string; messageId: string; batchId: string; type: ItemType }): void;
 }
 
-export function ChatPanel({ agent, state, sessionId, expanded = true, onToggleExpanded, onSelect, onNewSession, onRenameSession, onDeleteSession, onMode, onSend, onEditMessage, onSave }: Props) {
+export function ChatPanel({ agent, state, sessionId, expanded = true, onToggleExpanded, width = CHAT_DEFAULT_WIDTH, onResize, full = false, onToggleFull, onSelect, onNewSession, onResumeSession, onRenameSession, onDeleteSession, onMode, onSend, onEditMessage, onKnowledgeChange, onSave }: Props) {
   const session = state.sessions.find((s) => s.id === sessionId);
   const ordered = [...state.sessions].reverse();
   const [useAgent, setUseAgent] = useState(true);
@@ -33,13 +43,42 @@ export function ChatPanel({ agent, state, sessionId, expanded = true, onToggleEx
   const draft = composer.sessionId === sessionId ? composer.text : "";
   const setDraft = (text: string) => setComposer({ sessionId, text });
   const [saving, setSaving] = useState<string | null>(null);
+  const [attached, setAttached] = useState<{ sessionId: string | undefined; items: Attachment[] }>({ sessionId, items: [] });
+  const attachments = attached.sessionId === sessionId ? attached.items : [];
+  const [attachError, setAttachError] = useState("");
+  const [dragging, setDragging] = useState(false), drag = useRef<(() => void) | null>(null);
+  useEffect(() => () => drag.current?.(), []);
+  const [settingsShown, setSettingsShown] = useState(() => { try { return localStorage.getItem("lab.chat.settingsShown") !== "false"; } catch { return true; } });
+  const toggleSettings = () => { const next = !settingsShown; setSettingsShown(next); try { localStorage.setItem("lab.chat.settingsShown", String(next)); } catch { /* the choice still applies to this visit */ } };
+  const fileInput = useRef<HTMLInputElement>(null);
+  const addFiles = async (files: File[]) => {
+    if (!files.length) return;
+    const room = MAX_ATTACHMENTS - attachments.length;
+    setAttachError(files.length > room ? `Up to ${MAX_ATTACHMENTS} files per message.` : "");
+    const added: Attachment[] = [];
+    for (const file of files.slice(0, Math.max(0, room))) {
+      try { added.push(await readAttachment(file, `att-${crypto.randomUUID()}`)); } catch (e) { setAttachError(e instanceof Error ? e.message : "Could not read the file."); }
+    }
+    if (added.length) setAttached(current => ({ sessionId, items: [...(current.sessionId === sessionId ? current.items : []), ...added] }));
+  };
 
   const optionLabel = (s: Session) => `${s.title}, ${formatSessionTime(s.createdAt)}${isReadOnly(s) ? " (read-only)" : ""}`;
   const readOnly = session ? isReadOnly(session) : false;
   const sessionDefaultName = session ? (sessionBatch(state, session.id)?.name ?? sessionImportName(session)) : "";
 
   return (
-    <aside className={`chat${expanded ? "" : " collapsed"}`} aria-label="Chat">
+    <aside className={`chat${expanded ? "" : " collapsed"}${dragging ? " dragging" : ""}`} aria-label="Chat">
+      {expanded && !full && onResize && <div role="separator" aria-orientation="vertical" aria-label="Resize chat" aria-valuenow={width} aria-valuemin={CHAT_MIN_WIDTH} tabIndex={0} className={`chat-resizer${dragging ? " dragging" : ""}`} title="Drag to resize, double-click to reset"
+        onPointerDown={e => {
+          e.preventDefault(); drag.current?.();
+          const right = e.currentTarget.closest(".layout")?.getBoundingClientRect().right ?? window.innerWidth;
+          const move = (ev: PointerEvent) => onResize(right - ev.clientX);
+          const stop = () => { window.removeEventListener("pointermove", move); window.removeEventListener("pointerup", stop); window.removeEventListener("pointercancel", stop); drag.current = null; setDragging(false); };
+          window.addEventListener("pointermove", move); window.addEventListener("pointerup", stop); window.addEventListener("pointercancel", stop);
+          drag.current = stop; setDragging(true);
+        }}
+        onDoubleClick={() => onResize(CHAT_DEFAULT_WIDTH)}
+        onKeyDown={e => { if (e.key === "ArrowLeft") { e.preventDefault(); onResize(width + CHAT_KEY_STEP); } else if (e.key === "ArrowRight") { e.preventDefault(); onResize(width - CHAT_KEY_STEP); } else if (e.key === "Home") { e.preventDefault(); onResize(CHAT_MIN_WIDTH); } else if (e.key === "End") { e.preventDefault(); onResize(100000); } }} />}
       <div className="chat-head">
         <h2>Chat</h2>
         <div id="chat-session-controls" className="chat-session-controls" hidden={!expanded}>
@@ -55,6 +94,9 @@ export function ChatPanel({ agent, state, sessionId, expanded = true, onToggleEx
             + New session
           </button>
         </div>
+        {onToggleFull && expanded && <button type="button" className="chat-toggle chat-full-toggle" onClick={onToggleFull} aria-pressed={full} aria-label={full ? "Exit full screen chat" : "Full screen chat"} title={full ? "Exit full screen (Esc)" : "Full screen"}>
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><path d={full ? "M6 2v4H2M10 2v4h4M6 14v-4H2M10 14v-4h4" : "M2 6V2h4M14 6V2h-4M2 10v4h4M14 10v4h-4"} /></svg>
+        </button>}
         {onToggleExpanded && <button type="button" className="chat-toggle" onClick={onToggleExpanded} aria-expanded={expanded} aria-controls="chat-session-controls chat-panel-content" aria-label={expanded ? "Collapse chat" : "Expand chat"} title={expanded ? "Collapse chat" : "Expand chat"}>
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><path d={expanded ? "m6 4 4 4-4 4" : "m10 4-4 4 4 4"} /></svg>
           {!expanded && <span className="chat-toggle-text">Expand chat</span>}
@@ -62,13 +104,17 @@ export function ChatPanel({ agent, state, sessionId, expanded = true, onToggleEx
       </div>
       <div id="chat-panel-content" className="chat-content" hidden={!expanded}>
         <div className="muse-chat-controls">
+          <button type="button" className="btn small chat-settings-toggle" aria-expanded={settingsShown} aria-controls="muse-chat-settings" onClick={toggleSettings}>{settingsShown ? "Hide chat settings" : "Show chat settings"}</button>
+          <div id="muse-chat-settings" className="muse-chat-settings" hidden={!settingsShown}>
           {session && <SessionActions key={session.id} session={session} busy={agent.busy} onRename={onRenameSession} onDelete={onDeleteSession} />}
           <div className="toggle" role="group" aria-label="Chat interaction"><button type="button" disabled={agent.busy} aria-pressed={useAgent} onClick={() => setUseAgent(true)}>Muse agent</button><button type="button" disabled={agent.busy} aria-pressed={!useAgent} onClick={() => setUseAgent(false)}>Notes only</button></div>
           {useAgent && <><label>Muse model<select aria-label="Muse chat model" value={agent.modelChoice} disabled={agent.busy} onChange={e => agent.setModel(e.target.value as AgentModelChoice)}><option value="auto">Auto · choose for each message</option>{AGENT_MODELS.map(model => <option key={model} value={model}>{agentModelLabel(model)}</option>)}</select></label><ul className="hint muse-model-guide">
             {agent.modelChoice === "auto" ? <><li><strong>Spark 1.3:</strong> routine chat and map controls.</li><li><strong>Wonder 1.0:</strong> analysis and complex requests; may cost more.</li><li><strong>Model used:</strong> shown on each reply.</li></> : <li><strong>Selected model:</strong> controls the map and its analysis tools.</li>}
             <li><strong>Image generation:</strong> Muse Image 1.0.</li>
             <li><strong>Segmentation:</strong> SAM 3.1.</li>
-          </ul>{!agent.configured && <p className="sam-error">Configure MODEL_API_KEY to enable Muse chat.</p>}</>}
+          </ul></>}
+          </div>
+          {useAgent && !agent.configured && <p className="sam-error">Configure MODEL_API_KEY to enable Muse chat.</p>}
         </div>
         {session && (
           <p className="chat-meta">
@@ -90,6 +136,8 @@ export function ChatPanel({ agent, state, sessionId, expanded = true, onToggleEx
               busy={agent.busy}
               canResend={!agent.busy && (!useAgent || agent.configured)}
               resendLabel={useAgent ? "Send as new message" : "Save as new note"}
+              knowledgeModel={agent.model}
+              onKnowledge={onKnowledgeChange ? value => onKnowledgeChange(session.id, m.id, value) : undefined}
               onEdit={text => onEditMessage(session.id, m.id, text)}
               onResend={text => onSend(session.id, text, useAgent)}
               onOpen={() => setSaving(saving === m.id ? null : m.id)}
@@ -108,6 +156,7 @@ export function ChatPanel({ agent, state, sessionId, expanded = true, onToggleEx
             <p>
               {session.title}, {formatSessionTime(session.createdAt)} ended {formatDateTime(session.endedAt!)}. You can still save its messages to notes.
             </p>
+            {!session.sample && onResumeSession && <button type="button" className="btn small primary" disabled={agent.busy} onClick={() => onResumeSession(session.id)}>Continue this session</button>}
           </div>
         )}
         {session && !readOnly && (
@@ -115,9 +164,11 @@ export function ChatPanel({ agent, state, sessionId, expanded = true, onToggleEx
             className="chat-foot"
             onSubmit={(e) => {
               e.preventDefault();
-              if (!draft.trim() || agent.busy || (useAgent && !agent.configured)) return;
-              onSend(session.id, draft, useAgent);
+              if ((!draft.trim() && !attachments.length) || agent.busy || (useAgent && !agent.configured)) return;
+              onSend(session.id, draft.trim() || "Shared a file", useAgent, attachments);
               setDraft("");
+              setAttached({ sessionId, items: [] });
+              setAttachError("");
             }}
           >
             {!useAgent && <div className="mode-row">
@@ -139,10 +190,15 @@ export function ChatPanel({ agent, state, sessionId, expanded = true, onToggleEx
               onKeyDown={(e) => {
                 if ((e.metaKey || e.ctrlKey) && e.key === "Enter") e.currentTarget.form?.requestSubmit();
               }}
+              onPaste={(e) => { const files = [...e.clipboardData.files]; if (files.length) { e.preventDefault(); void addFiles(files); } }}
             />
+            {attachments.length > 0 && <ul className="attachment-chips" aria-label="Attached files">{attachments.map(a => <li key={a.id}>{a.kind === "image" ? <img src={a.dataUrl} alt="" /> : <span aria-hidden="true">{"📄"}</span>}<span className="attachment-name" title={a.name}>{a.name}</span><button type="button" className="btn small" aria-label={`Remove ${a.name}`} onClick={() => setAttached({ sessionId, items: attachments.filter(x => x.id !== a.id) })}>{"×"}</button></li>)}</ul>}
+            {attachError && <p className="sam-error" role="alert">{attachError}</p>}
             <div className="send-row">
+              <input ref={fileInput} type="file" hidden multiple accept={ATTACH_ACCEPT} aria-label="Attach files" onChange={e => { const files = [...(e.currentTarget.files ?? [])]; e.currentTarget.value = ""; void addFiles(files); }} />
+              <button type="button" className="btn" disabled={agent.busy || attachments.length >= MAX_ATTACHMENTS} onClick={() => fileInput.current?.click()}>Attach</button>
               <span className="hint" role="status">{agent.phase || (useAgent ? "Muse can run map tools. Each action is logged." : "Saves a note without a model call.")}</span>
-              {agent.busy ? <button type="button" className="btn" onClick={agent.cancel}>Stop Muse</button> : <button type="submit" className="btn primary" disabled={!draft.trim() || (useAgent && !agent.configured)}>
+              {agent.busy ? <button type="button" className="btn" onClick={agent.cancel}>Stop Muse</button> : <button type="submit" className="btn primary" disabled={(!draft.trim() && !attachments.length) || (useAgent && !agent.configured)}>
                 {useAgent ? "Send to Muse" : "Save note"}
               </button>}
             </div>
@@ -185,6 +241,8 @@ function MessageRow(props: {
   busy: boolean;
   canResend: boolean;
   resendLabel: string;
+  knowledgeModel: string;
+  onKnowledge?(value: KnowledgeCapture): void;
   onEdit(text: string): void;
   onResend(text: string): void;
   onOpen(): void;
@@ -231,6 +289,8 @@ function MessageRow(props: {
           <button type="button" className="btn small" onClick={() => setEditing(false)}>Cancel</button>
         </div>
       </form> : m.role === "model" ? <ChatMarkdown text={m.text || (m.agent?.status === "running" ? "Working on the selected map…" : "")} /> : <p>{m.text}</p>}
+      {m.attachments && m.attachments.length > 0 && <ul className="attachment-list" aria-label="Attachments">{m.attachments.map(a => <li key={a.id}>{a.kind === "image" && a.dataUrl ? <a href={a.dataUrl} target="_blank" rel="noreferrer" title={a.name}><img src={a.dataUrl} alt={a.name} /></a> : <details><summary>{"📄 "}{a.name}{a.truncated ? " (truncated)" : ""}</summary><pre>{a.text}</pre></details>}</li>)}</ul>}
+      {m.role === "researcher" && <KnowledgeOffer message={m} model={props.knowledgeModel} disabled={props.busy} onChange={props.onKnowledge} />}
       {m.agent && m.agent.steps.length > 0 && <details className="muse-chat-actions" open={m.agent.status === "running"}><summary>Action log · {m.agent.steps.length}</summary><ol>{m.agent.steps.map((step, index) => <li key={index}><details><summary>{step.action.replaceAll("_", " ")} · {step.status}</summary><pre>{JSON.stringify({ parameters: step.parameters, result: step.result }, null, 2)}</pre></details></li>)}</ol></details>}
       {m.validation && <VerdictLine check={m.validation.citationCheck} modelDrafted review="pending" />}
       {!m.validation && !m.agent && m.role === "model" && <p className="hint">Citation check: Not run</p>}

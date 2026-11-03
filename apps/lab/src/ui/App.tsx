@@ -1,9 +1,10 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { clampChatWidth, loadChatWidth, saveChatWidth } from "./chatSize";
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { costReadout } from "../domain/config";
 import { exportJson, importJson } from "../domain/persistence";
 import { noFilters, type Filters, type Sort } from "../domain/query";
 import { hasSampleData, loadSampleData } from "../domain/sample";
-import { addBatch, currentSession, deleteSession, editMessage, newSession, renameSession, registerSnapshot, saveMessageToNotes, sendMessage, setReview, setSessionMode } from "../domain/store";
+import { addBatch, currentSession, deleteSession, editMessage, newSession, renameSession, resumeSession, registerSnapshot, saveMessageToNotes, sendMessage, setReview, setSessionMode } from "../domain/store";
 import { emptyState, type SavedMap } from "../domain/types";
 import type { Polygon } from "geojson";
 import { UPM_MAP } from "../geo/maps";
@@ -18,6 +19,7 @@ import { MapSidebar, type MapSidebarTab } from "./MapSidebar";
 import { DeleteMapDialog } from "./DeleteMapDialog";
 import { Snapshots } from "./Snapshots";
 import { snapshotScope } from "./snapshotScope";
+import { detectPaper } from "../domain/knowledge";
 import { useMapChat } from "./useMapChat";
 import { validateMapAgentCall, type MapAgentHandle } from "../geo/mapAgent";
 import { useLab } from "./useLab";
@@ -50,7 +52,7 @@ export function App() {
   const [sidebarExpanded, setSidebarExpanded] = useState(true);
   const [sidebarTab, setSidebarTab] = useState<MapSidebarTab>("maps");
   const [layerHost, setLayerHost] = useState<HTMLDivElement | null>(null);
-  const openSidebar = (panel: MapSidebarTab) => { setSidebarTab(panel); setSidebarExpanded(true); if (panel !== "snapshots") { setTab("map"); setComparing(false); } };
+  const openSidebar = (panel: MapSidebarTab) => { setSidebarTab(panel); setSidebarExpanded(true); if (panel !== "snapshots" && panel !== "knowledge") { setTab("map"); setComparing(false); } };
   const [addMapView, setAddMapView] = useState<Omit<SavedMap, "id" | "name"> | null>(null);
   const [addingMap, setAddingMap] = useState(false);
   const [deletedMap, setDeletedMap] = useState<{ map: SavedMap; index: number; wasActive: boolean; area: Polygon | null } | null>(null);
@@ -64,6 +66,10 @@ export function App() {
     setAddingMap(adding);
   };
   const [chatExpanded, setChatExpanded] = useState(true);
+  const [chatWidth, setChatWidth] = useState(loadChatWidth), [chatFull, setChatFull] = useState(false);
+  const changeChatWidth = (width: number) => { const next = clampChatWidth(width, window.innerWidth); setChatWidth(next); saveChatWidth(next); };
+  useEffect(() => { const frame = requestAnimationFrame(() => window.dispatchEvent(new Event("resize"))); return () => cancelAnimationFrame(frame); }, [chatWidth, chatFull, chatExpanded]);
+  useEffect(() => { if (!chatFull) return; const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setChatFull(false); }; window.addEventListener("keydown", onKey); return () => window.removeEventListener("keydown", onKey); }, [chatFull]);
   const [mapFocusRequest, setMapFocusRequest] = useState(0);
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -187,6 +193,31 @@ export function App() {
     async execute(raw, signal, model) {
       const call = validateMapAgentCall(raw), p = call.parameters; signal.throwIfAborted();
       if (pendingDeleteMap) throw Error("Complete or cancel the typed map-name deletion dialog first.");
+      if (call.action === "query_knowledge") {
+        if (!["muse-spark-1.3", "muse-wonder-1.0"].includes(model)) throw Error("Select Muse Spark 1.3 or Wonder 1.0 to query paper knowledge.");
+        const response = await fetch("/api/knowledge/query", { method: "POST", headers: { "Content-Type": "application/json" }, signal, body: JSON.stringify({ question: p.question, ...(p.collection ? { collection: p.collection } : {}) }) }); const data = await response.json(); if (!response.ok) throw Error(data.error ?? "Knowledge query failed."); return data;
+      }
+      if (call.action === "transcribe_page") {
+        if (!["muse-spark-1.3", "muse-wonder-1.0"].includes(model)) throw Error("Select Muse Spark 1.3 or Wonder 1.0 to transcribe a paper page.");
+        const response = await fetch("/api/knowledge/transcribe", { method: "POST", headers: { "Content-Type": "application/json" }, signal, body: JSON.stringify({ paper: p.paper, page: p.page, ...(p.collection ? { collection: p.collection } : {}) }) }); const data = await response.json(); if (!response.ok) throw Error(data.error ?? "Transcribing the page failed."); return data;
+      }
+      if (call.action === "compare_papers") {
+        if (!["muse-spark-1.3", "muse-wonder-1.0"].includes(model)) throw Error("Select Muse Spark 1.3 or Wonder 1.0 to compare stored papers.");
+        const response = await fetch("/api/knowledge/overview", { method: "POST", headers: { "Content-Type": "application/json" }, signal, body: JSON.stringify(p.collection ? { collection: p.collection } : {}) }); const data = await response.json(); if (!response.ok) throw Error(data.error ?? "Comparing papers failed."); return data;
+      }
+      if (call.action === "read_paper") {
+        if (!["muse-spark-1.3", "muse-wonder-1.0"].includes(model)) throw Error("Select Muse Spark 1.3 or Wonder 1.0 to read stored papers.");
+        const response = await fetch("/api/knowledge/read", { method: "POST", headers: { "Content-Type": "application/json" }, signal, body: JSON.stringify({ paper: p.paper, query: p.query, ...(p.collection ? { collection: p.collection } : {}) }) }); const data = await response.json(); if (!response.ok) throw Error(data.error ?? "Reading the paper failed."); return data;
+      }
+      if (call.action === "propose_knowledge_capture") {
+        const source = state.sessions.flatMap(s => s.messages.map(message => ({ sessionId: s.id, message }))).reverse().find(({ message }) => message.role === "researcher" && (p.attachmentId ? message.attachments?.some(a => a.id === p.attachmentId && a.kind !== "image") : message.text.includes(String(p.url))));
+        if (!source) throw Error("That paper was not shared in chat.");
+        if (source.message.knowledge?.status === "declined") return "The user declined this paper. Nothing was stored.";
+        if (source.message.knowledge?.status === "stored") return "This paper is already stored. Use query_knowledge.";
+        const candidate = detectPaper(source.message); if (!candidate) throw Error("That attachment is not a detected paper.");
+        apply(saved => ({ ...saved, sessions: saved.sessions.map(s => s.id === source.sessionId ? { ...s, messages: s.messages.map(m => m.id === source.message.id ? { ...m, knowledge: { status: "offered", candidate } } : m) } : s) }));
+        return "Confirmation card offered. Nothing was stored. Wait for the user to click Store in knowledge base.";
+      }
       if (call.action === "open_sidebar") { if (p.tab === "collapse") setSidebarExpanded(false); else openSidebar(p.tab as MapSidebarTab); }
       else if (call.action === "open_map") { if (sam.busy || addingMap) throw Error("Finish the current map operation first."); if (![UPM_MAP, ...(state.maps ?? [])].some(map => map.id === p.id)) throw Error("That saved map does not exist."); openMap(p.id as string); }
       else if (call.action === "add_map") { if (sam.busy || addingMap) throw Error("Finish the current map operation first."); changeAddingMap(true); return "Add map form opened. Waiting for the user to enter a name, location and boundary, then Save map."; }
@@ -276,7 +307,7 @@ export function App() {
       {deletedMap && <div className="notice info" role="status"><span>Deleted “{deletedMap.map.name}”.</span><button type="button" className="btn small" disabled={sam.busy || addingMap} onClick={undoDeleteMap}>Undo delete</button><button type="button" aria-label="Dismiss deletion" onClick={() => setDeletedMap(null)}>×</button></div>}
       {pendingDeleteMap && <DeleteMapDialog key={pendingDeleteMap.id} name={pendingDeleteMap.name} busy={sam.busy || addingMap} onCancel={() => setDeleteMapId(null)} onConfirm={() => removeMap(pendingDeleteMap.id)} />}
 
-      <div className={`layout${chatExpanded ? "" : " chat-collapsed"}`}>
+      <div className={`layout${chatExpanded ? "" : " chat-collapsed"}${chatExpanded && chatFull ? " chat-full" : ""}`} style={{ "--chat-width": `${clampChatWidth(chatWidth, typeof window === "undefined" ? 1200 : window.innerWidth)}px` } as CSSProperties}>
         <main className="main">
           <div className="tabs-row">
             <div className="toggle big" role="tablist" aria-label="View">
@@ -334,11 +365,16 @@ export function App() {
           sessionId={sessionId}
           expanded={chatExpanded}
           onToggleExpanded={() => setChatExpanded((expanded) => !expanded)}
+          width={chatWidth}
+          onResize={changeChatWidth}
+          full={chatFull}
+          onToggleFull={() => setChatFull(full => !full)}
           onSelect={setViewSession}
           onNewSession={() => {
             const out = run((s) => newSession(s, currentSession(s)?.mode ?? "take-notes"));
             if (out) setViewSession(out.session.id);
           }}
+          onResumeSession={(id) => { if (!chat.busy) apply(s => resumeSession(s, id)); }}
           onRenameSession={(id, title) => { if (!chat.busy) apply(s => renameSession(s, id, title)); }}
           onDeleteSession={(id) => {
             if (chat.busy) return;
@@ -347,8 +383,9 @@ export function App() {
             setNotice({ kind: "info", text: "Session deleted. Notes already saved have been kept." });
           }}
           onMode={(id, mode) => apply((s) => setSessionMode(s, id, mode))}
+          onKnowledgeChange={(id, messageId, value) => apply(saved => ({ ...saved, sessions: saved.sessions.map(s => s.id === id ? { ...s, messages: s.messages.map(m => m.id === messageId && m.role === "researcher" ? { ...m, knowledge: value } : m) } : s) }))}
           onEditMessage={(id, messageId, text) => { if (!chat.busy) apply(s => editMessage(s, id, messageId, text)); }}
-          onSend={(id, text, useAgent) => { const session = state.sessions.find(s => s.id === id); if (!session || session.endedAt || chat.busy) return; apply(s => sendMessage(s, id, text)); if (useAgent) void chat.send(session, text); }}
+          onSend={(id, text, useAgent, attachments) => { const session = state.sessions.find(s => s.id === id); if (!session || session.endedAt || chat.busy) return; apply(s => sendMessage(s, id, text, undefined, attachments)); if (useAgent) void chat.send(session, text, attachments); }}
           onSave={(input) => {
             const out = run((s) => saveMessageToNotes(s, input));
             if (out) setNotice({ kind: "info", text: `Saved to ${state.batches.find((b) => b.id === out.item.batchId)?.name ?? out.state.batches.find((b) => b.id === out.item.batchId)?.name}.` });

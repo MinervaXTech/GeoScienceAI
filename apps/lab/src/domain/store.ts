@@ -1,8 +1,9 @@
+import { sessionAttachments } from "./attachments";
 import { computeLabel, isLabelled } from "./labelRule";
 import { assertItem } from "./validate";
 import { buildSnapshotData, DEFAULT_SNAPSHOT_PARAMETERS } from "./snapshots";
 import { NO_IMPLEMENTATION } from "./registry";
-import type { Batch, Item, ItemType, LabState, Message, Mode, Session } from "./types";
+import type { Attachment, Batch, Item, ItemType, LabState, Message, Mode, Session } from "./types";
 
 /** All state changes are pure functions of (state, input), so they can be tested without React. */
 export interface Clock {
@@ -68,6 +69,16 @@ export function newSession(state: LabState, mode: Mode = "take-notes", clock: Cl
   return { state: { ...state, sessions: [...ended, session] }, session };
 }
 
+const withoutEnd = (s: Session): Session => { const open = { ...s }; delete open.endedAt; return open; };
+
+/** Reopens an ended session so chat can continue in it. The previously open session ends, so only one stays open. Sample sessions stay read-only. */
+export function resumeSession(state: LabState, sessionId: string, clock: Clock = systemClock): LabState {
+  const target = state.sessions.find(s => s.id === sessionId);
+  if (!target || !isReadOnly(target) || target.sample) return state;
+  const now = clock.now();
+  return { ...state, sessions: state.sessions.map(s => s.id === sessionId ? withoutEnd(s) : s.endedAt === undefined ? { ...s, endedAt: now } : s) };
+}
+
 export function setSessionMode(state: LabState, sessionId: string, mode: Mode): LabState {
   const s = state.sessions.find((x) => x.id === sessionId);
   if (!s || isReadOnly(s)) return state;
@@ -93,11 +104,11 @@ export function deleteSession(state: LabState, sessionId: string): LabState {
 }
 
 /** Sending adds the researcher's message only. No model call is made in this phase. */
-export function sendMessage(state: LabState, sessionId: string, text: string, clock: Clock = systemClock): LabState {
+export function sendMessage(state: LabState, sessionId: string, text: string, clock: Clock = systemClock, attachments: Attachment[] = []): LabState {
   const body = text.trim();
   const s = state.sessions.find((x) => x.id === sessionId);
   if (!body || !s || isReadOnly(s)) return state;
-  const message: Message = { id: clock.id("msg"), role: "researcher", text: body, createdAt: clock.now() };
+  const message: Message = { id: clock.id("msg"), role: "researcher", text: body, createdAt: clock.now(), ...(attachments.length ? { attachments: sessionAttachments(attachments) } : {}) };
   return { ...state, sessions: state.sessions.map((x) => (x.id === sessionId ? { ...x, messages: [...x.messages, message] } : x)) };
 }
 
@@ -107,7 +118,7 @@ export function editMessage(state: LabState, sessionId: string, messageId: strin
   const session = state.sessions.find(s => s.id === sessionId);
   const message = session?.messages.find(m => m.id === messageId);
   if (!body || !session || isReadOnly(session) || message?.role !== "researcher" || message.text === body) return state;
-  return { ...state, sessions: state.sessions.map(s => s.id === sessionId ? { ...s, messages: s.messages.map(m => m.id === messageId ? { ...m, text: body, editedAt: clock.now() } : m) } : s) };
+  return { ...state, sessions: state.sessions.map(s => s.id === sessionId ? { ...s, messages: s.messages.map(m => { if (m.id !== messageId) return m; const next = { ...m, text: body, editedAt: clock.now() }; delete next.knowledge; return next; }) } : s) };
 }
 
 export const sessionImportName = (s: Session) => `${s.title} import`;

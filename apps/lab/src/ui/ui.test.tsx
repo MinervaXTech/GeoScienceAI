@@ -137,6 +137,53 @@ describe("message actions", () => {
     { id: "reply", role: "model" as const, text: "**Planning points**\n\n- 42 candidates", createdAt: "2026-11-03T00:00:01Z" },
   ] }] };
   const props = { agent, state, sessionId: "chat", onSelect() {}, onNewSession() {}, onRenameSession() {}, onDeleteSession() {}, onMode() {}, onSend() {}, onEditMessage() {}, onSave() {} };
+  it("resizes the chat from the keyboard and by double-click, and toggles full screen", () => {
+    const onResize = vi.fn(), onToggleFull = vi.fn();
+    const { rerender } = render(<ChatPanel {...props} width={500} onResize={onResize} full={false} onToggleFull={onToggleFull} />);
+    const handle = screen.getByRole("separator", { name: "Resize chat" });
+    expect(handle.getAttribute("aria-valuenow")).toBe("500");
+    fireEvent.keyDown(handle, { key: "ArrowLeft" }); expect(onResize).toHaveBeenLastCalledWith(532);
+    fireEvent.keyDown(handle, { key: "ArrowRight" }); expect(onResize).toHaveBeenLastCalledWith(468);
+    fireEvent.keyDown(handle, { key: "Home" }); expect(onResize).toHaveBeenLastCalledWith(340);
+    fireEvent.doubleClick(handle); expect(onResize).toHaveBeenLastCalledWith(500);
+    fireEvent.click(screen.getByRole("button", { name: "Full screen chat" })); expect(onToggleFull).toHaveBeenCalledTimes(1);
+    rerender(<ChatPanel {...props} width={500} onResize={onResize} full onToggleFull={onToggleFull} />);
+    expect(screen.queryByRole("separator", { name: "Resize chat" })).toBeNull();
+    expect(screen.getByRole("button", { name: "Exit full screen chat" }).getAttribute("aria-pressed")).toBe("true");
+  });
+  it("shows a note as Markdown with a Raw toggle, and docks the detail at the bottom with a vertical resize handle only", () => {
+    localStorage.removeItem("lab.notes.detail");
+    const state = emptyState(); state.batches.push({ id: "b1", name: "Paper 1 import", kind: "session", source: "s1", createdAt: "2026-11-03T00:00:00Z" });
+    state.items.push({ id: "n1", batchId: "b1", type: "note", title: "From the stored paper:", body: "**Main results**\n\n> a quoted line\n\n- first\n- second", review: "pending", citationCheck: "not-run", createdAt: "2026-11-03T00:00:00Z", updatedAt: "2026-11-03T00:00:00Z" } as never);
+    render(<NotesView state={state} filters={noFilters()} setFilters={() => {}} sort={undefined} setSort={() => {}} selectedId="n1" onSelect={() => {}} onNewBatch={() => {}} onReview={() => {}} onLoadSample={() => {}} />);
+    const detail = screen.getByRole("complementary", { name: "Detail" });
+    expect(within(detail).getByText("Main results").tagName).toBe("STRONG"); expect(detail.querySelector("blockquote")).not.toBeNull(); expect(detail.querySelectorAll("li")).toHaveLength(2);
+    expect(detail.textContent).not.toContain("**Main results**");
+    fireEvent.click(within(detail).getByRole("button", { name: "Raw" })); expect(detail.textContent).toContain("**Main results**"); expect(detail.querySelector("blockquote")).toBeNull();
+    fireEvent.click(within(detail).getByRole("button", { name: "Preview" })); expect(detail.querySelector("blockquote")).not.toBeNull();
+    const handle = within(detail).getByRole("separator", { name: "Resize detail height" });
+    expect(handle.getAttribute("aria-orientation")).toBe("horizontal");
+    const before = Number(handle.getAttribute("aria-valuenow"));
+    fireEvent.keyDown(handle, { key: "ArrowUp" }); expect(Number(within(detail).getByRole("separator").getAttribute("aria-valuenow"))).toBe(before + 32);
+    expect(document.querySelector(".notes.dock-bottom")).not.toBeNull();
+    fireEvent.click(within(detail).getByRole("button", { name: "Move to side" }));
+    expect(document.querySelector(".notes.dock-right")).not.toBeNull(); expect(within(screen.getByRole("complementary", { name: "Detail" })).queryByRole("separator")).toBeNull();
+    localStorage.removeItem("lab.notes.detail");
+  });
+  it("hides and shows the chat settings, and remembers the choice", () => {
+    localStorage.removeItem("lab.chat.settingsShown");
+    render(<ChatPanel {...props} />);
+    const settings = () => document.getElementById("muse-chat-settings")!;
+    expect(settings().hidden).toBe(false);
+    fireEvent.click(screen.getByRole("button", { name: "Hide chat settings" }));
+    expect(settings().hidden).toBe(true);
+    expect(localStorage.getItem("lab.chat.settingsShown")).toBe("false");
+    cleanup(); render(<ChatPanel {...props} />);
+    expect(settings().hidden).toBe(true);
+    fireEvent.click(screen.getByRole("button", { name: "Show chat settings" }));
+    expect(settings().hidden).toBe(false);
+    localStorage.removeItem("lab.chat.settingsShown");
+  });
   it("copies the original message including Markdown, and confirms success", async () => {
     const writeText = vi.fn().mockResolvedValue(undefined);
     vi.stubGlobal("navigator", { clipboard: { writeText } });

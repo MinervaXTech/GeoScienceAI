@@ -1,6 +1,8 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { isAgentModelChoice, resolveAgentModel, validateMapAgentCall, type AgentChatMeta, type AgentModel, type AgentModelChoice, type MapAgentCall, type MapAgentHandle } from "../geo/mapAgent";
-import type { Message, Session } from "../domain/types";
+import type { Attachment, Message, Session } from "../domain/types";
+import { detectPaper } from "../domain/knowledge";
+import { messageContent, readPdfForChat } from "../domain/attachments";
 import type { MuseImage } from "../geo/muse";
 
 type Bridge = Pick<MapAgentHandle, "context" | "execute" | "cancel">;
@@ -15,7 +17,7 @@ export function useMapChat(bridge: Bridge, update: (sessionId: string, message: 
   useEffect(() => { const controller = new AbortController(); void fetch("/api/map-agent/status", { signal: controller.signal }).then(r => r.json()).then(d => { if (!controller.signal.aborted) setConfigured(d.configured === true); }).catch(() => {}); return () => { controller.abort(); pending.current?.abort(); }; }, []);
   const setModel = (value: AgentModelChoice) => { if (pending.current || !isAgentModelChoice(value)) return; setModelState(value); try { localStorage.setItem("lab.muse.chatModel", value); } catch { /* session choice still works */ } };
   const cancel = () => { pending.current?.abort(); latest.current.bridge.cancel(); };
-  const send = async (session: Session, text: string) => {
+  const send = async (session: Session, text: string, attachments: Attachment[] = []) => {
     if (pending.current || session.endedAt || !text.trim()) return;
     const controller = new AbortController(); pending.current = controller;
     const previousModel = session.messages.filter(m => m.agent).at(-1)?.agent?.model;
@@ -24,7 +26,12 @@ export function useMapChat(bridge: Bridge, update: (sessionId: string, message: 
     const meta: AgentChatMeta = { model, modelSelection: modelChoice, mapId: String(latest.current.bridge.context().mapId ?? ""), status: "running", steps: [], requests: 0 };
     const reply: Message = { id: `msg-${crypto.randomUUID()}`, role: "model", model, text: "", createdAt: new Date().toISOString(), agent: meta };
     const publish = () => latest.current.update(session.id, { ...reply, agent: { ...meta, steps: meta.steps.map(s => ({ ...s })) } });
-    const history: unknown[] = [...session.messages.slice(-12).filter(m => m.text.trim() && m.agent?.status !== "running").map(m => ({ role: m.role === "researcher" ? "user" : "assistant", content: m.text.slice(0, 18000) })), { role: "user", content: text.trim() }];
+    const pdfs = [...session.messages.slice(-12).flatMap(m => m.attachments ?? []), ...attachments].filter(a => a.kind === "pdf");
+    if (pdfs.length) { setPhase("Reading the attached PDF…"); try { for (const a of pdfs) await readPdfForChat(a, controller.signal); } catch { if (pending.current === controller) { pending.current = null; setPhase(""); } return; } }
+    const recent = session.messages.slice(-12).filter(m => m.text.trim() && m.agent?.status !== "running");
+    const imageIds = new Set(recent.filter(m => m.attachments?.some(a => a.kind === "image")).slice(-2).map(m => m.id));
+    const paperContent = (message: Pick<Message, "text" | "attachments">, images: boolean) => { const paper = detectPaper(message); return paper ? `Research paper shared: ${paper.title}. ${paper.source.attachmentId ? `Attachment ID: ${paper.source.attachmentId}.` : paper.source.url ? `URL: ${paper.source.url}.` : "Pasted paper text detected; a confirmation card is available."} Content withheld pending explicit knowledge-base confirmation. Offer to learn it without reading it.` : messageContent(message.text, message.attachments, images); };
+    const history: unknown[] = [...recent.map(m => ({ role: m.role === "researcher" ? "user" : "assistant", content: m.role === "researcher" ? paperContent({ ...m, text: m.text.slice(0, 18000) }, imageIds.has(m.id)) : (!["muse-spark-1.3", "muse-wonder-1.0"].includes(model) && m.agent?.steps.some(s => s.action === "query_knowledge" || s.action === "read_paper" || s.action === "compare_papers" || s.action === "transcribe_page") ? "Paper knowledge reply withheld for this model. Select Muse Spark 1.3 or Wonder 1.0." : m.text.slice(0, 18000)) })), { role: "user", content: paperContent({ text: text.trim(), attachments }, true) }];
     const paidRuns = new Set<string>();
     let expectedMapId = meta.mapId;
     let inspection: MuseImage | undefined;
@@ -33,7 +40,7 @@ export function useMapChat(bridge: Bridge, update: (sessionId: string, message: 
       for (let index = 0; index <= 12; index++) {
         controller.signal.throwIfAborted(); setPhase(index ? "Muse is reviewing the action result…" : "Muse is thinking…");
         const requestContext = latest.current.bridge.context();
-        if (requestContext.mapId !== expectedMapId || requestContext.mapUnavailable) throw Error("The selected map changed or closed. Send a new message to work on the current map.");
+        if (requestContext.mapId !== expectedMapId) throw Error("The selected map changed or closed. Send a new message to work on the current map.");
         if (inspection && JSON.stringify(inspection.area) !== JSON.stringify((requestContext.polygon as { area?: unknown } | undefined)?.area)) inspection = undefined;
         const response = await fetch("/api/map-agent/step", { method: "POST", headers: { "Content-Type": "application/json" }, signal: controller.signal, body: JSON.stringify({ model, messages: history, context: requestContext, inspection, final: index === 12 }) });
         const data = await response.json(); controller.signal.throwIfAborted(); meta.requests++; meta.usage = data.usage; reply.requestId = data.requestId;
@@ -43,6 +50,7 @@ export function useMapChat(bridge: Bridge, update: (sessionId: string, message: 
         if (latest.current.bridge.context().mapId !== expectedMapId) throw Error("The selected map changed while Muse was thinking. No new action was applied.");
         if (JSON.stringify(latest.current.bridge.context().polygon) !== JSON.stringify(requestContext.polygon)) throw Error("The polygon changed while Muse was thinking. Send a new message for the new selection.");
         const call: MapAgentCall = validateMapAgentCall({ action: data.call.action, parameters: data.call.parameters });
+        if (requestContext.mapUnavailable && !["query_knowledge", "read_paper", "compare_papers", "transcribe_page", "propose_knowledge_capture", "open_sidebar"].includes(call.action)) throw Error("Open the Map view before using map tools. Paper knowledge remains available in Notes.");
         const step: AgentChatMeta["steps"][number] = { ...call, at: new Date().toISOString(), status: "running" }; meta.steps.push(step); setPhase(`Muse · ${call.action.replaceAll("_", " ")}…`); publish();
         history.push({ role: "assistant", content: data.text || null, tool_calls: [{ id: data.call.id, type: "function", function: { name: "map_action", arguments: JSON.stringify(call) } }] });
         let result: unknown;

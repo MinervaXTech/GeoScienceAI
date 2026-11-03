@@ -84,3 +84,29 @@ it("restores a manual model choice and rejects a mismatched response before exec
   expect(execute).not.toHaveBeenCalled();
   expect(messages.at(-1)).toMatchObject({ agent: { model: "muse-spark-1.2", status: "error" } });
 });
+
+
+it("withholds unconfirmed paper text from the chat model", async () => {
+  let body: { messages: unknown[] } | undefined;
+  vi.stubGlobal("fetch", vi.fn(async (url: string, init?: RequestInit) => {
+    if (url.endsWith("/status")) return Response.json({ configured: true });
+    body = JSON.parse(init!.body as string); return Response.json({ model: "muse-spark-1.2", text: "Please confirm the knowledge offer." });
+  }));
+  const { result } = renderHook(() => useMapChat({ context: () => ({ mapId: "map" }), execute: vi.fn(), cancel() {} }, () => {}));
+  act(() => result.current.setModel("muse-spark-1.2"));
+  await act(() => result.current.send(session, "Study\nAbstract\nUnconfirmed private finding.\nReferences"));
+  expect(JSON.stringify(body!.messages)).not.toContain("Unconfirmed private finding");
+  expect(JSON.stringify(body!.messages)).toContain("Content withheld pending explicit");
+});
+
+it("can query paper knowledge while Notes is open", async () => {
+  let calls = 0; const execute = vi.fn().mockResolvedValue({ status: "no_match", message: "not in the knowledge base" });
+  vi.stubGlobal("fetch", vi.fn(async (url: string) => {
+    if (url.endsWith("/status")) return Response.json({ configured: true });
+    return Response.json(++calls === 1 ? { model: "muse-spark-1.3", call: { id: "kb", action: "query_knowledge", parameters: { question: "SAM method" } } } : { model: "muse-spark-1.3", text: "not in the knowledge base" });
+  }));
+  const { result } = renderHook(() => useMapChat({ context: () => ({ mapId: "map", mapUnavailable: true }), execute, cancel() {} }, () => {}));
+  act(() => result.current.setModel("muse-spark-1.3"));
+  await act(() => result.current.send(session, "What is stored about SAM?"));
+  expect(execute).toHaveBeenCalledTimes(1);
+});

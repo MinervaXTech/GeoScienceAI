@@ -184,3 +184,49 @@ With **Pick a start point for each cluster** on (the default), every cluster get
 The app has no road layer and does not detect roads itself, so the road reference is, in order: the outlines of a loaded SAM 3.1 output whose prompt names a road, track, path or similar; the outer border of any other loaded SAM 3.1 output (the edge of tree cover); otherwise the map boundary. The panel says which one is in use and a dashed white line shows it. Loading a different SAM output marks the starts out of date until you rebuild.
 
 The optional **Pull neighbouring starts close together** rule lets a cluster take a border point up to the chosen extra distance (default 20 m) beyond its nearest-to-road point when that puts its start next to a neighbour's start, so the drone can enter several clusters from one area. Starts still stay on borders, and a cluster never exceeds that allowance.
+
+
+### Paper knowledge base
+
+Attach a PDF, share an HTTPS arXiv/DOI link, or paste paper text in chat. **Store in knowledge base** authorizes Muse to read the whole paper and store its graph. **Not now** stores no knowledge. Detection, agent proposals, opening the sidebar and resumed sessions never start ingestion. PDF messages retain only metadata and SHA-256. PDF bytes and graphs never enter localStorage. After a reload, choose the original PDF again in its offer card.
+
+Install the verified release, then restart Vite:
+
+```sh
+uv tool install "graphifyy[pdf]==0.9.101"
+# Upstream general command: uv tool install "graphifyy[pdf]"
+```
+
+Use the existing `MODEL_API_KEY`. Optionally set `GRAPHIFY_BIN` in `.env.local` to an absolute executable path if it is outside Vite's PATH. The server checks `graphify --version` at startup and rejects missing or incompatible installations with this install command. The PDF helper uses the Python interpreter beside the resolved Graphify executable and its installed `pypdf` extra. Scanned, blank, unreadable or encrypted pages require a readable text PDF. No OCR fallback is used.
+
+All paper understanding uses only `muse-spark-1.3` or `muse-wonder-1.0` at `https://api.meta.ai/v1/chat/completions`. The card names the extraction model. Earlier Spark chat choices use Spark 1.3 for ingestion. Unconfirmed paper content is withheld from ordinary chat calls. Knowledge queries require Spark 1.3 or Wonder 1.0. Graphify gets a small environment allowlist with `GRAPHIFY_BACKEND=none`, without any model credentials. It never performs semantic extraction or LLM community naming.
+
+Limits: 25 MB per file, 120,000 extracted characters, contiguous 12,000-character chunks, at most 10 Muse calls, 3,500 output tokens per call, a 200,000-token job budget and a 10-minute timeout. The whole paper must fit; it is never silently truncated. Every nonempty quote must appear verbatim in its source chunk. The validator derives EXTRACTED for a supported quote and INFERRED for an empty quote, checks node types, endpoint IDs, field lengths and counts, deduplicates identical IDs/edges, and rejects conflicting IDs. Real provider usage and request/response IDs are recorded. No automatic retries or provider substitutions occur.
+
+Only HTTPS `arxiv.org` and `doi.org` may be fetched, including every redirect. arXiv abstract links become PDF links. DOI redirects to other publisher domains fail explicitly and require attaching the PDF. Landing pages are not treated as whole papers.
+
+The ignored `apps/lab/knowledge/` contains `index.json`, per-paper `<entryId>/graphify-out/graph.json`, `graph.html`, `GRAPH_REPORT.md`, confirmed source files and extraction usage. `merged-graph/` holds the cross-paper query graph. Successful papers are deduplicated by source-byte SHA-256. Failed entries stay marked failed and cannot supply query facts. The **Papers** sidebar icon opens the Knowledge section, with graph links and an explicit delete confirmation. Deletion rebuilds the merged graph before removing an entry.
+
+Verified commands, always with `GRAPHIFY_BACKEND=none` and an `execFile` argument array:
+
+```sh
+graphify --version
+graphify query "SAM" --graph graphify-out/graph.json --budget 1500
+graphify merge-graphs paper-one/graphify-out/graph.json paper-two/graphify-out/graph.json --out merged.json
+graphify cluster-only . --no-label
+graphify export html --graph graphify-out/graph.json
+```
+
+`graphify --help` documents these commands and query exits 0 (answer), 3 (ambiguous) and 4 (no match). `graphify query --help` confirms the scoped query flags. In the pinned package, `graphify/cli.py` confirms merge parsing and cluster-only report generation. `graphify/paths.py::load_node_link_graph` accepts NetworkX node-link JSON with `nodes` and `links`. `graphify/export.py::to_json` writes nested `graph.schema_version = 1` and `graph.graphify_version = "0.9.101"`. The app writes directed multigraphs. Nodes contain `id`, `label`, `type`, `source_file` and paper provenance. Links contain `source`, `target`, `key`, `relation`, `confidence`, `quote`, `section` and paper provenance. No documented pre-extracted-node import command was found, so the app writes this verified schema directly. Real query, merge, HTML and report commands accepted externally written fixtures. No undocumented import, Muse backend flag or MCP command is used. See the [upstream repository](https://github.com/Graphify-Labs/graphify).
+
+The schema contract test uses the actual pinned CLI when `GRAPHIFY_TEST_BIN` points to it and fails on an incompatible version/schema. Without this variable, only that external-tool test is skipped. All other tests use mocked Muse/subprocess calls.
+
+```sh
+GRAPHIFY_TEST_BIN=/absolute/path/to/graphify npx vitest run server/knowledgeGraphify.test.ts
+npx tsc --noEmit -p .
+npx vitest run
+npx eslint src server
+npx vite build
+```
+
+Manual check: attach a real text PDF in a new session and send it. Decline and confirm that the Knowledge list is unchanged. Attach again, confirm, and wait for the stored receipt. Open its graph and inspect sources and quotes. In a new session, ask Spark 1.3 or Wonder 1.0 about a specific concept from that paper. Each fact must name its paper and EXTRACTED/INFERRED status. An absent concept must produce "not in the knowledge base". Reload another unconfirmed PDF and verify that it does not ingest automatically and needs its original file again. Confirm deletion in the Papers sidebar and check that later queries cannot return that paper's facts.

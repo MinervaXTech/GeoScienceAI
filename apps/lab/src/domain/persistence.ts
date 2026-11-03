@@ -1,6 +1,10 @@
+import { sessionAttachments } from "./attachments";
+import type { Attachment } from "./types";
 import { itemErrors } from "./validate";
 import { savedMapError } from "./maps";
 import { emptyState, SCHEMA_VERSION, type LabState } from "./types";
+
+const sessionJson = (key: string, value: unknown) => key === "attachments" && Array.isArray(value) ? sessionAttachments(value as Attachment[]) : value;
 
 export const STORAGE_KEY = "lab.state";
 export const EXPORT_APP = "geoscience-lab";
@@ -58,7 +62,7 @@ export function parseState(raw: unknown): ParseResult {
 
 export function exportJson(state: LabState, now: string = new Date().toISOString()): string {
   const file: ExportFile = { app: EXPORT_APP, schemaVersion: SCHEMA_VERSION, exportedAt: now, state };
-  return JSON.stringify(file, null, 2);
+  return JSON.stringify(file, sessionJson, 2);
 }
 
 export function importJson(text: string): ParseResult {
@@ -104,7 +108,7 @@ export function loadState(storage: StorageLike | null = defaultStorage()): { sta
 export function saveState(state: LabState, storage: StorageLike | null = defaultStorage()): boolean {
   if (!storage) return false;
   try {
-    storage.setItem(STORAGE_KEY, JSON.stringify(state));
+    storage.setItem(STORAGE_KEY, JSON.stringify(state, sessionJson));
     return true;
   } catch {
     return false;
