@@ -9,7 +9,9 @@
     "build": "tsc --noEmit && vite build",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
-    "test": "vitest run"
+    "test": "vitest run",
+    "paperrun:setup": "uv venv paperruns/.venv --allow-existing && uv pip install --python paperruns/.venv/bin/python numpy scipy matplotlib pandas",
+    "paperrun:mcp": "node --experimental-strip-types server/paperrunMcp.ts"
   },
   "dependencies": {
     "@meta-sam/parser": "^0.1.0",

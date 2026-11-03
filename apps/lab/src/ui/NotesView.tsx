@@ -85,7 +85,7 @@ export function NotesView(p: Props) {
   };
 
   return (
-    <section className={`notes dock-${layout.dock}${mode === "lineage" ? " lineage-mode" : ""}`} style={{ "--detail-height": `${layout.height}px` } as CSSProperties} aria-label="Notes">
+    <section className={`notes dock-${layout.dock}${mode === "lineage" ? " lineage-mode" : ""}${selected ? "" : " no-selection"}`} style={{ "--detail-height": `${layout.height}px` } as CSSProperties} aria-label="Notes">
       {mode === "table" && <BatchList state={state} filters={filters} setBatch={(id) => set("batch", id ?? "")} onNewBatch={p.onNewBatch} />}
 
       <div className="table-col">

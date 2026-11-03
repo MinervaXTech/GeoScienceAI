@@ -191,6 +191,17 @@ export function saveMessageToNotes(state: LabState, input: SaveInput, clock: Clo
   return { state: addItem(next, item), item };
 }
 
+/** Saves text generated from a stored paper (such as a reproduction spec) as a note in that paper's own batch, created on first use. */
+export function addKnowledgeNote(state: LabState, input: { entryId: string; paperTitle: string; label: string; title: string; body: string }, clock: Clock = systemClock): { state: LabState; item: Item } {
+  const body = input.body.trim(), title = input.title.trim();
+  if (!body || !title) throw new Error("A note needs a title and text.");
+  const source = `knowledge:${input.entryId}`;
+  let next = state, batch = state.batches.find(b => b.kind === "paper" && b.source === source);
+  if (!batch) { const added = addBatch(state, { name: `${input.label}: ${input.paperTitle}`.slice(0, 120), kind: "paper", source }, clock); next = added.state; batch = added.batch; }
+  const item = makeItem({ batchId: batch.id, type: "note", title, body }, clock);
+  return { state: addItem(next, item), item };
+}
+
 export function setReview(state: LabState, itemId: string, review: Item["review"], clock: Clock = systemClock): LabState {
   return { ...state, items: state.items.map((i) => (i.id === itemId ? { ...i, review, updatedAt: clock.now() } : i)) };
 }

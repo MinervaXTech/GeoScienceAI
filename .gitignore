@@ -6,3 +6,5 @@ dist
 .local/
 
 apps/lab/knowledge/
+apps/lab/paperruns/
+apps/lab/environments/

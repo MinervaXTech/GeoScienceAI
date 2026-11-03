@@ -6,7 +6,7 @@ export const PAPER_CHUNK_SIZE = 12000;
 const kinds = ["concept", "method", "dataset", "result", "equation", "author", "claim", "step", "parameter", "metric", "limitation"];
 const object = (v: unknown): v is Record<string, unknown> => !!v && typeof v === "object" && !Array.isArray(v);
 /** PDF text breaks lines and hyphenates mid-sentence, so quotes match ignoring whitespace, case, ligatures and line-break hyphens. */
-const flat = (value: string) => value.normalize("NFKC").replace(/\u00ad|-\s*\n\s*/g, "").replace(/[\u2010-\u2015]/g, "-").replace(/[\u2018\u2019]/g, "'").replace(/[\u201c\u201d]/g, '"').replace(/\s+/g, " ").trim().toLowerCase();
+export const flat = (value: string) => value.normalize("NFKC").replace(/\u00ad|-\s*\n\s*/g, "").replace(/[\u2010-\u2015]/g, "-").replace(/[\u2018\u2019]/g, "'").replace(/[\u201c\u201d]/g, '"').replace(/\s+/g, " ").trim().toLowerCase();
 export interface PaperNode { id: string; label: string; type: string; description: string }
 export interface PaperEdge { source: string; target: string; relation: string; quote: string; section: string; confidence: "EXTRACTED" | "INFERRED" }
 const slug = (value: string) => value.toLowerCase().normalize("NFKD").replace(/[^a-z0-9_-]+/g, "_").replace(/^_+|_+$/g, "").slice(0, 64);

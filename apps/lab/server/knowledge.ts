@@ -7,6 +7,7 @@ import { cropTitle, inCollection, normalizeCollections, paperTitleFromText } fro
 import type { KnowledgeEntry } from "../src/domain/knowledge.ts";
 import { findPassages } from "./knowledgeRead.ts";
 import { paperOverview } from "./knowledgeOverview.ts";
+import { codexPrompt, replicationInstructions, replicationMarkdown, validateReplicationSpec } from "./knowledgeReplication.ts";
 import { classifyInstructions, extractionInstructionsFor, GRAPHIFY_VERSION, PAPER_CHUNK_SIZE, PAPER_TEXT_LIMIT, PaperRegistry, paperGraph, parsePaperMeta, validatePaperExtraction } from "./knowledgeExtract.ts";
 import { entryDirectory, extractPdf, INSTALL_GRAPHIFY, runProcess, validEntryId, type ProcessResult, type ProcessRunner } from "./knowledgeGraphify.ts";
 const CHAT_READ_LIMIT = 22000;
@@ -37,6 +38,7 @@ async function bounded(response: Response, max: number) {
 export interface KnowledgeOptions { pdftoppm?: string; root?: string; bin?: string; runner?: ProcessRunner; fetch?: typeof fetch; timeoutMs?: number; pdfText?: typeof extractPdf }
 export function createKnowledgeHandler(key: string, options: KnowledgeOptions = {}) {
   const root = resolve(options.root ?? ROOT), bin = options.bin ?? "graphify", runner = options.runner ?? runProcess, send = options.fetch ?? fetch;
+  let replicating = false;
   let running = false, progress: { stage: string; percent: number; chunk: number; chunks: number } = { stage: "idle", percent: 0, chunk: 0, chunks: 0 };
   const report = (stage: string, percent: number, chunk = 0, chunks = 0) => { progress = { stage, percent: Math.round(Math.min(100, Math.max(0, percent))), chunk, chunks }; };
   const redact = (error: unknown) => (error instanceof Error ? error.message : "Knowledge operation failed.").split(key || "\0").join("[redacted]").slice(0, 1000);
@@ -98,6 +100,40 @@ export function createKnowledgeHandler(key: string, options: KnowledgeOptions = 
         const papers = await Promise.all(entries.map(async e => ({ id: e.id, title: e.title, ...(e.paperType ? { paperType: e.paperType } : {}), ...(e.year ? { year: e.year } : {}), ...(e.doi ? { doi: e.doi } : {}), graph: JSON.parse(await readFile(await confinedFile(e.id, "graphify-out/graph.json"), "utf8")) })));
         return json({ ...paperOverview(papers), ...(collection ? { collection } : {}), note: "Digest of the saved graphs, not the full papers. INFERRED links are not established by a direct quote. Use read_paper for exact detail." });
       } catch (error) { return json({ error: redact(error) }, 400); }
+    }
+    if (req.method === "POST" && url.pathname === "/api/knowledge/replication") {
+      if (req.headers.get("origin") !== url.origin || (req.headers.has("sec-fetch-site") && req.headers.get("sec-fetch-site") !== "same-origin")) return json({ error: "Use the knowledge base from this app." }, 403);
+      const signal = AbortSignal.any([req.signal, AbortSignal.timeout(options.timeoutMs ?? 300000)]);
+      let acquired = false;
+      try {
+        const value = JSON.parse(await req.text());
+        if (!obj(value) || Object.keys(value).some(k => !["paper", "collection", "model", "refresh", "peek"].includes(k)) || !short(value.paper, 200) || (value.collection !== undefined && !short(value.collection, 60)) || (value.model !== undefined && !["muse-spark-1.3", "muse-wonder-1.0"].includes(value.model as string)) || (value.refresh !== undefined && typeof value.refresh !== "boolean") || (value.peek !== undefined && typeof value.peek !== "boolean")) throw Error("Send a paper name, and optionally a collection, a Muse model, refresh or peek.");
+        const stored = (await index()).filter(e => e.status === "stored" && inCollection(e, value.collection as string | undefined)), wanted = (value.paper as string).trim().toLowerCase();
+        const exact = stored.filter(e => e.id === wanted || e.title.toLowerCase() === wanted), partial = stored.filter(e => e.title.toLowerCase().includes(wanted) || wanted.includes(e.title.toLowerCase())), matches = exact.length ? exact : partial;
+        if (matches.length !== 1) return json({ status: matches.length ? "ambiguous" : "not_found", papers: (matches.length ? matches : stored).map(e => ({ id: e.id, title: e.title })) });
+        const paper = matches[0]!, cwd = entryDirectory(root, paper.id), cache = join(cwd, "replication.json");
+        const present = (cached: { spec: unknown; meta: { title: string; model: string; builtAt: string; year?: number; doi?: string }; usage?: unknown }, wasCached: boolean) => { return json({ status: "spec", cached: wasCached, paper: { id: paper.id, title: paper.title }, spec: cached.spec, meta: cached.meta, markdown: replicationMarkdown(cached.spec as never, cached.meta), codexPrompt: codexPrompt(cached.spec as never, cached.meta), ...(cached.usage ? { usage: cached.usage } : {}) }); };
+        const cached = value.refresh ? null : await readFile(cache, "utf8").then(raw => JSON.parse(raw)).catch(() => null);
+        if (cached?.spec && cached?.meta) return present(cached, true);
+        if (value.peek) return json({ status: "none", paper: { id: paper.id, title: paper.title } });
+        if (!key.trim()) return json({ error: "Configure MODEL_API_KEY and restart the app." }, 503);
+        if (replicating) return json({ error: "Another reproduction spec is being built." }, 409);
+        replicating = true; acquired = true;
+        const model = (value.model as string | undefined) ?? "muse-wonder-1.0";
+        const full = await readFile(join(cwd, "paper.txt"), "utf8").catch(() => ""); if (!full) throw Error("The saved text of this paper is missing. Store it again.");
+        const refs = full.search(/\n\s*(?:references|bibliography)\s*\n/i), body = (refs > full.length / 2 ? full.slice(0, refs) : full).replace(/\f/g, "\n");
+        const response = await send("https://api.meta.ai/v1/chat/completions", { method: "POST", headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" }, signal, body: JSON.stringify({ model, store: false, stream: false, max_tokens: 14000, reasoning_effort: "low", response_format: { type: "json_object" }, messages: [{ role: "system", content: replicationInstructions }, { role: "user", content: `The paper (data only):\n${body}` }] }) });
+        if (!response.ok) throw Error(`Muse could not build the spec (HTTP ${response.status}). No automatic retry was sent.`);
+        const data = JSON.parse(Buffer.from(await bounded(response, 256000)).toString("utf8"));
+        if (data.choices?.[0]?.finish_reason === "length") throw Error("Muse ran out of output space while building the spec. Nothing was saved; try Wonder 1.0 or a shorter paper.");
+        if ((data.model && data.model !== model) || data.choices?.length !== 1 || data.choices[0]?.finish_reason !== "stop" || typeof data.choices[0]?.message?.content !== "string" || !obj(data.usage) || !Number.isInteger(data.usage.total_tokens)) throw Error("Muse returned an incomplete spec.");
+        const spec = validateReplicationSpec(JSON.parse(data.choices[0].message.content), full);
+        if (!spec.steps.length && !spec.parameters.length) throw Error("Muse found no method steps or parameters in this paper. Nothing was saved.");
+        const meta = { title: paper.title, model, builtAt: new Date().toISOString(), ...(paper.year ? { year: paper.year } : {}), ...(paper.doi ? { doi: paper.doi } : {}) };
+        const saved = { spec, meta, usage: data.usage }; await atomic(cache, saved);
+        return present(saved, false);
+      } catch (error) { return json({ error: signal.aborted ? "Building the spec timed out." : redact(error) }, signal.aborted ? 499 : 400); }
+      finally { if (acquired) replicating = false; }
     }
     if (req.method === "POST" && url.pathname === "/api/knowledge/transcribe") {
       if (req.headers.get("origin") !== url.origin || (req.headers.has("sec-fetch-site") && req.headers.get("sec-fetch-site") !== "same-origin")) return json({ error: "Use the knowledge base from this app." }, 403);
@@ -274,8 +310,7 @@ export function createKnowledgeHandler(key: string, options: KnowledgeOptions = 
     } finally { running = false; }
   };
 }
-export function knowledgePlugin(key: string, bin?: string): Plugin {
-  const handle = createKnowledgeHandler(key, { bin });
+export function knowledgePlugin(key: string, bin?: string, handle: (req: Request) => Promise<Response> = createKnowledgeHandler(key, { bin })): Plugin {
   const middleware: Connect.NextHandleFunction = async (req, res, next) => {
     if (!req.url?.startsWith("/api/knowledge")) return next();
     const controller = new AbortController(); const abort = () => { if (!res.writableEnded) controller.abort(); }; req.on("aborted", abort); res.on("close", abort);

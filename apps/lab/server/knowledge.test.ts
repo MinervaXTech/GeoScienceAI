@@ -233,3 +233,36 @@ it("transcribes one PDF page with a vision model, caches it, and reports a missi
   const missing = createKnowledgeHandler("fixture", { root: base, runner: async () => { throw Object.assign(Error("spawn pdftoppm ENOENT"), { code: "ENOENT" }); }, fetch: send });
   expect((await (await missing(request("/transcribe", { paper: "canopy masks", page: 3 }))).json()).error).toContain("brew install poppler");
 });
+
+it("builds a reproduction spec with Muse, caches it, and supports peek, refresh and clear errors", async () => {
+  const f = await fixture(); const text = `Canopy study\nAbstract\nWe set the colony size to 50 ants.\nIntroduction\nIn a 20*20 grid map, convergence came in the 23rd iteration.\nReferences\n[1] Not part of the spec.`;
+  const stored = (await (await f.handle(request("/ingest", { ...ingest, text }))).json()).entry;
+  const spec = { goal: "Reproduce it.", steps: [{ name: "Init", description: "Set ants.", quote: "colony size to 50 ants" }], equations: [], parameters: [{ name: "ants", value: "50", unit: "", meaning: "colony", quote: "colony size to 50 ants" }, { name: "bogus", value: "9", quote: "invented" }], environment: [], evaluation: { metrics: [], baselines: [], datasets: [], protocol: "" }, reportedResults: [{ description: "iter", value: "23rd iteration", condition: "20*20", quote: "convergence came in the 23rd iteration" }], gaps: [{ kind: "randomness", description: "seeds", impact: "medium", assumption: { proposal: "0-29", rationale: "common" } }] };
+  const bodies: { model: string; user: string; max: number }[] = [];
+  const send = vi.fn<typeof fetch>().mockImplementation(async (_url, init) => { const p = JSON.parse(init!.body as string), system = p.messages[0].content as string; bodies.push({ model: p.model, user: p.messages[1].content, max: p.max_tokens }); return Response.json({ model: p.model, choices: [{ finish_reason: "stop", message: { content: JSON.stringify(system.startsWith("You are preparing a reproduction") ? spec : system.startsWith("Identify") ? classification : extraction) } }], usage: { total_tokens: 20000 } }); });
+  const handle = createKnowledgeHandler("fixture", { root: f.root, runner: f.runner, fetch: send });
+  const post = (value: unknown, origin?: string) => handle(request("/replication", value, "POST", origin));
+  expect(await (await post({ paper: stored.id, peek: true })).json()).toMatchObject({ status: "none", paper: { id: stored.id } });
+  expect(send).not.toHaveBeenCalled();
+  const built = await (await post({ paper: "canopy masks" })).json();
+  expect(built).toMatchObject({ status: "spec", cached: false, meta: { model: "muse-wonder-1.0", title: "Canopy masks with SAM" }, usage: { total_tokens: 20000 } });
+  expect(built.spec.parameters.map((p: { name: string; verified: boolean }) => [p.name, p.verified])).toEqual([["ants", true], ["bogus", false]]);
+  expect(built.markdown).toContain("# Reproduction spec: Canopy masks with SAM"); expect(built.codexPrompt).toContain("TASK: Re-implement");
+  expect(bodies[0]).toMatchObject({ model: "muse-wonder-1.0", max: 14000 }); expect(bodies[0]!.user).toContain("colony size to 50 ants"); expect(bodies[0]!.user).not.toContain("Not part of the spec");
+  const again = await (await post({ paper: stored.id })).json(); expect(again.cached).toBe(true); expect(send).toHaveBeenCalledTimes(1);
+  expect(await (await post({ paper: stored.id, peek: true })).json()).toMatchObject({ status: "spec", cached: true });
+  const refreshed = await (await post({ paper: stored.id, refresh: true, model: "muse-spark-1.3" })).json(); expect(refreshed).toMatchObject({ cached: false, meta: { model: "muse-spark-1.3" } }); expect(send).toHaveBeenCalledTimes(2);
+  expect(await (await post({ paper: "nothing" })).json()).toMatchObject({ status: "not_found" });
+  for (const bad of [{ paper: "x", model: "gpt-4" }, { paper: "x", extra: 1 }, { paper: "x", refresh: "yes" }, {}]) expect((await post(bad)).status).toBe(400);
+  expect((await post({ paper: stored.id }, "https://other.site")).status).toBe(403);
+});
+it("never saves a reproduction spec when Muse runs out of space or finds nothing", async () => {
+  const f = await fixture(); const stored = (await (await f.handle(request("/ingest", ingest))).json()).entry;
+  const reply = (content: string, finish = "stop") => Response.json({ model: "muse-wonder-1.0", choices: [{ finish_reason: finish, message: { content } }], usage: { total_tokens: 5 } });
+  const send = vi.fn<typeof fetch>().mockImplementationOnce(async () => reply("{}", "length")).mockImplementationOnce(async () => reply(JSON.stringify({ goal: "x", steps: [], parameters: [] })));
+  const handle = createKnowledgeHandler("fixture", { root: f.root, runner: f.runner, fetch: send });
+  const first = await handle(request("/replication", { paper: stored.id })); expect(first.status).toBe(400); expect((await first.json()).error).toContain("ran out of output space");
+  const second = await handle(request("/replication", { paper: stored.id })); expect(second.status).toBe(400); expect((await second.json()).error).toContain("no method steps");
+  expect(await (await handle(request("/replication", { paper: stored.id, peek: true }))).json()).toMatchObject({ status: "none" });
+  expect((await createKnowledgeHandler("", { root: f.root, runner: f.runner, fetch: send })(request("/replication", { paper: stored.id }))).status).toBe(503);
+});

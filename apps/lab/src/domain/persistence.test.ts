@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { exportJson, importJson, loadState, parseState, saveState, STORAGE_KEY, type StorageLike } from "./persistence";
-import { SESSION_IMPORT, currentSession, deleteSession, editMessage, newSession, renameSession, resumeSession, saveMessageToNotes, sendMessage, setSessionMode, isReadOnly, savedTo, SAVE_TYPES } from "./store";
+import { SESSION_IMPORT, addKnowledgeNote, currentSession, deleteSession, editMessage, newSession, renameSession, resumeSession, saveMessageToNotes, sendMessage, setSessionMode, isReadOnly, savedTo, SAVE_TYPES } from "./store";
 import { loadSampleData } from "./sample";
 import { statusOf } from "./query";
 import { emptyState } from "./types";
@@ -213,5 +213,17 @@ describe("resuming a session", () => {
   it("leaves sample sessions read-only", () => {
     const state = { ...emptyState(), sessions: [{ id: "s", title: "Sample", createdAt: "2026-01-01T00:00:00Z", endedAt: "2026-01-01T01:00:00Z", mode: "take-notes" as const, sample: true as const, messages: [] }] };
     expect(resumeSession(state, "s")).toBe(state);
+  });
+});
+
+describe("knowledge notes", () => {
+  it("saves generated text as a note in the paper's own batch, created once", () => {
+    const first = addKnowledgeNote(emptyState(), { entryId: "e1", paperTitle: "ACO study", label: "Replication", title: "Reproduction spec: ACO study", body: "# Spec" });
+    expect(first.state.batches).toEqual([expect.objectContaining({ name: "Replication: ACO study", kind: "paper", source: "knowledge:e1" })]);
+    expect(first.item).toMatchObject({ type: "note", batchId: first.state.batches[0]!.id, body: "# Spec", review: "pending" });
+    const second = addKnowledgeNote(first.state, { entryId: "e1", paperTitle: "ACO study", label: "Replication", title: "Again", body: "More" });
+    expect(second.state.batches).toHaveLength(1); expect(second.state.items).toHaveLength(2);
+    expect(addKnowledgeNote(first.state, { entryId: "e2", paperTitle: "Other", label: "Replication", title: "x", body: "y" }).state.batches).toHaveLength(2);
+    expect(() => addKnowledgeNote(emptyState(), { entryId: "e", paperTitle: "t", label: "l", title: "x", body: "  " })).toThrow("needs a title and text");
   });
 });

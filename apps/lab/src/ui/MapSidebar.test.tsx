@@ -10,7 +10,7 @@ function Fixture() {
   const [expanded, setExpanded] = useState(true);
   const [host, setHost] = useState<HTMLDivElement | null>(null);
   const [canopy, setCanopy] = useState(true);
-  return <><MapSidebar active={active} expanded={expanded} onOpen={(tab) => { setActive(tab); setExpanded(true); }} onCollapse={() => setExpanded(false)} snapshots={<p>Registered snapshots</p>} layerHost={setHost} maps={<label>Map name<input defaultValue="Kluang" /></label>} />{host && createPortal(<label><input type="checkbox" checked={canopy} onChange={(event) => setCanopy(event.target.checked)} />Show canopy layer</label>, host)}</>;
+  return <><MapSidebar choices={[]} currentMapId="upm" onOpenMap={() => {}} viewingEnv={null} onViewEnv={() => {}} active={active} expanded={expanded} onOpen={(tab) => { setActive(tab); setExpanded(true); }} onCollapse={() => setExpanded(false)} snapshots={<p>Registered snapshots</p>} layerHost={setHost} maps={<label>Map name<input defaultValue="Kluang" /></label>} />{host && createPortal(<label><input type="checkbox" checked={canopy} onChange={(event) => setCanopy(event.target.checked)} />Show canopy layer</label>, host)}</>;
 }
 it("opens either icon's panel without collapsing on repeated clicks, and has a separate collapse control", () => {
   render(<Fixture />);
@@ -53,5 +53,5 @@ it("supports vertical keyboard navigation and opens a collapsed sidebar", () => 
   expect(screen.getByRole("tabpanel").id).toBe("map-sidebar-panel-snapshots");
   expect(screen.getByText("Registered snapshots")).toBeTruthy();
   fireEvent.keyDown(snapshots, { key: "Home" });
-  expect(document.activeElement).toBe(maps);
+  expect(document.activeElement).toBe(screen.getByRole("tab", { name: "Environments" }));
 });

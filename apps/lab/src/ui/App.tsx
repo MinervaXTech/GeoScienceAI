@@ -1,10 +1,14 @@
+import { PaperRunView } from "./PaperRunView";
+import { EnvironmentViewer } from "./EnvironmentsPanel";
+import type { EnvSummary } from "./paperRunUi";
+import { useRunningPaperRuns } from "./useRunningPaperRuns";
 import { clampChatWidth, loadChatWidth, saveChatWidth } from "./chatSize";
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { costReadout } from "../domain/config";
 import { exportJson, importJson } from "../domain/persistence";
 import { noFilters, type Filters, type Sort } from "../domain/query";
 import { hasSampleData, loadSampleData } from "../domain/sample";
-import { addBatch, currentSession, deleteSession, editMessage, newSession, renameSession, resumeSession, registerSnapshot, saveMessageToNotes, sendMessage, setReview, setSessionMode } from "../domain/store";
+import { addBatch, addKnowledgeNote, currentSession, deleteSession, editMessage, newSession, renameSession, resumeSession, registerSnapshot, saveMessageToNotes, sendMessage, setReview, setSessionMode } from "../domain/store";
 import { emptyState, type SavedMap } from "../domain/types";
 import type { Polygon } from "geojson";
 import { UPM_MAP } from "../geo/maps";
@@ -29,7 +33,7 @@ import type { BasemapId, SatelliteMapHandle } from "../geo/sam";
 import { deleteSavedMap, withDefaultMapAreas } from "../domain/maps";
 import { samePolygon } from "../geo/samArea";
 
-type Tab = "map" | "notes";
+type Tab = "map" | "notes" | "paperrun";
 
 export function App() {
   const { state, apply, run, replace, notice, setNotice } = useLab();
@@ -50,9 +54,10 @@ export function App() {
   const [pick, setPick] = useState<{ a?: string; b?: string }>({});
   const [mapPick, setMapPick] = useState<string[] | undefined>();
   const [sidebarExpanded, setSidebarExpanded] = useState(true);
-  const [sidebarTab, setSidebarTab] = useState<MapSidebarTab>("maps");
+  const [sidebarTab, setSidebarTab] = useState<MapSidebarTab>("environments");
+  const [viewEnv, setViewEnv] = useState<EnvSummary | null>(null);
   const [layerHost, setLayerHost] = useState<HTMLDivElement | null>(null);
-  const openSidebar = (panel: MapSidebarTab) => { setSidebarTab(panel); setSidebarExpanded(true); if (panel !== "snapshots" && panel !== "knowledge") { setTab("map"); setComparing(false); } };
+  const openSidebar = (panel: MapSidebarTab) => { setSidebarTab(panel); setSidebarExpanded(true); if (panel !== "snapshots" && panel !== "knowledge" && panel !== "environments") { setTab("map"); setComparing(false); } };
   const [addMapView, setAddMapView] = useState<Omit<SavedMap, "id" | "name"> | null>(null);
   const [addingMap, setAddingMap] = useState(false);
   const [deletedMap, setDeletedMap] = useState<{ map: SavedMap; index: number; wasActive: boolean; area: Polygon | null } | null>(null);
@@ -66,7 +71,12 @@ export function App() {
     setAddingMap(adding);
   };
   const [chatExpanded, setChatExpanded] = useState(true);
+  const runningRuns = useRunningPaperRuns();
   const [chatWidth, setChatWidth] = useState(loadChatWidth), [chatFull, setChatFull] = useState(false);
+  useEffect(() => {
+    const onNote = (event: Event) => { const note = (event as CustomEvent).detail; if (note && typeof note.entryId === "string" && typeof note.body === "string") apply(s => { try { return addKnowledgeNote(s, note).state; } catch { return s; } }); };
+    window.addEventListener("lab-save-note", onNote); return () => window.removeEventListener("lab-save-note", onNote);
+  });
   const changeChatWidth = (width: number) => { const next = clampChatWidth(width, window.innerWidth); setChatWidth(next); saveChatWidth(next); };
   useEffect(() => { const frame = requestAnimationFrame(() => window.dispatchEvent(new Event("resize"))); return () => cancelAnimationFrame(frame); }, [chatWidth, chatFull, chatExpanded]);
   useEffect(() => { if (!chatFull) return; const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setChatFull(false); }; window.addEventListener("keydown", onKey); return () => window.removeEventListener("keydown", onKey); }, [chatFull]);
@@ -313,20 +323,27 @@ export function App() {
             <div className="toggle big" role="tablist" aria-label="View">
               <button type="button" role="tab" aria-selected={tab === "map"} onClick={() => { setTab("map"); setComparing(false); }}>Map</button>
               <button type="button" role="tab" aria-selected={tab === "notes"} onClick={goNotes}>Notes</button>
+              <button type="button" role="tab" aria-selected={tab === "paperrun"} onClick={() => { setTab("paperrun"); setComparing(false); setSidebarExpanded(false); }}>PaperRun{runningRuns > 0 && <svg className="tab-spinner" role="img" aria-label={`${runningRuns} run${runningRuns === 1 ? " is" : "s are"} working`} viewBox="0 0 16 16" width="14" height="14"><title>{runningRuns === 1 ? "A run is working" : `${runningRuns} runs are working`}</title><circle cx="8" cy="8" r="6" fill="none" stroke="currentColor" strokeOpacity=".3" strokeWidth="2.5" /><path d="M8 2a6 6 0 0 1 6 6" fill="none" stroke="#ff6a52" strokeWidth="2.5" strokeLinecap="round" /></svg>}</button>
             </div>
             <span className="summary">
               {comparing
                 ? `Comparing snapshot A with snapshot B`
                 : tab === "map"
                   ? mapSummary(mapSnapshots, basemap, currentMap)
-                  : `Knowledge library · ${state.batches.length} batches · ${state.items.length} items`}
+                  : tab === "paperrun"
+                    ? "Reproduce a stored paper with Muse or an external agent"
+                    : `Knowledge library · ${state.batches.length} batches · ${state.items.length} items`}
             </span>
           </div>
 
           <div className="stage">
             <div className={`map-layout${sidebarExpanded ? "" : " sidebar-collapsed"}`}>
-              <MapSidebar active={sidebarTab} expanded={sidebarExpanded} onOpen={openSidebar} onCollapse={() => setSidebarExpanded(false)} snapshots={snapshotsPanel} layerHost={setLayerHost} maps={<SavedMaps view={addMapView} onDelete={setDeleteMapId} area={samArea} adding={addingMap} onAddingChange={changeAddingMap} basemap={basemap} onBasemap={setBasemap} state={state} snapshots={allSnapshots} active={onMap} currentMapId={currentMap.id} busy={sam.busy || chat.busy} onOpenMap={openMap} onLocate={(location) => !sam.busy && (mapRef.current?.locate(location) ?? false)} onGetView={() => { const view = mapRef.current?.getView(); return view ? { ...view, basemap, ...(samArea.polygon ? { area: samArea.polygon } : {}) } : null; }} onAdd={(map) => openMap(map.id, map)} onToggle={(id) => setMapPick(onMap.includes(id) ? onMap.filter((x) => x !== id) : [...onMap, id].slice(-2))} />} />
+              <MapSidebar choices={[UPM_MAP, ...(state.maps ?? [])].map(m => ({ id: m.id, name: m.name, basemap: m.basemap }))} currentMapId={currentMap.id} onOpenMap={(id) => openMap(id)} viewingEnv={viewEnv?.id ?? null} onViewEnv={(env) => { setViewEnv(env); if (env) { setTab("map"); setComparing(false); } }} active={sidebarTab} expanded={sidebarExpanded} onOpen={openSidebar} onCollapse={() => setSidebarExpanded(false)} snapshots={snapshotsPanel} layerHost={setLayerHost} maps={<SavedMaps view={addMapView} onDelete={setDeleteMapId} area={samArea} adding={addingMap} onAddingChange={changeAddingMap} basemap={basemap} onBasemap={setBasemap} state={state} snapshots={allSnapshots} active={onMap} currentMapId={currentMap.id} busy={sam.busy || chat.busy} onOpenMap={openMap} onLocate={(location) => !sam.busy && (mapRef.current?.locate(location) ?? false)} onGetView={() => { const view = mapRef.current?.getView(); return view ? { ...view, basemap, ...(samArea.polygon ? { area: samArea.polygon } : {}) } : null; }} onAdd={(map) => openMap(map.id, map)} onToggle={(id) => setMapPick(onMap.includes(id) ? onMap.filter((x) => x !== id) : [...onMap, id].slice(-2))} />} />
               <div className={`workspace-content${tab === "map" && !comparing ? " is-map" : ""}`}>
+                <div className="map-keep" hidden={tab !== "map" || comparing}>
+                  <MapView agentRef={agentRef} agentModel={chat.model} layerHost={layerHost} legendHidden={addingMap} onOpenLayers={() => openSidebar("layers")} key={currentMap.id} savedMap={currentMap} mapRef={mapRef} snapshots={mapSnapshots} shown={shown} focusRequest={mapFocusRequest} basemap={basemap} onBasemap={(value) => { setBasemap(value); if (!addingMap && currentMap.id !== "upm") apply((s) => ({ ...s, maps: s.maps?.map((map) => map.id === currentMap.id ? { ...map, basemap: value } : map) })); }} sam={sam} samArea={samArea} onToggle={(i) => setShown((s) => s.map((v, k) => (k === i ? !v : v)))} />
+                  {tab === "map" && viewEnv && <EnvironmentViewer env={viewEnv} onClose={() => setViewEnv(null)} />}
+                </div>
                 {comparing && compareA && compareB ? (
                   <CompareView
                     snapshots={scope.snapshots}
@@ -335,9 +352,9 @@ export function App() {
                     onPick={(side, id) => setPick((p) => ({ ...p, [side]: id }))}
                     onClose={() => setComparing(false)}
                   />
-                ) : tab === "map" ? (
-                  <MapView agentRef={agentRef} agentModel={chat.model} layerHost={layerHost} legendHidden={addingMap} onOpenLayers={() => openSidebar("layers")} key={currentMap.id} savedMap={currentMap} mapRef={mapRef} snapshots={mapSnapshots} shown={shown} focusRequest={mapFocusRequest} basemap={basemap} onBasemap={(value) => { setBasemap(value); if (!addingMap && currentMap.id !== "upm") apply((s) => ({ ...s, maps: s.maps?.map((map) => map.id === currentMap.id ? { ...map, basemap: value } : map) })); }} sam={sam} samArea={samArea} onToggle={(i) => setShown((s) => s.map((v, k) => (k === i ? !v : v)))} />
-                ) : (
+                ) : tab === "paperrun" ? (
+                  <PaperRunView />
+) : tab === "map" ? null : (
                   <NotesView
                     state={state}
                     filters={filters}

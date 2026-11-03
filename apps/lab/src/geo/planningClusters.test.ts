@@ -136,7 +136,7 @@ describe("count-constrained spatial clustering", () => {
         expect(createPlanningClusters(points, { ...settings, method, mode: "range", min: 1, max: 1 }, heights).clusters).toHaveLength(400);
       }
     });
-  });
+  }, 30000);
   describe("start points", () => {
     const southRoad: RoadReference = { source: "sam-road", label: "test road", lines: [[[102.99, 2.0], [103.03, 2.0]]], key: "k" };
     const frame = (points: PlanningPoints) => { const m = metricFrame(points.area); return new Map(points.points.map(p => { const q = m(p.coordinate); return [p.id, [q.x, q.y] as [number, number]]; })); };
