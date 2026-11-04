@@ -58,4 +58,4 @@ If you use this software, or ideas or results taken from it, please cite it.
 }
 ```
 
-Contact: sheng.lee1@monash.edu, lamghai.lim@monash.edu. Third-party software used here keeps its own licence and credit, listed in `HACKATHON.md`.
+Contact: hello@minerva-x-tech.com, lamghai.lim@monash.edu. Third-party software used here keeps its own licence and credit, listed in `HACKATHON.md`.
