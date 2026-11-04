@@ -1,0 +1,16 @@
+cff-version: 1.2.0
+message: "If you use this software, or ideas or results taken from it, please cite it as below."
+title: "GeoScienceAI Lab"
+abstract: "Evidence-gated paper replication and follow-on exploration with agents: PaperRun, Descendance, Workshop, and an automatic wiki and knowledge graph."
+type: software
+version: 0.1.0
+date-released: 2026-11-05
+doi: 10.5281/zenodo.23955762
+repository-code: "https://github.com/MinervaXTech/GeoScienceAI"
+authors:
+  - family-names: Lee
+    given-names: Sheng Siang
+    email: sheng.lee1@monash.edu
+  - family-names: Lim
+    given-names: Lam Ghai
+    email: lamghai.lim@monash.edu

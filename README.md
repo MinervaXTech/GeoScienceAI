@@ -39,3 +39,23 @@ npm run typecheck
 npm run lint
 npm run build
 ```
+
+## Citation
+
+If you use this software, or ideas or results taken from it, please cite it.
+
+> Lee, S. S., and Lim, L. G. (2026). GeoScienceAI Lab (v0.1.0). Zenodo. https://doi.org/10.5281/zenodo.23955762
+
+```bibtex
+@software{lee_lim_geoscienceai_2026,
+  author    = {Lee, Sheng Siang and Lim, Lam Ghai},
+  title     = {GeoScienceAI Lab},
+  year      = {2026},
+  version   = {v0.1.0},
+  publisher = {Zenodo},
+  doi       = {10.5281/zenodo.23955762},
+  url       = {https://github.com/MinervaXTech/GeoScienceAI}
+}
+```
+
+Contact: sheng.lee1@monash.edu, lamghai.lim@monash.edu. Third-party software used here keeps its own licence and credit, listed in `HACKATHON.md`.
