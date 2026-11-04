@@ -4,8 +4,8 @@ import { existsSync } from "node:fs";
 import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
-import { createRun, listCodeFiles, readCodeFile, readEvents, readRun, updateRun } from "./paperrunCore";
-import { chooseEnvironments, codegenInstructions, envChoiceInstructions, continueRun, findHardcodedResults, forkForExternal, guidanceFor, handoverText, repairInstructions, reviewInstructions, runPipeline, runReport, settled, specForModel } from "./paperrunPipeline";
+import { codeFingerprint, createRun, currentCoverage, listCodeFiles, writeCodeFile, readCodeFile, readEvents, readRun, updateRun } from "./paperrunCore";
+import { addPriorWork, chooseEnvironments, continuationText, codegenInstructions, envChoiceInstructions, continueRun, findHardcodedResults, forkForExternal, guidanceFor, handoverText, repairInstructions, reviewInstructions, runPipeline, runReport, settled, specForModel } from "./paperrunPipeline";
 import { validateReplicationSpec } from "./knowledgeReplication";
 import { listEnvironments, saveEnvironment } from "./environments";
 import { setEnvPolicy } from "./paperrunCore";
@@ -39,6 +39,14 @@ const setup = async (script: Script, options: { maxRounds?: number; tokenCap?: n
   return { root, run, send, seen, go: (signal = new AbortController().signal) => runPipeline({ root, key: "fixture-secret", send, python }, run.id, signal) };
 };
 describe("pure helpers", () => {
+  it("tells Muse what code the paper states, that it cannot fetch it, and notes the authors' code in the report", () => {
+    const codeSources = { status: "link" as const, links: [{ url: "https://github.com/lab/aco", host: "github.com", kind: "repository" as const, ownCode: true, inReferences: false, quote: "Our code is at https://github.com/lab/aco.", page: 3 }], statements: [] };
+    const data = JSON.parse(specForModel(spec, [], [], codeSources)); expect(data.codeStatedInThePaper.join("\n")).toContain("https://github.com/lab/aco"); expect(data.codeStatedInThePaper.join("\n")).toContain("cannot fetch it");
+    expect(JSON.parse(specForModel(spec, [])).codeStatedInThePaper).toBeUndefined();
+    const base = { title: "ACO", model: "m", rows: [], assumptions: [], spec, notes: [], concerns: [], roundsUsed: 1, maxRounds: 1, tokens: { used: 1, cap: 2 }, stopReason: "x", files: [] };
+    expect(runReport({ ...base, codeSources })).toContain("Code the paper states: https://github.com/lab/aco (link)."); expect(runReport({ ...base, codeSources })).toContain("not that the method was independently re-implemented");
+    expect(runReport({ ...base, codeSources: { status: "none", links: [], statements: [] } })).toContain("Code the paper states: none (none)."); expect(runReport(base)).not.toContain("Code the paper states");
+  });
   it("gives Muse the spec with result ids and the assumption chosen for each gap", () => {
     const data = JSON.parse(specForModel(spec, [{ gapId: "G1", proposal: "use seeds 5-9" }]));
     expect(data.reportedResults.map((r: { id: string }) => r.id)).toEqual(["R1", "R2"]); expect(data.gaps[0].assumptionToUse).toBe("use seeds 5-9"); expect(data.parameters[0]).toMatchObject({ name: "ants", value: "50" });
@@ -128,10 +136,35 @@ describe.runIf(available)("the Muse pipeline", () => {
     const child = await forkForExternal(t.root, t.run.id, "/k", envRoot); const kid = await readRun(t.root, child);
     expect(kid.environments).toEqual([expect.objectContaining({ id: env.id })]); expect((await listCodeFiles(t.root, child)).map(f => f.path)).toContain(`environments/${env.id}.json`); expect(await readFile(join(t.root, child, "brief.md"), "utf8")).toContain("ENVIRONMENTS ATTACHED");
   });
+  it("carries method coverage into a continuation while the shared code is unchanged, and drops it once the code changes", async () => {
+    const t = await setup({ codegen: good }), coverage = [{ n: 1, status: "partial" as const, note: "Single colony." }];
+    const ext = await createRun(t.root, { paperId: "p", title: "t", mode: "external", model: "m", maxRounds: 0, tokenCap: 50000, spec, meta });
+    await writeCodeFile(t.root, ext.id, "impl.py", "x = 1\n"); await writeCodeFile(t.root, ext.id, "NOTES.md", "first notes");
+    const judged = await codeFingerprint(t.root, ext.id);
+    await updateRun(t.root, ext.id, r => { r.status = "done"; r.stepCoverage = coverage; r.coverageCode = judged; r.coverageFrom = ext.id; });
+    // Notes and audits are not the method, so they do not invalidate the coverage.
+    await writeCodeFile(t.root, ext.id, "NOTES.md", "much longer notes"); expect(await codeFingerprint(t.root, ext.id)).toBe(judged);
+    const same = await readRun(t.root, await forkForExternal(t.root, ext.id, "/k"));
+    expect(same).toMatchObject({ stepCoverage: coverage, coverageFrom: ext.id }); expect(same.results ?? []).toEqual([]); expect(await currentCoverage(t.root, same)).toEqual(coverage);
+    await writeCodeFile(t.root, ext.id, "impl.py", "x = 2\n"); // the next agent changes the method
+    expect(await currentCoverage(t.root, same)).toBeUndefined(); expect(await currentCoverage(t.root, await readRun(t.root, ext.id))).toBeUndefined();
+    const later = await readRun(t.root, await forkForExternal(t.root, ext.id, "/k")); expect(later.stepCoverage).toBeUndefined();
+    expect(await readFile(join(t.root, later.id, "brief.md"), "utf8")).not.toContain("Step 1 (partial)");
+  });
+  it("tells a run prepared from scratch about the shared code and the memory of earlier runs", async () => {
+    const t = await setup({ codegen: good }); await t.go();
+    const blank = await createRun(t.root, { paperId: "other", title: "t", mode: "external", model: "m", maxRounds: 0, tokenCap: 50000, spec, meta });
+    expect(await addPriorWork(t.root, blank.id)).toBe(false); expect(await readFile(join(t.root, blank.id, "brief.md"), "utf8")).not.toContain("PRIOR WORK");
+    const again = await createRun(t.root, { paperId: (await readRun(t.root, t.run.id)).paperId, title: "t", mode: "external", model: "m", maxRounds: 0, tokenCap: 50000, spec, meta });
+    await writeCodeFile(t.root, again.id, "impl.py", "x = 1\n");
+    expect(await addPriorWork(t.root, again.id)).toBe(true);
+    const brief = await readFile(join(t.root, again.id, "brief.md"), "utf8");
+    expect(brief).toContain("PRIOR WORK ON THIS PAPER"); expect(brief).toContain("impl.py"); expect(brief).toContain("improve them in place"); expect(brief).toContain("REPLICATION MEMORY"); expect(brief.indexOf("TASK: Re-implement")).toBeLessThan(brief.indexOf("PRIOR WORK"));
+  });
   it("refuses to hand over a run that is not a finished Muse run with code", async () => {
     const t = await setup({ codegen: good }); await expect(forkForExternal(t.root, t.run.id, "/k")).rejects.toThrow("Wait for the run to finish");
-    await t.go(); const ext = await createRun(t.root, { paperId: "p", title: "t", mode: "external", model: "m", maxRounds: 0, tokenCap: 50000, spec, meta }); await expect(forkForExternal(t.root, ext.id, "/k")).rejects.toThrow("Only a run Muse handled");
-    const empty = await setup({ codegen: good }); await updateRun(empty.root, empty.run.id, r => { r.status = "cancelled"; }); await expect(forkForExternal(empty.root, empty.run.id, "/k")).rejects.toThrow("no code to hand over");
+    await t.go(); const ext = await createRun(t.root, { paperId: "p", title: "t", mode: "external", model: "m", maxRounds: 0, tokenCap: 50000, spec, meta }); await expect(forkForExternal(t.root, ext.id, "/k")).rejects.toThrow("Wait for the run to finish");
+    const empty = await setup({ codegen: good }); await updateRun(empty.root, empty.run.id, r => { r.status = "cancelled"; }); await expect(forkForExternal(empty.root, empty.run.id, "/k")).rejects.toThrow("no code to continue from");
   });
   it("writes a hand-over brief that stays short when Muse's notes are long and omits empty sections", () => {
     const text = handoverText({ parentId: "run-1", title: "T", run: {}, spec, files: [], report: `# R\n\n## Muse's notes\n1. ${"long note ".repeat(1000)}\n\n## Files\n- code/impl.py`, pdfPath: "/k/paper.pdf" });
@@ -210,5 +243,18 @@ describe("letting Muse choose environments", () => {
   it("never stops the run when the choice fails", async () => {
     const t = await prepare({ pick: true, create: true }, { create: { name: "", origin: "dream" } }); await t.go();
     expect((await readRun(t.root, t.run.id)).environments).toBeUndefined(); expect((await readEvents(t.root, t.run.id)).some(e => e.kind === "warning" && e.message.includes("builds its own"))).toBe(true);
+  });
+});
+
+describe("continuing on the shared code with maps attached", () => {
+  const maps = [{ name: "ACO corrected markers simple 24x24", status: "candidate" }, { name: "Fig 12 multi", status: "approved" }];
+  const base = { parentId: "run-1", title: "T", spec, files: [{ path: "impl.py", bytes: 1 }, { path: "environments/env-a-1111.json", bytes: 1 }] };
+  it("tells the agent the figure data is already digitised, drops the stale 'supply the data' step, and lists code files apart from maps", () => {
+    const run = { results: [{ id: "R1", description: "x", reported: "1", reproduced: "2", tolerance: 0.1, status: "not_comparable" as const, note: "" }], environments: maps };
+    const text = continuationText({ ...base, run });
+    expect(text).toContain("MAPS ALREADY ATTACHED (2)"); expect(text).toContain("ACO corrected markers simple 24x24 (candidate)"); expect(text).toContain("Do not recreate or re-digitise a map unless you find an error");
+    expect(text).not.toContain("Supply the missing data"); expect(text).toContain("Files already in the folder: impl.py."); expect(text).toContain("Use paperrun_get_page_image only to check an attached map");
+    expect(text).not.toContain("Assess method coverage with Muse");
+    const plain = continuationText({ ...base, run: { results: run.results } }); expect(plain).not.toContain("MAPS ALREADY ATTACHED"); expect(plain).toContain("Read the paper's figures with paperrun_get_page_image when a value is only shown there");
   });
 });

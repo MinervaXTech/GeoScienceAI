@@ -4,7 +4,7 @@ import type { EnvSummary } from "./paperRunUi";
 import { useRef, type ReactNode } from "react";
 
 export type MapSidebarTab = "maps" | "layers" | "snapshots" | "knowledge" | "environments";
-const tabs = [{ id: "environments", label: "Environments", heading: "Environments" }, { id: "maps", label: "Maps", heading: "Saved maps" }, { id: "layers", label: "Layers", heading: "Map layers" }, { id: "snapshots", label: "Snapshots", heading: "Snapshots" }, { id: "knowledge", label: "Knowledge", heading: "Paper knowledge base" }] as const;
+const allTabs = [{ id: "environments", label: "Environments", heading: "Environments" }, { id: "maps", label: "Maps", heading: "Saved maps" }, { id: "layers", label: "Layers", heading: "Map layers" }, { id: "snapshots", label: "Snapshots", heading: "Snapshots" }, { id: "knowledge", label: "Knowledge", heading: "Paper knowledge base" }] as const;
 
 export function MapSidebar({ active, expanded, onOpen, onCollapse, maps, snapshots, layerHost, viewingEnv, onViewEnv, choices, currentMapId, onOpenMap }: {
   choices: MapChoice[];
@@ -21,6 +21,8 @@ export function MapSidebar({ active, expanded, onOpen, onCollapse, maps, snapsho
   layerHost(element: HTMLDivElement | null): void;
 }) {
   const buttons = useRef<Partial<Record<MapSidebarTab, HTMLButtonElement | null>>>({});
+  // Layers belong to a satellite map, so the tab is hidden while a simulated environment is on show.
+  const tabs = allTabs.filter(tab => tab.id !== "layers" || !viewingEnv), shown = tabs.find(tab => tab.id === active) ?? tabs[0]!;
   return <aside className={`map-sidebar${expanded ? "" : " is-collapsed"}`} aria-label="Map sidebar">
     <div className="map-sidebar-tabs" role="tablist" aria-label="Map sidebar panels" aria-orientation="vertical">
       {tabs.map((tab, index) => <button key={tab.id} ref={(button) => { buttons.current[tab.id] = button; }} type="button" role="tab" id={`map-sidebar-tab-${tab.id}`} aria-label={tab.label} title={tab.label} aria-selected={active === tab.id} aria-expanded={expanded && active === tab.id} aria-controls={`map-sidebar-panel-${tab.id}`} tabIndex={active === tab.id ? 0 : -1} onClick={() => onOpen(tab.id)} onKeyDown={(event) => {
@@ -36,13 +38,13 @@ export function MapSidebar({ active, expanded, onOpen, onCollapse, maps, snapsho
       </button>)}
     </div>
     <div className="map-sidebar-body" hidden={!expanded}>
-      <header className="map-sidebar-heading"><h2>{tabs.find(tab => tab.id === active)!.heading}</h2><button type="button" className="map-sidebar-collapse" aria-label="Collapse map sidebar" title="Collapse sidebar" onClick={() => { onCollapse(); buttons.current[active]?.focus(); }}><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><path d="m10 4-4 4 4 4" /></svg></button></header>
+      <header className="map-sidebar-heading"><h2>{shown.heading}</h2><button type="button" className="map-sidebar-collapse" aria-label="Collapse map sidebar" title="Collapse sidebar" onClick={() => { onCollapse(); buttons.current[active]?.focus(); }}><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><path d="m10 4-4 4 4 4" /></svg></button></header>
       <div className="map-sidebar-scroll">
-        <div role="tabpanel" id="map-sidebar-panel-maps" aria-labelledby="map-sidebar-tab-maps" hidden={active !== "maps"}>{maps}</div>
-        <div role="tabpanel" id="map-sidebar-panel-layers" aria-labelledby="map-sidebar-tab-layers" hidden={active !== "layers"}><div className="map-layer-host" ref={layerHost} /></div>
-        <div role="tabpanel" id="map-sidebar-panel-knowledge" aria-labelledby="map-sidebar-tab-knowledge" hidden={active !== "knowledge"}>{active === "knowledge" && <KnowledgeSidebar />}</div>
-        <div role="tabpanel" id="map-sidebar-panel-environments" aria-labelledby="map-sidebar-tab-environments" hidden={active !== "environments"}>{active === "environments" && <EnvironmentsSidebar maps={choices} currentMapId={currentMapId} viewing={viewingEnv} onOpenMap={onOpenMap} onView={onViewEnv} />}</div>
-        <div role="tabpanel" id="map-sidebar-panel-snapshots" aria-labelledby="map-sidebar-tab-snapshots" hidden={active !== "snapshots"}>{snapshots}</div>
+        <div role="tabpanel" id="map-sidebar-panel-maps" aria-labelledby="map-sidebar-tab-maps" hidden={shown.id !== "maps"}>{maps}</div>
+        <div role="tabpanel" id="map-sidebar-panel-layers" aria-labelledby="map-sidebar-tab-layers" hidden={shown.id !== "layers"}><div className="map-layer-host" ref={layerHost} /></div>
+        <div role="tabpanel" id="map-sidebar-panel-knowledge" aria-labelledby="map-sidebar-tab-knowledge" hidden={shown.id !== "knowledge"}>{shown.id === "knowledge" && <KnowledgeSidebar />}</div>
+        <div role="tabpanel" id="map-sidebar-panel-environments" aria-labelledby="map-sidebar-tab-environments" hidden={shown.id !== "environments"}>{shown.id === "environments" && <EnvironmentsSidebar maps={choices} currentMapId={currentMapId} viewing={viewingEnv} onOpenMap={onOpenMap} onView={onViewEnv} />}</div>
+        <div role="tabpanel" id="map-sidebar-panel-snapshots" aria-labelledby="map-sidebar-tab-snapshots" hidden={shown.id !== "snapshots"}>{snapshots}</div>
       </div>
     </div>
   </aside>;

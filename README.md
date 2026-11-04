@@ -11,6 +11,8 @@ A map and paper workspace for geoscience research, built for the Meta AI Develop
 
 Everything here was built after the event kickoff. The three files in `apps/lab/engine/` and the data in `apps/lab/src/data/` were imported from the author's sibling project, OpenPalm AI, which was built in the same event window, is not being submitted, and was set aside. See [HACKATHON.md](HACKATHON.md) for the full account, the Meta API use and the known limits.
 
+The wiki (WikiLLM) and the knowledge graph are not new ideas and not new tools. The graph is built and drawn with the third party tool graphify, and the wiki follows the existing "LLM Wiki" pattern, in a simpler form. [HACKATHON.md, section 7](HACKATHON.md#7-prior-art-what-is-not-new) says exactly what is borrowed and what was written here.
+
 ## Setup
 
 Needs Node 22.12 or newer.

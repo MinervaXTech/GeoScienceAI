@@ -12,12 +12,17 @@ import { createKnowledgeHandler, knowledgePlugin } from "./server/knowledge.ts";
 import { paperRunPlugin } from "./server/paperrun.ts";
 import { environmentsPlugin } from "./server/environments.ts";
 import { crownAgentPlugin } from "./server/crownAgent.ts";
+import { descendPlugin } from "./server/descend.ts";
+import { workshopPlugin } from "./server/workshop.ts";
+import { wikiPlugin } from "./server/wiki.ts";
+import { knowledgeSyncPlugin } from "./server/knowledgeSync.ts";
+import { autoInfo, autoSyncPlugin } from "./server/autosync.ts";
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), "");
   const knowledge = createKnowledgeHandler(env.MODEL_API_KEY ?? "", { bin: env.GRAPHIFY_BIN });
   return {
-    plugins: [react(), knowledgePlugin(env.MODEL_API_KEY ?? "", env.GRAPHIFY_BIN, knowledge), paperRunPlugin(env.MODEL_API_KEY ?? "", knowledge), environmentsPlugin(), mapAgentPlugin(env.MODEL_API_KEY ?? ""), googleMapsPlugin(env.GOOGLE_MAPS_API_KEY ?? ""), samPlugin(env.MODEL_API_KEY ?? ""), canopyPlugin(), crownAgentPlugin(env.MODEL_API_KEY ?? ""), musePyramidPlugin(), musePlugin(env.MODEL_API_KEY ?? ""), placeSearchPlugin(env.PHOTON_GEOCODER_URL)],
+    plugins: [react(), knowledgePlugin(env.MODEL_API_KEY ?? "", env.GRAPHIFY_BIN, knowledge), paperRunPlugin(env.MODEL_API_KEY ?? "", knowledge), environmentsPlugin(), descendPlugin(env.MODEL_API_KEY ?? ""), workshopPlugin(env.MODEL_API_KEY ?? ""), wikiPlugin(), knowledgeSyncPlugin({ knowledge, auto: () => autoInfo() }), autoSyncPlugin({ knowledge }), mapAgentPlugin(env.MODEL_API_KEY ?? ""), googleMapsPlugin(env.GOOGLE_MAPS_API_KEY ?? ""), samPlugin(env.MODEL_API_KEY ?? ""), canopyPlugin(), crownAgentPlugin(env.MODEL_API_KEY ?? ""), musePyramidPlugin(), musePlugin(env.MODEL_API_KEY ?? ""), placeSearchPlugin(env.PHOTON_GEOCODER_URL)],
     test: { environment: "jsdom", include: ["src/**/*.test.{ts,tsx}", "server/**/*.test.ts"] },
   };
 });

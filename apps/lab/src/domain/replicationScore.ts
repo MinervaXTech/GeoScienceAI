@@ -62,7 +62,7 @@ const DATA_GAPS = ["figure_only", "unspecified_data"];
 const short = (text: string, max: number) => { const t = text.replace(/\s+/g, " ").trim(); return t.length <= max ? t : `${t.slice(0, max - 1).replace(/[\s,;:.]+\S*$/, "")}…`; };
 
 /** A plain verdict with the reasons behind it, and what to do next, ordered by priority. Deterministic: the same inputs always give the same answer. */
-export function assessReplication(input: { results: ResultInfo[]; stepCount: number; coverage?: StepCoverage[]; gaps: GapInfo[]; concerns: string[] }): Assessment {
+export function assessReplication(input: { results: ResultInfo[]; stepCount: number; coverage?: StepCoverage[]; gaps: GapInfo[]; concerns: string[]; mapsAttached?: number }): Assessment {
   const score = replicationScore(input.results, input.stepCount, input.coverage), method = score.steps.percent, near = score.comparablePercent, total = score.total;
   const comparedShare = total ? Math.round((score.comparable / total) * 100) : 0;
   const dataGaps = input.gaps.filter(g => DATA_GAPS.includes(g.kind) && g.impact === "high");
@@ -85,7 +85,8 @@ export function assessReplication(input: { results: ResultInfo[]; stepCount: num
 
   const actions: NextAction[] = [];
   if (method === null && total) actions.push({ priority: "high", kind: "assess", text: "Assess method coverage with Muse, so the rating can use how much of the method is really implemented." });
-  for (const g of dataGaps.slice(0, 2)) actions.push({ priority: "high", kind: "data", text: `Supply the missing data (${g.id}): ${short(g.description, 170)} Until then, results on substituted data show only that the code runs.` });
+  const maps = input.mapsAttached ?? 0;
+  for (const g of dataGaps.slice(0, 2)) actions.push(maps > 0 ? { priority: "medium", kind: "data", text: `${g.id} covers data the paper shows only as figures. ${maps} digitised map${maps === 1 ? " is" : "s are"} attached: check ${maps === 1 ? "it" : "them"} against the figures and use ${maps === 1 ? "it" : "them"}. Save a corrected version as a new candidate only if you find an error. Results on maps the user has not approved show only that the code runs.` } : { priority: "high", kind: "data", text: `Supply the missing data (${g.id}): ${short(g.description, 170)} Until then, results on substituted data show only that the code runs.` });
   const weak = (input.coverage ?? []).filter(c => c.status !== "implemented");
   if (weak.length) actions.push({ priority: "high", kind: "code", text: `Fix ${weak.length} step${weak.length === 1 ? "" : "s"} that ${weak.length === 1 ? "is" : "are"} only partly implemented or missing (steps ${weak.slice(0, 6).map(c => c.n).join(", ")}${weak.length > 6 ? ", …" : ""}). First: step ${weak[0]!.n}, ${short(weak[0]!.note || weak[0]!.status, 140)}` });
   for (const c of high.slice(0, 3)) actions.push({ priority: "high", kind: "honesty", text: `Resolve this review concern: ${short(c.replace(/^\[high\]\s*/, ""), 200)}` });

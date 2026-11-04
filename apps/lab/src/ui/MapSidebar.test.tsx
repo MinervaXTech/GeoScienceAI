@@ -5,12 +5,12 @@ import { afterEach, expect, it } from "vitest";
 import { MapSidebar, type MapSidebarTab } from "./MapSidebar";
 
 afterEach(cleanup);
-function Fixture() {
+function Fixture({ viewingEnv = null }: { viewingEnv?: string | null } = {}) {
   const [active, setActive] = useState<MapSidebarTab>("maps");
   const [expanded, setExpanded] = useState(true);
   const [host, setHost] = useState<HTMLDivElement | null>(null);
   const [canopy, setCanopy] = useState(true);
-  return <><MapSidebar choices={[]} currentMapId="upm" onOpenMap={() => {}} viewingEnv={null} onViewEnv={() => {}} active={active} expanded={expanded} onOpen={(tab) => { setActive(tab); setExpanded(true); }} onCollapse={() => setExpanded(false)} snapshots={<p>Registered snapshots</p>} layerHost={setHost} maps={<label>Map name<input defaultValue="Kluang" /></label>} />{host && createPortal(<label><input type="checkbox" checked={canopy} onChange={(event) => setCanopy(event.target.checked)} />Show canopy layer</label>, host)}</>;
+  return <><MapSidebar choices={[]} currentMapId="upm" onOpenMap={() => {}} viewingEnv={viewingEnv} onViewEnv={() => {}} active={active} expanded={expanded} onOpen={(tab) => { setActive(tab); setExpanded(true); }} onCollapse={() => setExpanded(false)} snapshots={<p>Registered snapshots</p>} layerHost={setHost} maps={<label>Map name<input defaultValue="Kluang" /></label>} />{host && createPortal(<label><input type="checkbox" checked={canopy} onChange={(event) => setCanopy(event.target.checked)} />Show canopy layer</label>, host)}</>;
 }
 it("opens either icon's panel without collapsing on repeated clicks, and has a separate collapse control", () => {
   render(<Fixture />);
@@ -54,4 +54,11 @@ it("supports vertical keyboard navigation and opens a collapsed sidebar", () => 
   expect(screen.getByText("Registered snapshots")).toBeTruthy();
   fireEvent.keyDown(snapshots, { key: "Home" });
   expect(document.activeElement).toBe(screen.getByRole("tab", { name: "Environments" }));
+});
+
+it("offers the Layers tab for a satellite map and hides it while a simulated environment is on show", () => {
+  const { unmount } = render(<Fixture />);
+  expect(screen.getByRole("tab", { name: "Layers" })).toBeTruthy(); unmount();
+  render(<Fixture viewingEnv="env-grid-1" />);
+  expect(screen.queryByRole("tab", { name: "Layers" })).toBeNull();
 });

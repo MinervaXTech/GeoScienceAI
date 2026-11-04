@@ -4,8 +4,10 @@ import { readFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import { join, resolve } from "node:path";
 import { getEnvironment } from "./environments.ts";
-import { appendEvent, attachEnvironment, detachEnvironment, parsePolicy, setEnvPolicy, codePath, createRun, listCodeFiles, listRuns, readCodeFile, readEvents, readRun, readSpec, runDirectory, runTests, updateRun, validRunId, workingRuns } from "./paperrunCore.ts";
-import { assessRun, continueRun, finalizeExternal, forkForExternal, guidanceFor, runPipeline, type PipelineDeps } from "./paperrunPipeline.ts";
+import { findCodeSources } from "../src/domain/codeSources.ts";
+import { backfillMemory, memoryText, readMemory } from "./paperrunMemory.ts";
+import { currentCoverage, codeFolderSizes, appendEvent, attachEnvironment, detachEnvironment, migrateSharedCode, parsePolicy, setEnvPolicy, codePath, createRun, listCodeFiles, listRuns, readCodeFile, readEvents, readRun, readSpec, runDirectory, runTests, updateRun, validRunId, workingRuns } from "./paperrunCore.ts";
+import { addPriorWork, assessRun, continueRun, finalizeExternal, forkForExternal, guidanceFor, runPipeline, type PipelineDeps } from "./paperrunPipeline.ts";
 
 const ROOT = fileURLToPath(new URL("../paperruns/", import.meta.url)), KNOWLEDGE = fileURLToPath(new URL("../knowledge/", import.meta.url)), ENVIRONMENTS = fileURLToPath(new URL("../environments/", import.meta.url));
 const json = (value: unknown, status = 200) => Response.json(value, { status, headers: { "Cache-Control": "no-store" } });
@@ -22,14 +24,16 @@ export function createPaperRunHandler(key: string, options: PaperRunOptions) {
   const ready = () => (options.sandboxAvailable ?? (process.platform === "darwin" && existsSync("/usr/bin/sandbox-exec"))) ? existsSync(python) ? null : "The PaperRun Python environment is missing. Run: npm run paperrun:setup (in apps/lab)." : "Running code in a sandbox needs macOS. Use an external agent instead.";
   const knowledge = (path: string, body: unknown, method = "POST") => options.knowledge(new Request(`http://paperrun.local${path}`, { method, headers: { origin: "http://paperrun.local", "content-type": "application/json" }, ...(method === "POST" ? { body: JSON.stringify(body) } : {}) }));
   const mcpConfig = () => ({ command: "node", args: ["--experimental-strip-types", fileURLToPath(new URL("./paperrunMcp.ts", import.meta.url))], env: { PAPERRUN_ROOT: root, PAPERRUN_PYTHON: python, PAPERRUN_ENVIRONMENTS: resolve(options.environmentsRoot ?? ENVIRONMENTS) } });
+  let migration: Promise<void> | null = null;
   return async (req: Request): Promise<Response> => {
     const url = new URL(req.url);
     if (req.headers.get("origin") !== url.origin && req.method !== "GET") return json({ error: "Use PaperRun from this app." }, 403);
     if (req.method !== "GET" && req.headers.has("sec-fetch-site") && req.headers.get("sec-fetch-site") !== "same-origin") return json({ error: "Use PaperRun from this app." }, 403);
     const path = url.pathname;
     try {
+      migration ??= migrateSharedCode(root).then(() => backfillMemory(root)).catch(() => undefined); await migration;
       if (req.method === "GET" && path === "/api/paperrun/status") return json({ root, ready: ready() === null, problem: ready(), configured: !!key.trim(), mcp: mcpConfig(), running: [...active.keys()], working: await workingRuns(root) });
-      if (req.method === "GET" && path === "/api/paperrun") return json({ runs: await listRuns(root) });
+      if (req.method === "GET" && path === "/api/paperrun") { const runs = await listRuns(root), folders: Record<string, { muse: number; external: number }> = {}; const memory: Record<string, string> = {}; for (const id of new Set(runs.map(r => r.paperId))) { folders[id] = await codeFolderSizes(root, id).catch(() => ({ muse: 0, external: 0 })); memory[id] = memoryText(await readMemory(root, id)); } return json({ runs, folders, memory }); }
       const one = /^\/api\/paperrun\/(run-[0-9]{14}-[a-f0-9]{4})(?:\/(file|cancel|run-tests|finish|assess|continue|handover|environments))?$/.exec(path);
       if (one) {
         const id = one[1]!, action = one[2];
@@ -37,8 +41,10 @@ export function createPaperRunHandler(key: string, options: PaperRunOptions) {
         const run = await readRun(root, id).catch(() => null); if (!run) return json({ error: "Unknown run." }, 404);
         if (req.method === "GET" && !action) {
           const report = await readFile(join(runDirectory(root, id), "report.md"), "utf8").catch(() => null);
-          const spec = await readSpec(root, id).then(x => x.spec).catch(() => null);
-          return json({ run, events: await readEvents(root, id, 120), files: await listCodeFiles(root, id), report, active: active.has(id), directory: runDirectory(root, id), gaps: (spec?.gaps ?? []).map(g => ({ id: g.id, kind: g.kind, impact: g.impact, description: g.description })) });
+          const stored = await readSpec(root, id).catch(() => null), spec = stored?.spec ?? null;
+          // Read from the paper text each time, so an improvement to the detector reaches runs made earlier. The copy saved with the spec is the fallback.
+          const codeSources = await readFile(join(resolve(options.knowledgeRoot ?? KNOWLEDGE), run.paperId, "paper.txt"), "utf8").then(findCodeSources, () => stored?.meta.codeSources);
+          return json({ ...(codeSources ? { codeSources } : {}), coverageStale: !!run.stepCoverage?.length && !(await currentCoverage(root, run)), run, events: await readEvents(root, id, 120), files: await listCodeFiles(root, id), report, active: active.has(id), directory: runDirectory(root, id), gaps: (spec?.gaps ?? []).map(g => ({ id: g.id, kind: g.kind, impact: g.impact, description: g.description })) });
         }
         if (req.method === "GET" && action === "file") {
           const wanted = url.searchParams.get("path") ?? "";
@@ -112,6 +118,7 @@ export function createPaperRunHandler(key: string, options: PaperRunOptions) {
         const run = await createRun(root, { paperId: data.paper.id, title: data.meta.title, mode, model, maxRounds: (value.rounds as number | undefined) ?? 4, tokenCap: (value.tokenCap as number | undefined) ?? 400000, spec: data.spec, meta: data.meta });
         if (value.envPolicy !== undefined) await setEnvPolicy(root, run.id, parsePolicy(value.envPolicy)!);
         for (const envId of (value.environments as string[] | undefined) ?? []) await attachEnvironment(root, run.id, resolve(options.environmentsRoot ?? ENVIRONMENTS), envId);
+        if (mode === "external") await addPriorWork(root, run.id);
         if (mode === "muse") {
           const controller = new AbortController(); active.set(run.id, controller);
           const deps: PipelineDeps = { root, key, send, python, environmentsRoot: resolve(options.environmentsRoot ?? ENVIRONMENTS), ...(options.testTimeoutMs ? { testTimeoutMs: options.testTimeoutMs } : {}) };

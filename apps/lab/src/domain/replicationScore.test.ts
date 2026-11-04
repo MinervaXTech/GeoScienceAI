@@ -52,3 +52,14 @@ describe("assessment", () => {
     expect(assessReplication({ results: [], stepCount: 0, gaps: [], concerns: [] })).toMatchObject({ rating: "unrated", reasons: ["Method coverage has not been assessed, so the method cannot be rated yet.", "No results have been compared yet."], actions: [] });
   });
 });
+
+describe("next steps when maps are already attached", () => {
+  const res = (...statuses: string[]) => statuses.map((status, i) => ({ id: `R${i + 1}`, status }));
+  it("replaces 'supply the missing data' by checking the attached maps, at medium priority", () => {
+    const without = assessReplication({ results: res("not_comparable"), stepCount: 2, gaps, concerns: [] }).actions.find(a => a.kind === "data")!;
+    expect(without).toMatchObject({ priority: "high" }); expect(without.text).toContain("Supply the missing data (G8)");
+    const withMaps = assessReplication({ results: res("not_comparable"), stepCount: 2, gaps, concerns: [], mapsAttached: 5 }).actions.find(a => a.kind === "data")!;
+    expect(withMaps).toMatchObject({ priority: "medium" }); expect(withMaps.text).not.toContain("Supply the missing data"); expect(withMaps.text).toContain("5 digitised maps are attached"); expect(withMaps.text).toContain("only if you find an error"); expect(withMaps.text).toContain("not approved");
+    expect(assessReplication({ results: res("not_comparable"), stepCount: 2, gaps, concerns: [], mapsAttached: 1 }).actions.find(a => a.kind === "data")!.text).toContain("1 digitised map is attached: check it against the figures and use it");
+  });
+});

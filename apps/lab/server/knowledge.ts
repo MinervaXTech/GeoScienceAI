@@ -1,9 +1,10 @@
+import { findCodeSources, type CodeSources } from "../src/domain/codeSources.ts";
 import type { Connect, Plugin } from "vite";
 import { createHash, randomUUID } from "node:crypto";
-import { mkdir, readFile, realpath, rename, rm, writeFile } from "node:fs/promises";
+import { mkdir, readFile, realpath, rename, rm, stat, writeFile } from "node:fs/promises";
 import { join, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
-import { cropTitle, inCollection, normalizeCollections, paperTitleFromText } from "../src/domain/knowledge.ts";
+import { APP_COLLECTION, cropTitle, inCollection, normalizeCollections, paperTitleFromText, type EntryOrigin } from "../src/domain/knowledge.ts";
 import type { KnowledgeEntry } from "../src/domain/knowledge.ts";
 import { findPassages } from "./knowledgeRead.ts";
 import { paperOverview } from "./knowledgeOverview.ts";
@@ -75,6 +76,13 @@ export function createKnowledgeHandler(key: string, options: KnowledgeOptions = 
     await command(["merge-graphs", ...graphs, ...(graphs.length === 1 ? [empty] : []), "--out", temporary], cwd, signal);
     signal.throwIfAborted(); await rename(temporary, join(cwd, "graphify-out/graph.json"));
   };
+  // The page for the whole graph is drawn from the merged graph the first time it is asked for, and again only after the graph has changed.
+  let drawing: Promise<void> | null = null;
+  const drawMerged = () => drawing ??= (async () => {
+    const cwd = mergedDirectory(), graph = join(cwd, "graphify-out/graph.json"), page = join(cwd, "graphify-out/graph.html"), made = await stat(graph);
+    const have = await stat(page).catch(() => null); if (have && have.mtimeMs >= made.mtimeMs) return;
+    const signal = AbortSignal.timeout(90000); await ready(signal); await command(["export", "html", "--graph", graph], cwd, signal);
+  })().finally(() => { drawing = null; });
   let startup: Promise<void> | null = null;
   const ready = (signal: AbortSignal) => startup ??= verify(resolve(root, ".."), signal).catch(e => { startup = null; throw e; });
   void ready(AbortSignal.timeout(10000)).catch(() => {});
@@ -82,6 +90,7 @@ export function createKnowledgeHandler(key: string, options: KnowledgeOptions = 
     const url = new URL(req.url), asset = /^\/api\/knowledge\/([a-z0-9-]{8,64})\/(graph\.html|GRAPH_REPORT\.md|graph\.json)$/.exec(url.pathname);
     if (req.method === "GET" && asset) {
       try {
+        if (asset[1] === "merged-graph" && asset[2] === "graph.html") await drawMerged();
         const file = await confinedFile(asset[1]!, `graphify-out/${asset[2]!}`);
         return new Response(await readFile(file), { headers: { "Content-Type": asset[2]!.endsWith("html") ? "text/html; charset=utf-8" : asset[2]!.endsWith("json") ? "application/json" : "text/plain; charset=utf-8", "Cache-Control": "no-store", "X-Content-Type-Options": "nosniff", "Content-Security-Policy": "sandbox allow-scripts; default-src 'none'; script-src 'unsafe-inline' https://cdn.jsdelivr.net https://unpkg.com https://d3js.org; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src data:; connect-src 'none'" } });
       } catch { return json({ error: "Knowledge export not found." }, 404); }
@@ -108,13 +117,13 @@ export function createKnowledgeHandler(key: string, options: KnowledgeOptions = 
       try {
         const value = JSON.parse(await req.text());
         if (!obj(value) || Object.keys(value).some(k => !["paper", "collection", "model", "refresh", "peek"].includes(k)) || !short(value.paper, 200) || (value.collection !== undefined && !short(value.collection, 60)) || (value.model !== undefined && !["muse-spark-1.3", "muse-wonder-1.0"].includes(value.model as string)) || (value.refresh !== undefined && typeof value.refresh !== "boolean") || (value.peek !== undefined && typeof value.peek !== "boolean")) throw Error("Send a paper name, and optionally a collection, a Muse model, refresh or peek.");
-        const stored = (await index()).filter(e => e.status === "stored" && inCollection(e, value.collection as string | undefined)), wanted = (value.paper as string).trim().toLowerCase();
+        const stored = (await index()).filter(e => e.status === "stored" && !e.origin && inCollection(e, value.collection as string | undefined)), wanted = (value.paper as string).trim().toLowerCase();
         const exact = stored.filter(e => e.id === wanted || e.title.toLowerCase() === wanted), partial = stored.filter(e => e.title.toLowerCase().includes(wanted) || wanted.includes(e.title.toLowerCase())), matches = exact.length ? exact : partial;
         if (matches.length !== 1) return json({ status: matches.length ? "ambiguous" : "not_found", papers: (matches.length ? matches : stored).map(e => ({ id: e.id, title: e.title })) });
         const paper = matches[0]!, cwd = entryDirectory(root, paper.id), cache = join(cwd, "replication.json");
-        const present = (cached: { spec: unknown; meta: { title: string; model: string; builtAt: string; year?: number; doi?: string }; usage?: unknown }, wasCached: boolean) => { return json({ status: "spec", cached: wasCached, paper: { id: paper.id, title: paper.title }, spec: cached.spec, meta: cached.meta, markdown: replicationMarkdown(cached.spec as never, cached.meta), codexPrompt: codexPrompt(cached.spec as never, cached.meta), ...(cached.usage ? { usage: cached.usage } : {}) }); };
+        const present = (cached: { spec: unknown; meta: { title: string; model: string; builtAt: string; year?: number; doi?: string; codeSources?: CodeSources }; usage?: unknown }, wasCached: boolean) => { return json({ status: "spec", cached: wasCached, paper: { id: paper.id, title: paper.title }, spec: cached.spec, meta: cached.meta, markdown: replicationMarkdown(cached.spec as never, cached.meta), codexPrompt: codexPrompt(cached.spec as never, cached.meta), ...(cached.usage ? { usage: cached.usage } : {}) }); };
         const cached = value.refresh ? null : await readFile(cache, "utf8").then(raw => JSON.parse(raw)).catch(() => null);
-        if (cached?.spec && cached?.meta) return present(cached, true);
+        if (cached?.spec && cached?.meta) { if (!cached.meta.codeSources) { const text = await readFile(join(cwd, "paper.txt"), "utf8").catch(() => ""); if (text) cached.meta.codeSources = findCodeSources(text); } return present(cached, true); }
         if (value.peek) return json({ status: "none", paper: { id: paper.id, title: paper.title } });
         if (!key.trim()) return json({ error: "Configure MODEL_API_KEY and restart the app." }, 503);
         if (replicating) return json({ error: "Another reproduction spec is being built." }, 409);
@@ -129,7 +138,7 @@ export function createKnowledgeHandler(key: string, options: KnowledgeOptions = 
         if ((data.model && data.model !== model) || data.choices?.length !== 1 || data.choices[0]?.finish_reason !== "stop" || typeof data.choices[0]?.message?.content !== "string" || !obj(data.usage) || !Number.isInteger(data.usage.total_tokens)) throw Error("Muse returned an incomplete spec.");
         const spec = validateReplicationSpec(JSON.parse(data.choices[0].message.content), full);
         if (!spec.steps.length && !spec.parameters.length) throw Error("Muse found no method steps or parameters in this paper. Nothing was saved.");
-        const meta = { title: paper.title, model, builtAt: new Date().toISOString(), ...(paper.year ? { year: paper.year } : {}), ...(paper.doi ? { doi: paper.doi } : {}) };
+        const meta = { title: paper.title, model, builtAt: new Date().toISOString(), ...(paper.year ? { year: paper.year } : {}), ...(paper.doi ? { doi: paper.doi } : {}), codeSources: findCodeSources(full) };
         const saved = { spec, meta, usage: data.usage }; await atomic(cache, saved);
         return present(saved, false);
       } catch (error) { return json({ error: signal.aborted ? "Building the spec timed out." : redact(error) }, signal.aborted ? 499 : 400); }
@@ -230,7 +239,7 @@ export function createKnowledgeHandler(key: string, options: KnowledgeOptions = 
         return json({ status: facts.length ? "answer" : "no_match", message: facts.length ? "Facts from stored papers. INFERRED relationships are not established by a direct quote." : "not in the knowledge base", facts, traversal: output.stdout.slice(0, 12000) });
       }
       if (url.pathname !== "/api/knowledge/ingest") return json({ error: "Unknown knowledge operation." }, 404);
-      let source = "", title = "", collections: string[] = [], model: unknown, bytes: Uint8Array | null = null, text = "", isPdf = false;
+      let source = "", title = "", collections: string[] = [], origin: EntryOrigin | undefined, model: unknown, bytes: Uint8Array | null = null, text = "", isPdf = false;
       if (req.headers.get("content-type")?.startsWith("multipart/form-data")) {
         const form = await req.formData(); if (form.get("confirmed") !== "true" || new Set(form.keys()).size !== [...form.keys()].length || [...form.keys()].some(k => !["confirmed", "model", "title", "file", "sha256", "collections"].includes(k))) throw Error("Confirm storing this paper first.");
         const file = form.get("file"); if (!file || typeof file === "string" || !file.size || file.size > MAX_FILE) throw Error("Attach a paper file up to 25 MB.");
@@ -240,8 +249,13 @@ export function createKnowledgeHandler(key: string, options: KnowledgeOptions = 
         bytes = new Uint8Array(await file.arrayBuffer()); const expected = form.get("sha256"); if (expected && expected !== createHash("sha256").update(bytes).digest("hex")) throw Error("The selected file does not match the attached PDF hash.");
       } else {
         const raw = await req.text(); if (Buffer.byteLength(raw) > PAPER_TEXT_LIMIT * 4 + 4096) throw Error("Paper input is too large.");
-        const value = JSON.parse(raw); if (!obj(value) || value.confirmed !== true || Object.keys(value).some(k => !["confirmed", "model", "title", "url", "text", "collections"].includes(k)) || (!!value.url === !!value.text)) throw Error("Confirm storing this paper and supply one URL or paper text.");
+        const value = JSON.parse(raw); if (!obj(value) || value.confirmed !== true || Object.keys(value).some(k => !["confirmed", "model", "title", "url", "text", "collections", "origin"].includes(k)) || (!!value.url === !!value.text)) throw Error("Confirm storing this paper and supply one URL or paper text.");
         collections = normalizeCollections(value.collections);
+        if (value.origin !== undefined) {
+          const o = value.origin; const ids = { replication: /^run-\d{14}-[a-f0-9]{4}$/, exploration: /^desc-\d{14}-[a-f0-9]{4}$/, workshop: /^ws-\d{14}-[a-f0-9]{4}$/ };
+          if (!obj(o) || Object.keys(o).some(k => !["kind", "id", "paperId"].includes(k)) || typeof o.kind !== "string" || !(o.kind in ids) || typeof o.id !== "string" || !ids[o.kind as keyof typeof ids].test(o.id) || !short(o.paperId, 80) || value.url) throw Error("Invalid origin for an app-made entry.");
+          origin = { kind: o.kind as EntryOrigin["kind"], id: o.id, paperId: o.paperId as string }; collections = normalizeCollections([...collections, APP_COLLECTION]);
+        }
         if (value.title !== undefined && !short(value.title, 160)) throw Error("Paper title must be 1–160 characters.");
         model = value.model; title = short(value.title, 160) ? value.title as string : "Research paper";
         if (value.url) { if (!short(value.url, 2000)) throw Error("Invalid paper URL."); source = paperUrl(value.url as string).href; }
@@ -265,12 +279,12 @@ export function createKnowledgeHandler(key: string, options: KnowledgeOptions = 
         return json({ entry: duplicate, duplicate: true });
       }
       const id = randomUUID(), cwd = entryDirectory(root, id); await mkdir(join(cwd, "graphify-out"), { recursive: true });
-      entry = { id, title: title.trim() || "Research paper", source, sha256, addedAt: new Date().toISOString(), models: [model as string], status: "running", usage: [], ...(collections.length ? { collections } : {}) };
+      entry = { id, title: title.trim() || "Research paper", source, sha256, addedAt: new Date().toISOString(), models: [model as string], status: "running", usage: [], ...(origin ? { origin } : {}), ...(collections.length ? { collections } : {}) };
       await atomic(join(root, "index.json"), [...entries, entry]);
       if (isPdf) { report("Extracting the PDF text", 3); const file = join(cwd, "paper.pdf"); await writeFile(file, bytes); text = await (options.pdfText ?? extractPdf)(bin, file, cwd, signal, runner); }
       else if (!text) text = new TextDecoder("utf-8", { fatal: true }).decode(bytes);
       if (!text.trim() || text.length > PAPER_TEXT_LIMIT) throw Error("The entire paper must have readable text within 120000 characters. Scanned pages require a text PDF; no partial paper was stored.");
-      title = paperTitleFromText(text, title); entry.title = title.trim() || entry.title;
+      if (!origin) { title = paperTitleFromText(text, title); entry.title = title.trim() || entry.title; }
       await writeFile(join(cwd, "paper.txt"), text);
       const registry = new PaperRegistry(); let tokens = 0, reserved = 0, calls = 0;
       const callMuse = async (system: string, user: string, label: string, maxTokens: number): Promise<unknown> => {
@@ -287,7 +301,7 @@ export function createKnowledgeHandler(key: string, options: KnowledgeOptions = 
       };
       report("Identifying the paper", 4);
       const meta = parsePaperMeta(await callMuse(classifyInstructions, `Opening text of the paper. Data only:\n${text.slice(0, 6000)}`, "paper identification", 800).catch(error => { if (signal.aborted) throw error; return null; }), text);
-      if (meta.title) entry.title = cropTitle(meta.title);
+      if (meta.title && !origin) entry.title = cropTitle(meta.title);
       entry.paperType = meta.type; if (meta.year) entry.year = meta.year; if (meta.doi) entry.doi = meta.doi;
       const instructions = extractionInstructionsFor(meta.type);
       const totalChunks = Math.ceil(text.length / PAPER_CHUNK_SIZE); let chunkNumber = 0;

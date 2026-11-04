@@ -8,3 +8,7 @@ dist
 apps/lab/knowledge/
 apps/lab/paperruns/
 apps/lab/environments/
+apps/lab/descendances/
+apps/lab/workshops/
+apps/lab/wiki/
+apps/lab/autosync/

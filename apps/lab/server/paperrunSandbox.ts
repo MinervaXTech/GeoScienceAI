@@ -12,6 +12,8 @@ export interface SandboxOptions {
   args?: string[];
   /** Working directory inside the run folder; defaults to the run folder. */
   cwd?: string;
+  /** Folders outside the run folder the script may read and write, such as a paper's shared code folder. */
+  extraDirs?: string[];
   timeoutMs: number;
   maxOutput?: number;
   signal?: AbortSignal;
@@ -23,14 +25,15 @@ const quote = (path: string) => `"${path.replace(/\\/g, "\\\\").replace(/"/g, '\
  * macOS sandbox profile for model-written code: no network, writes only inside the run folder, and no reads of the user's
  * home folder except the run folder and the Python installation. Everything else the interpreter needs stays readable.
  */
-export function sandboxProfile(input: { runDir: string; readable: string[]; home: string }): string {
+export function sandboxProfile(input: { runDir: string; readable: string[]; home: string; writable?: string[] }): string {
+  const writable = [input.runDir, ...(input.writable ?? [])];
   return [
     "(version 1)", "(allow default)",
     "(deny network*)",
     "(deny file-write*)",
-    `(allow file-write* (subpath ${quote(input.runDir)}) (literal "/dev/null") (literal "/dev/dtracehelper"))`,
+    `(allow file-write* ${writable.map(p => `(subpath ${quote(p)})`).join(" ")} (literal "/dev/null") (literal "/dev/dtracehelper"))`,
     `(deny file-read* (subpath ${quote(input.home)}))`,
-    `(allow file-read* ${[input.runDir, ...input.readable].map(p => `(subpath ${quote(p)})`).join(" ")})`,
+    `(allow file-read* ${[...writable, ...input.readable].map(p => `(subpath ${quote(p)})`).join(" ")})`,
   ].join("\n");
 }
 
@@ -48,7 +51,8 @@ export async function runSandboxed(options: SandboxOptions): Promise<SandboxResu
   const runDir = await realpath(options.runDir), cwd = options.cwd ? join(runDir, options.cwd) : runDir;
   if (!cwd.startsWith(runDir)) throw Error("The working directory must be inside the run folder.");
   await mkdir(join(runDir, ".tmp"), { recursive: true }); await mkdir(join(runDir, ".mpl"), { recursive: true });
-  const profile = sandboxProfile({ runDir, readable: await interpreterRoots(options.python), home: await realpath(homedir()).catch(() => homedir()) });
+  const extra = await Promise.all((options.extraDirs ?? []).map(d => realpath(d).catch(() => resolve(d))));
+  const profile = sandboxProfile({ runDir, readable: await interpreterRoots(options.python), home: await realpath(homedir()).catch(() => homedir()), writable: extra });
   const env = { PATH: "/usr/bin:/bin", HOME: runDir, TMPDIR: join(runDir, ".tmp"), MPLCONFIGDIR: join(runDir, ".mpl"), MPLBACKEND: "Agg", PYTHONDONTWRITEBYTECODE: "1", PYTHONHASHSEED: "0", PYTHONUNBUFFERED: "1", LANG: "en_US.UTF-8" };
   const max = options.maxOutput ?? 200000, started = Date.now();
   return new Promise(resolveResult => {

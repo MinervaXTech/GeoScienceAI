@@ -7,11 +7,11 @@ const mcp = { command: "node", args: ["--experimental-strip-types", "/Users/me/M
 const paper = { id: "paper-0001", title: "ACO study", source: "x", sha256: "h", addedAt: "2026-11-03T00:00:00Z", models: ["m"], status: "stored" };
 const stages = ["Spec and assumptions", "Write code", "Run tests", "Repair", "Review", "Report"].map((name, i) => ({ name, status: i < 2 ? "done" : "pending", ...(i === 1 ? { note: "2 file(s)" } : {}) }));
 const baseRun = { id: "run-20261103141600-ab12", paperId: "paper-0001", title: "ACO study", mode: "muse", status: "repairing", createdAt: "2026-11-03T06:16:00.000Z", updatedAt: "2026-11-03T06:17:00.000Z", model: "muse-wonder-1.0", rounds: { max: 4, used: 2 }, tokens: { cap: 400000, used: 120000 }, stages, results: [{ id: "R1", description: "iterations", reported: "23rd iteration", reproduced: "24", relError: 0.044, tolerance: 0.1, status: "within_tolerance", note: "mean of 30 seeds" }, { id: "R2", description: "accuracy", reported: "94.64%", reproduced: "", tolerance: 0, status: "not_run", note: "" }] };
-function stubApi(overrides: { run?: Record<string, unknown>; ready?: boolean; report?: string | null; active?: boolean; eventAgeSeconds?: number; extraRuns?: Record<string, unknown>[]; working?: unknown[]; environments?: unknown[] } = {}) {
+function stubApi(overrides: { run?: Record<string, unknown>; ready?: boolean; report?: string | null; active?: boolean; eventAgeSeconds?: number; extraRuns?: Record<string, unknown>[]; working?: unknown[]; environments?: unknown[]; entries?: unknown[] } = {}) {
   const run = { ...baseRun, ...overrides.run }; const calls: { method: string; path: string; body?: unknown }[] = [];
   vi.stubGlobal("fetch", vi.fn(async (url: string, init?: RequestInit) => {
     const method = init?.method ?? "GET", path = url.split("?")[0]!, body = init?.body ? JSON.parse(String(init.body)) : undefined; calls.push({ method, path, ...(body ? { body } : {}) });
-    if (path === "/api/knowledge") return Response.json({ entries: [paper] });
+    if (path === "/api/knowledge") return Response.json({ entries: overrides.entries ?? [paper] });
     if (path === "/api/environments") return Response.json({ environments: overrides.environments ?? [] });
     if (path === "/api/paperrun/status") return Response.json({ root: "/r", ready: overrides.ready ?? true, problem: overrides.ready === false ? "The PaperRun Python environment is missing. Run: npm run paperrun:setup (in apps/lab)." : null, configured: true, mcp, running: [], working: overrides.working ?? [] });
     if (path === "/api/paperrun") return Response.json({ runs: [run, ...(overrides.extraRuns ?? [])] });
@@ -110,6 +110,12 @@ describe("PaperRunView", () => {
     expect(screen.queryByText(/Nothing new for/)).toBeNull(); expect(screen.getByText("Repair rounds 2 of 4")).toBeTruthy();
     expect(screen.getAllByText("Repairing")).toHaveLength(2);
   });
+  it("opens the run whose agent is working when the tab is first shown", async () => {
+    stubApi({ run: { status: "waiting_external", mode: "external" }, working: [{ id: baseRun.id, title: "ACO study", kind: "agent", status: "waiting_external" }] });
+    render(<PaperRunView />);
+    expect(await screen.findByRole("heading", { name: "ACO study" })).toBeTruthy();
+    expect(screen.getAllByText(/Agent working/).length).toBeGreaterThan(0);
+  });
   it("warns when a working run has shown nothing new for a long time, and shows no banner for a finished run", async () => {
     const old = new Date(Date.now() - 15 * 60_000).toISOString();
     stubApi({ run: { status: "running", createdAt: old, updatedAt: old }, active: true, eventAgeSeconds: 15 * 60 });
@@ -127,8 +133,8 @@ describe("PaperRunView", () => {
     fireEvent.click(agentRow); await waitFor(() => expect(document.querySelector(".pr-head .pr-mode")).not.toBeNull());
   });
   it("filters the runs list by name, type and date and says how many are shown", async () => {
-    const day = (iso: string) => ({ createdAt: iso, updatedAt: iso, model: "m", rounds: { max: 0, used: 0 }, tokens: { cap: 5, used: 0 }, stages, paperId: "paper-0001" });
-    stubApi({ run: { title: "Alpha ACO", mode: "muse", ...day("2026-11-03T08:00:00") }, extraRuns: [{ id: "run-20261102090000-bbbb", title: "Beta Canopy", mode: "external", status: "done", ...day("2026-11-02T08:00:00") }, { id: "run-20260901090000-cccc", title: "Gamma Crowns", mode: "external", status: "done", ...day("2026-09-01T08:00:00") }] });
+    const day = (iso: string, paperId: string) => ({ createdAt: iso, updatedAt: iso, model: "m", rounds: { max: 0, used: 0 }, tokens: { cap: 5, used: 0 }, stages, paperId });
+    stubApi({ run: { title: "Alpha ACO", mode: "muse", ...day("2026-11-03T08:00:00", "paper-a") }, extraRuns: [{ id: "run-20261102090000-bbbb", title: "Beta Canopy", mode: "external", status: "done", ...day("2026-11-02T08:00:00", "paper-b") }, { id: "run-20260901090000-cccc", title: "Gamma Crowns", mode: "external", status: "done", ...day("2026-09-01T08:00:00", "paper-c") }] });
     render(<PaperRunView />); await screen.findByText("Alpha ACO"); expect(screen.getByText("Showing 3 of 3")).toBeTruthy();
     fireEvent.change(screen.getByLabelText("Search runs"), { target: { value: "canopy" } }); expect(screen.getByText(/Showing 1 of 3/)).toBeTruthy(); expect(screen.queryByText("Alpha ACO")).toBeNull(); expect(screen.getByText("Beta Canopy")).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: "Clear filters" })); expect(screen.getByText("Showing 3 of 3")).toBeTruthy();
@@ -196,13 +202,85 @@ describe("PaperRunView", () => {
     render(<PaperRunView />); fireEvent.click(await screen.findByRole("button", { name: /ACO study/ })); const card = await screen.findByRole("region", { name: "Replication summary" });
     expect(within(card).queryByRole("button", { name: "Continue repair with Muse" })).toBeNull(); expect(within(card).queryByRole("button", { name: "Continue in an external agent" })).toBeNull(); expect(within(card).getByRole("button", { name: "Copy next steps" })).toBeTruthy();
   });
-  it("gives a finished external run a ready prompt to paste into the same agent", async () => {
+  it("lets a finished external run continue on the same code as a new run, and gives an unfinished one a prompt to paste", async () => {
     const writeText = vi.fn<(text: string) => Promise<void>>(async () => {}); Object.defineProperty(navigator, "clipboard", { value: { writeText }, configurable: true });
+    const done = stubApi({ run: { status: "done", mode: "external", stepCount: 1, stepCoverage: [{ n: 1, status: "partial", note: "x" }] }, active: false });
+    const first = render(<PaperRunView />); fireEvent.click(await screen.findByRole("button", { name: /ACO study/ })); const card = await screen.findByRole("region", { name: "Replication summary" });
+    expect(within(card).queryByRole("button", { name: "Copy prompt for my agent" })).toBeNull(); expect(card.textContent).toContain("one code folder for all its external runs");
+    const guide = within(card).getByText("Connect your coding agent").closest("details")!; expect(guide.open).toBe(false);
+    fireEvent.click(within(card).getByRole("button", { name: "Continue on the same code" }));
+    await waitFor(() => expect(done.find(c => c.method === "POST" && c.path.endsWith("/handover"))).toBeTruthy());
+    first.unmount();
+    stubApi({ run: { status: "waiting_external", mode: "external", stepCount: 1, stepCoverage: [{ n: 1, status: "partial", note: "x" }] }, active: false });
+    render(<PaperRunView />); fireEvent.click(await screen.findByRole("button", { name: /ACO study/ })); const open = await screen.findByRole("region", { name: "Replication summary" });
+    fireEvent.click(within(open).getByRole("button", { name: "Copy prompt for my agent" }));
+    await waitFor(() => expect(writeText.mock.calls[0]![0]).toMatch(/^Work PaperRun run-\d{14}-[a-f0-9]{4} using the paperrun tools\. Start with paperrun_get_brief[\s\S]*do not create another run[\s\S]*1\. \[/));
+  });
+  it("gives a new continuation run with no results yet a prompt to paste into the agent", async () => {
+    const writeText = vi.fn().mockResolvedValue(undefined); vi.stubGlobal("navigator", { clipboard: { writeText } });
+    stubApi({ run: { status: "waiting_external", mode: "external", results: [], rounds: { max: 4, used: 0 } }, active: false });
+    render(<PaperRunView />); fireEvent.click(await screen.findByRole("button", { name: /ACO study/ })); const card = await screen.findByRole("region", { name: "Replication summary" });
+    expect(card.textContent).toContain("No results have been compared yet.");
+    fireEvent.click(within(card).getByRole("button", { name: "Copy prompt for my agent" }));
+    await waitFor(() => expect(writeText.mock.calls[0]![0]).toMatch(/^Work PaperRun run-\d{14}-[a-f0-9]{4} using the paperrun tools\. Start with paperrun_get_brief/));
+  });
+  it("does not count method coverage that was assessed on earlier code, and says so", async () => {
+    const coverage = [{ n: 1, status: "implemented", note: "x" }];
+    const render1 = async (stale: boolean) => {
+      vi.stubGlobal("fetch", vi.fn(async (url: string) => { const path = url.split("?")[0]!; return path.startsWith("/api/paperrun/run-") ? Response.json({ coverageStale: stale, run: { ...baseRun, status: "done", mode: "external", stepCount: 1, stepCoverage: coverage, results: [{ id: "R1", description: "d", reported: "1", reproduced: "9", tolerance: 0.1, status: "mismatch", note: "" }] }, events: [], files: [{ path: "impl.py", bytes: 5 }], report: null, active: false, directory: "/r/x", gaps: [] }) : path === "/api/paperrun/status" ? Response.json({ root: "/r", ready: true, problem: null, configured: true, mcp, running: [], working: [] }) : path === "/api/paperrun" ? Response.json({ runs: [{ ...baseRun, status: "done", mode: "external" }] }) : path === "/api/knowledge" ? Response.json({ entries: [paper] }) : Response.json({ environments: [] }); }));
+      const view = render(<PaperRunView />); fireEvent.click(await screen.findByRole("button", { name: /ACO study/ })); const card = await screen.findByRole("region", { name: "Replication summary" }); return { card, view };
+    };
+    const fresh = await render1(false); expect(fresh.card.textContent).toContain("of the method implemented (1 of 1 steps"); expect(fresh.card.textContent).not.toContain("changed since the method was last assessed"); fresh.view.unmount();
+    const stale = await render1(true); expect(stale.card.textContent).toContain("not assessed yet"); expect(stale.card.textContent).toContain("changed since the method was last assessed"); expect(within(stale.card).getByRole("button", { name: /Assess method coverage/ })).toBeTruthy();
+  });
+  it("offers only real papers to replicate, not entries the app made from its own reports", async () => {
+    stubApi({ entries: [paper, { ...paper, id: "app-entry-0001", title: "Exploration: Can ACO go to the real world?", origin: { kind: "exploration", id: "desc-20261104100000-aaaa", paperId: "paper-0001" }, collections: ["App knowledge"] }] });
+    render(<PaperRunView />); await waitFor(() => expect(screen.getAllByRole("option").map(o => o.textContent)).toContain("ACO study"));
+    const options = screen.getAllByRole("option").map(o => o.textContent); expect(options.some(t => /Exploration: Can ACO/.test(t ?? ""))).toBe(false);
+  });
+  it("sends what the user leaves to the agent when starting a run", async () => {
+    const calls = stubApi({ environments: [{ id: "env-a-1111", name: "Fig 9 simple", status: "approved", origin: "digitised", kind: "fixed", rows: 24, cols: 24, version: 1, source: { note: "n" }, targets: [], dynamicObstacles: [], assumptions: [], solvable: true, checkNotes: [], description: "", hash: "h", ascii: ["..."] }] });
+    render(<PaperRunView />); const button = await screen.findByRole("button", { name: /^Environments/ });
+    fireEvent.click(button); fireEvent.click(await screen.findByLabelText(/Allow agent choose suitable map/)); fireEvent.click(screen.getByLabelText(/Extend or create environment options/));
+    expect(button.textContent).toContain("agent picks · may create");
+    fireEvent.click(screen.getByRole("button", { name: /Start PaperRun/ }));
+    await waitFor(() => expect(calls.find(c => c.path === "/api/paperrun/start")?.body).toMatchObject({ envPolicy: { pick: true, create: true } }));
+  });
+  it("shows the environments a run uses under its title and lets them be changed", async () => {
+    const e = (id: string, name: string) => ({ id, name, status: "approved", origin: "digitised", kind: "fixed", rows: 24, cols: 24, version: 1, source: { note: "n" }, targets: [], dynamicObstacles: [], assumptions: [], solvable: true, checkNotes: [], description: "", hash: "h", ascii: ["...", "...", "..."] });
+    const calls = stubApi({ environments: [e("env-a-1111", "Fig 9 simple"), e("env-b-2222", "Fig 9 maze")], run: { status: "done", environments: [{ id: "env-a-1111", name: "Fig 9 simple", version: 1, status: "approved", origin: "digitised", source: "x" }] }, active: false });
+    render(<PaperRunView />); fireEvent.click(await screen.findByRole("button", { name: /ACO study/ }));
+    const box = await screen.findByLabelText("Run environments"); expect(within(box).getByText(/Fig 9 simple/)).toBeTruthy();
+    fireEvent.click(within(box).getByRole("button", { name: "Change" }));
+    const simple = within(box).getByLabelText(/Fig 9 simple/) as HTMLInputElement, maze = within(box).getByLabelText(/Fig 9 maze/) as HTMLInputElement; expect(simple.checked).toBe(true); expect(maze.checked).toBe(false);
+    fireEvent.click(simple); fireEvent.click(maze); fireEvent.click(within(box).getByLabelText(/Allow agent choose suitable map/)); fireEvent.click(within(box).getByLabelText(/Extend or create environment options/)); fireEvent.click(within(box).getByRole("button", { name: "Apply" }));
+    await waitFor(() => expect(calls.find(c => c.method === "POST" && c.path.endsWith("/environments"))?.body).toEqual({ environments: ["env-b-2222"], policy: { pick: true, create: true } }));
+  });
+  it("gives a verdict, the reasons and prioritised next steps, and can continue repair or copy the steps", async () => {
+    const calls = stubApi({ run: { status: "done", rounds: { max: 4, used: 3 }, stepCount: 4, results: [{ id: "R1", description: "a", reported: "10", reproduced: "12", relError: 0.2, tolerance: 0.1, status: "mismatch", note: "" }, { id: "R2", description: "b", reported: "5", reproduced: "5", relError: 0, tolerance: 0.1, status: "match", note: "" }, { id: "R3", description: "c", reported: "7", reproduced: "", tolerance: 0, status: "not_run", note: "" }], stepCoverage: [{ n: 1, status: "implemented", note: "" }, { n: 2, status: "partial", note: "Eq. 1 altered." }, { n: 3, status: "missing", note: "Skipped." }, { n: 4, status: "partial", note: "Simplified." }], review: "[high] Seeds repeat." }, active: false });
+    const writeText = vi.fn().mockResolvedValue(undefined); vi.stubGlobal("navigator", { clipboard: { writeText } });
+    render(<PaperRunView />); fireEvent.click(await screen.findByRole("button", { name: /ACO study/ }));
+    const card = await screen.findByRole("region", { name: "Replication summary" });
+    await waitFor(() => expect(within(card).getByText("Partial replication")).toBeTruthy()); expect(card.textContent).toContain("50% of the method is implemented (1 of 4 steps fully, 2 partly).");
+    const steps = within(card).getByText("What to do next").nextElementSibling!; expect(steps.tagName).toBe("OL"); expect(steps.textContent).toContain("Supply the missing data (G8)"); expect(steps.textContent).toContain("Fix 3 steps that are only partly implemented or missing (steps 2, 3, 4)"); expect(steps.textContent).toContain("Resolve this review concern: Seeds repeat."); expect(steps.textContent).toContain("R3 produced no result");
+    expect(Array.from(steps.querySelectorAll(".pr-prio")).map(e => e.textContent).slice(0, 4)).toEqual(["high", "high", "high", "medium"]);
+    fireEvent.change(within(card).getByLabelText("More repair rounds"), { target: { value: "3" } }); fireEvent.click(within(card).getByRole("button", { name: "Continue repair with Muse" }));
+    await waitFor(() => expect(calls.find(c => c.path.endsWith("/continue"))?.body).toEqual({ rounds: 3 }));
+    fireEvent.click(within(card).getByRole("button", { name: "Copy next steps" })); await waitFor(() => expect(writeText.mock.calls[0]![0]).toMatch(/^Next steps for PaperRun run-20261103141600-ab12 \(ACO study\), rated "Partial replication":\n1\. \[high\] Supply the missing data/));
+  });
+  it("hands a finished Muse run to an external agent from the summary card and says what happens", async () => {
+    const calls = stubApi({ run: { status: "done", rounds: { max: 4, used: 3 }, stepCount: 2 }, active: false });
+    render(<PaperRunView />); fireEvent.click(await screen.findByRole("button", { name: /ACO study/ }));
+    const card = await screen.findByRole("region", { name: "Replication summary" });
+    expect(card.textContent).toContain("makes a new run with Muse's code, results, review and these next steps copied in"); expect(card.textContent).toContain("This run stays as it is.");
+    fireEvent.click(within(card).getByRole("button", { name: "Continue in an external agent" }));
+    await waitFor(() => expect(calls.find(c => c.method === "POST" && c.path.endsWith("/handover"))).toBeTruthy());
+    await screen.findByText("Handed over. Register the MCP server below if you have not, then ask your agent to work this run.");
+  });
+  it("offers no Continue button for an external agent's run or one still working", async () => {
     stubApi({ run: { status: "done", mode: "external", stepCount: 1, stepCoverage: [{ n: 1, status: "partial", note: "x" }] }, active: false });
     render(<PaperRunView />); fireEvent.click(await screen.findByRole("button", { name: /ACO study/ })); const card = await screen.findByRole("region", { name: "Replication summary" });
-    fireEvent.click(within(card).getByRole("button", { name: "Copy prompt for my agent" }));
-    const guide = within(card).getByText("Connect your coding agent").closest("details")!; expect(guide.open).toBe(false); expect(guide.textContent).toContain("Work PaperRun");
-    await waitFor(() => expect(writeText.mock.calls[0]![0]).toMatch(/^Continue PaperRun run-\d{14}-[a-f0-9]{4} using the paperrun tools\. Start with paperrun_get_brief[\s\S]*1\. \[/));
+    expect(within(card).queryByRole("button", { name: "Continue repair with Muse" })).toBeNull(); expect(within(card).queryByRole("button", { name: "Continue in an external agent" })).toBeNull(); expect(within(card).getByRole("button", { name: "Copy next steps" })).toBeTruthy();
   });
   it("shows method coverage once it is assessed, step by step", async () => {
     stubApi({ run: { status: "done", rounds: { max: 4, used: 1 }, stepCount: 4, stepCoverage: [{ n: 1, status: "implemented", note: "" }, { n: 2, status: "partial", note: "Simplified." }, { n: 3, status: "missing", note: "Skipped." }, { n: 4, status: "implemented", note: "" }] }, active: false });

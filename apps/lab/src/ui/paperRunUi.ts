@@ -14,13 +14,13 @@ export const TOKEN_CAPS = [150000, 400000, 800000, 1500000] as const;
 export const statusTone = (status: string): "ok" | "busy" | "bad" | "idle" => status === "done" || status === "match" || status === "within_tolerance" ? "ok" : RUN_ACTIVE.has(status) ? "busy" : status === "failed" || status === "mismatch" || status === "cancelled" ? "bad" : "idle";
 export const tokenShare = (tokens: { cap: number; used: number }) => Math.min(100, Math.round((tokens.used / Math.max(1, tokens.cap)) * 100));
 /** Commands that register the MCP server with common coding agents, plus the generic JSON form. */
-export function mcpSnippets(config: McpConfig): { name: string; text: string }[] {
+export function mcpSnippets(config: McpConfig, server = "paperrun"): { name: string; text: string }[] {
   const quote = (value: string) => /^[\w@%+=:,./-]+$/.test(value) ? value : `'${value.replace(/'/g, `'\\''`)}'`;
   const env = Object.entries(config.env), program = [config.command, ...config.args].map(quote).join(" ");
   return [
-    { name: "Claude Code", text: `claude mcp add paperrun ${env.map(([k, v]) => `-e ${k}=${quote(v)}`).join(" ")} -- ${program}` },
-    { name: "Codex", text: `codex mcp add paperrun ${env.map(([k, v]) => `--env ${k}=${quote(v)}`).join(" ")} -- ${program}` },
-    { name: "Cursor or other (JSON)", text: JSON.stringify({ mcpServers: { paperrun: { command: config.command, args: config.args, env: config.env } } }, null, 2) },
+    { name: "Claude Code", text: `claude mcp add ${server} ${env.map(([k, v]) => `-e ${k}=${quote(v)}`).join(" ")} -- ${program}` },
+    { name: "Codex", text: `codex mcp add ${server} ${env.map(([k, v]) => `--env ${k}=${quote(v)}`).join(" ")} -- ${program}` },
+    { name: "Cursor or other (JSON)", text: JSON.stringify({ mcpServers: { [server]: { command: config.command, args: config.args, env: config.env } } }, null, 2) },
   ];
 }
 /** Repair rounds Muse has actually done. Older runs did not record this, so it is estimated from the test rounds. */

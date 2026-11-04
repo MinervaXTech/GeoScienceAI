@@ -1,7 +1,9 @@
+import { CodeSourcesNote } from "./CodeSourcesNote";
+import type { CodeSources } from "../domain/codeSources";
 import { useEffect, useRef, useState } from "react";
 import type { KnowledgeEntry } from "../domain/knowledge";
 
-interface Built { cached: boolean; markdown: string; codexPrompt: string; spec: { steps: unknown[]; parameters: { verified: boolean }[]; reportedResults: unknown[]; gaps: { impact: string }[]; equations: unknown[] }; meta: { model: string; builtAt: string }; usage?: { total_tokens?: number } }
+interface Built { cached: boolean; markdown: string; codexPrompt: string; spec: { steps: unknown[]; parameters: { verified: boolean }[]; reportedResults: unknown[]; gaps: { impact: string }[]; equations: unknown[] }; meta: { model: string; builtAt: string; codeSources?: CodeSources }; usage?: { total_tokens?: number } }
 type State = { kind: "loading" } | { kind: "none" } | { kind: "building"; model: string } | { kind: "ready"; built: Built } | { kind: "error"; message: string };
 const MODELS = [["muse-wonder-1.0", "Wonder 1.0 (recommended)"], ["muse-spark-1.3", "Spark 1.3 (cheaper)"]] as const;
 
@@ -36,6 +38,7 @@ export function ReplicationPanel({ entry, onSaveNote }: { entry: KnowledgeEntry;
     <button type="button" className="btn small primary" onClick={() => { void build(false); }}>Build reproduction spec</button></div>;
   const { built } = state, high = built.spec.gaps.filter(g => g.impact === "high").length, unverified = built.spec.parameters.filter(p => !p.verified).length;
   return <div className="replication-panel"><p className="hint">{built.spec.steps.length} steps · {built.spec.equations.length} equations · {built.spec.parameters.length} parameters{unverified ? ` (${unverified} not verified)` : ""} · {built.spec.reportedResults.length} results to match · {built.spec.gaps.length} gaps ({high} high impact). Built by {built.meta.model} on {built.meta.builtAt.slice(0, 10)}.</p>
+    <CodeSourcesNote sources={built.meta.codeSources} />
     <div className="session-action-buttons">
       <button type="button" className="btn small primary" onClick={() => { onSaveNote({ entryId: entry.id, paperTitle: entry.title, label: "Replication", title: `Reproduction spec: ${entry.title}`.slice(0, 120), body: built.markdown }); setNotice("Saved to Notes."); }}>Save to Notes</button>
       <button type="button" className="btn small" onClick={() => { void copy(built.codexPrompt, "Codex prompt"); }}>Copy Codex prompt</button>

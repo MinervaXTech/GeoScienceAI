@@ -247,7 +247,7 @@ it("builds a reproduction spec with Muse, caches it, and supports peek, refresh 
   const built = await (await post({ paper: "canopy masks" })).json();
   expect(built).toMatchObject({ status: "spec", cached: false, meta: { model: "muse-wonder-1.0", title: "Canopy masks with SAM" }, usage: { total_tokens: 20000 } });
   expect(built.spec.parameters.map((p: { name: string; verified: boolean }) => [p.name, p.verified])).toEqual([["ants", true], ["bogus", false]]);
-  expect(built.markdown).toContain("# Reproduction spec: Canopy masks with SAM"); expect(built.codexPrompt).toContain("TASK: Re-implement");
+  expect(built.markdown).toContain("# Reproduction spec: Canopy masks with SAM"); expect(built.codexPrompt).toContain("TASK: Re-implement"); expect(built.meta.codeSources).toEqual({ status: "none", links: [], statements: [] });
   expect(bodies[0]).toMatchObject({ model: "muse-wonder-1.0", max: 14000 }); expect(bodies[0]!.user).toContain("colony size to 50 ants"); expect(bodies[0]!.user).not.toContain("Not part of the spec");
   const again = await (await post({ paper: stored.id })).json(); expect(again.cached).toBe(true); expect(send).toHaveBeenCalledTimes(1);
   expect(await (await post({ paper: stored.id, peek: true })).json()).toMatchObject({ status: "spec", cached: true });
@@ -255,6 +255,18 @@ it("builds a reproduction spec with Muse, caches it, and supports peek, refresh 
   expect(await (await post({ paper: "nothing" })).json()).toMatchObject({ status: "not_found" });
   for (const bad of [{ paper: "x", model: "gpt-4" }, { paper: "x", extra: 1 }, { paper: "x", refresh: "yes" }, {}]) expect((await post(bad)).status).toBe(400);
   expect((await post({ paper: stored.id }, "https://other.site")).status).toBe(403);
+});
+it("records the code the paper states in the spec, in the markdown and prompt, and fills it in for a spec saved before", async () => {
+  const f = await fixture(); const text = `Canopy study\nAbstract\nWe set the colony size to 50 ants. The source code is available at https://github.com/lab/canopy-aco.\nReferences\n[1] Not part of the spec. https://github.com/other/tool`;
+  const stored = (await (await f.handle(request("/ingest", { ...ingest, text }))).json()).entry;
+  const spec = { goal: "Reproduce it.", steps: [{ name: "Init", description: "Set ants.", quote: "colony size to 50 ants" }], equations: [], parameters: [{ name: "ants", value: "50", unit: "", meaning: "colony", quote: "colony size to 50 ants" }] };
+  const send = vi.fn<typeof fetch>().mockImplementation(async () => Response.json({ model: "muse-wonder-1.0", choices: [{ finish_reason: "stop", message: { content: JSON.stringify(spec) } }], usage: { total_tokens: 100 } }));
+  const handle = createKnowledgeHandler("fixture", { root: f.root, runner: f.runner, fetch: send });
+  const built = await (await handle(request("/replication", { paper: stored.id }, "POST"))).json();
+  expect(built.meta.codeSources).toMatchObject({ status: "link", links: [expect.objectContaining({ url: "https://github.com/lab/canopy-aco", ownCode: true }), expect.objectContaining({ url: "https://github.com/other/tool", inReferences: true })] });
+  expect(built.markdown).toContain("## Code the paper states"); expect(built.markdown).toContain("https://github.com/lab/canopy-aco"); expect(built.codexPrompt).toContain("CODE THE PAPER STATES");
+  const cache = join(f.root, stored.id, "replication.json"), saved = JSON.parse(await readFile(cache, "utf8")); delete saved.meta.codeSources; await writeFile(cache, JSON.stringify(saved));
+  const again = await (await handle(request("/replication", { paper: stored.id }, "POST"))).json(); expect(again.cached).toBe(true); expect(again.meta.codeSources.status).toBe("link"); expect(send).toHaveBeenCalledTimes(1);
 });
 it("never saves a reproduction spec when Muse runs out of space or finds nothing", async () => {
   const f = await fixture(); const stored = (await (await f.handle(request("/ingest", ingest))).json()).entry;
@@ -265,4 +277,25 @@ it("never saves a reproduction spec when Muse runs out of space or finds nothing
   const second = await handle(request("/replication", { paper: stored.id })); expect(second.status).toBe(400); expect((await second.json()).error).toContain("no method steps");
   expect(await (await handle(request("/replication", { paper: stored.id, peek: true }))).json()).toMatchObject({ status: "none" });
   expect((await createKnowledgeHandler("", { root: f.root, runner: f.runner, fetch: send })(request("/replication", { paper: stored.id }))).status).toBe(503);
+});
+
+const reportOrigin = { kind: "exploration", id: "desc-20261104100000-aaaa", paperId: "paper-0001" };
+it("stores an app-made entry under its own title and the App knowledge collection, and keeps it out of paper replication", async () => {
+  const f = await fixture(); const response = await f.handle(request("/ingest", { ...ingest, title: "Exploration: Can ACO go to the real world?", origin: reportOrigin })); const body = await response.json();
+  expect(response.status).toBe(200); expect(body.entry).toMatchObject({ status: "stored", title: "Exploration: Can ACO go to the real world?", origin: reportOrigin, collections: ["App knowledge"] });
+  const listed = await (await f.handle(new Request("http://localhost:5173/api/knowledge"))).json(); expect(listed.entries[0].origin).toEqual(reportOrigin);
+  const spec = await (await f.handle(request("/replication", { paper: "Exploration: Can ACO go to the real world?" }))).json(); expect(spec.status).toBe("not_found"); expect(spec.papers).toEqual([]);
+});
+it("refuses a malformed origin and an origin with a URL, and stores nothing", async () => {
+  const f = await fixture();
+  for (const origin of [{ kind: "paper", id: reportOrigin.id, paperId: "p" }, { kind: "exploration", id: "../x", paperId: "p" }, { kind: "exploration", id: reportOrigin.id }, { ...reportOrigin, extra: 1 }, "x"]) expect((await f.handle(request("/ingest", { ...ingest, origin }))).status).toBe(400);
+  expect((await f.handle(request("/ingest", { confirmed: true, model: "muse-spark-1.3", url: "https://doi.org/10.1234/paper", origin: reportOrigin }))).status).toBe(400); expect(f.send).not.toHaveBeenCalled();
+});
+it("draws the page for the whole graph when it is first asked for, again only after the graph changed, and never for an empty library", async () => {
+  const f = await fixture(), get = (path: string) => f.handle(new Request(`http://localhost:5173/api/knowledge/${path}`)), exports = () => f.runner.mock.calls.filter(c => c[1][0] === "export" && c[2].endsWith("merged-graph")).length;
+  expect((await get("merged-graph/graph.html")).status).toBe(404); expect(exports()).toBe(0);
+  await f.handle(request("/ingest", ingest)); const first = await get("merged-graph/graph.html"); expect(first.status).toBe(200); expect(first.headers.get("content-type")).toContain("text/html"); expect(await first.text()).toContain("graph"); expect(exports()).toBe(1);
+  await get("merged-graph/graph.html"); await get("merged-graph/graph.html"); expect(exports()).toBe(1);
+  await new Promise(r => setTimeout(r, 20)); await f.handle(request("/ingest", { ...ingest, text: `${paper}\nA second paper adds more.` })); await get("merged-graph/graph.html"); expect(exports()).toBe(2);
+  expect((await Promise.all([get("merged-graph/graph.html"), get("merged-graph/graph.html")])).every(r => r.status === 200)).toBe(true); expect(exports()).toBe(2);
 });

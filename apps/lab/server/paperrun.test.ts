@@ -123,11 +123,11 @@ describe("PaperRun routes", () => {
     if (!run) return;
     expect((await call(t.handle, `/api/paperrun/${run.id}/handover`, {})).status).toBe(409);
     await call(t.handle, `/api/paperrun/${run.id}/cancel`, {}); await new Promise(r => setTimeout(r, 30)); await updateRun(t.root, run.id, r => { r.status = "cancelled"; });
-    const empty = await call(t.handle, `/api/paperrun/${run.id}/handover`, {}); expect(empty.status).toBe(400); expect((await empty.json()).error).toContain("no code to hand over");
+    const empty = await call(t.handle, `/api/paperrun/${run.id}/handover`, {}); expect(empty.status).toBe(400); expect((await empty.json()).error).toContain("no code to continue from");
     await writeCodeFile(t.root, run.id, "impl.py", "x = 1\n");
     const ok = await (await call(t.handle, `/api/paperrun/${run.id}/handover`, {})).json();
     expect(ok.run).toMatchObject({ mode: "external", status: "waiting_external", parentId: run.id }); expect(ok.run.id).not.toBe(run.id); expect(ok.directory).toContain(ok.run.id); expect(ok.mcp.env.PAPERRUN_ROOT).toBe(t.root);
-    const next = await call(t.handle, `/api/paperrun/${ok.run.id}/handover`, {}); expect(next.status).toBe(400); expect((await next.json()).error).toContain("Only a run Muse handled");
+    const next = await call(t.handle, `/api/paperrun/${ok.run.id}/handover`, {}); expect(next.status).toBe(400); expect((await next.json()).error).toContain("Wait for the run to finish");
     expect((await call(t.handle, "/api/paperrun/run-20260101000000-abcd/handover", {})).status).toBe(404);
   });
   it("records what is left to the agent when a run starts and when it is changed, and rejects anything else", async () => {
@@ -138,6 +138,11 @@ describe("PaperRun routes", () => {
     const changed = await call(t.handle, `/api/paperrun/${id}/environments`, { policy: { pick: false, create: true } }); expect(changed.status).toBe(200);
     expect((await changed.json()).run.envPolicy).toEqual({ pick: false, create: true }); const brief = await readFile(join(t.root, id, "brief.md"), "utf8"); expect(brief).toContain("extend the library or create a new environment"); expect(brief).not.toContain("pick environments from the library yourself");
     expect((await call(t.handle, `/api/paperrun/${id}/environments`, { policy: { pick: 1, create: 0 } })).status).toBe(400);
+  });
+  it("lists runs with the size of each replication's two code folders and its condensed memory", async () => {
+    const t = await setup(), ext = await (await call(t.handle, "/api/paperrun/start", { paper: "ACO", mode: "external" })).json(); await writeCodeFile(t.root, ext.run.id, "impl.py", "x = 1\n");
+    const listed = await (await call(t.handle, "/api/paperrun")).json(); const paperId = ext.run.paperId as string;
+    expect(listed.folders[paperId]).toEqual({ muse: 0, external: 1 }); expect(listed.memory[paperId]).toBe(""); expect(listed.runs.map((r: { id: string }) => r.id)).toContain(ext.run.id);
   });
   it("lets the environments of a run be changed afterwards: added, removed, refused when unknown, unapproved or too many", async () => {
     const t = await setup(), make = (name: string, createdBy: "app" | "agent") => saveEnvironment(t.environmentsRoot, { name, description: "", origin: "digitised", source: { note: "Fig. 9a" }, grid: { rows: 4, cols: 4, ascii: ["....", ".##.", "....", "...."] }, start: [0, 0], goal: [3, 3] }, { createdBy });

@@ -3,7 +3,11 @@ export interface PaperCandidate { kind: "pdf" | "url" | "text"; title: string; s
 export interface KnowledgeCapture { status: "offered" | "declined" | "stored" | "failed"; entryId?: string; error?: string; candidate?: PaperCandidate }
 export const PAPER_TYPES = ["review", "method", "empirical", "other"] as const;
 export type PaperType = (typeof PAPER_TYPES)[number];
-export interface KnowledgeEntry { collections?: string[]; paperType?: PaperType; year?: number; doi?: string; id: string; title: string; source: string; sha256: string; addedAt: string; models: string[]; status: "running" | "stored" | "failed"; error?: string; usage?: unknown[] }
+/** Where an app-made entry came from. A saved report is stored in the graph as its own entry, labelled so it is never mistaken for a paper. */
+export interface EntryOrigin { kind: "replication" | "exploration" | "workshop"; id: string; paperId: string }
+export const APP_COLLECTION = "App knowledge";
+export const isAppEntry = (entry: { origin?: unknown }) => !!entry.origin;
+export interface KnowledgeEntry { origin?: EntryOrigin; collections?: string[]; paperType?: PaperType; year?: number; doi?: string; id: string; title: string; source: string; sha256: string; addedAt: string; models: string[]; status: "running" | "stored" | "failed"; error?: string; usage?: unknown[] }
 const paperText = (text: string) => [/\bAbstract\b/i, /\bReferences\b/i, /\bIntroduction\b/i, /\bdoi:/i, /\bet al\./i].filter(pattern => pattern.test(text)).length >= 2;
 const guess = (text: string) => text.split("\n").find(line => line.trim())?.replace(/^#+\s*/, "").slice(0, 160) || "Research paper";
 export function detectPaper(message: Pick<Message, "text" | "attachments">): PaperCandidate | null {

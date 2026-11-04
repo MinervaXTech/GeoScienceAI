@@ -1,15 +1,18 @@
 import { PaperRunView } from "./PaperRunView";
+import { DescendView } from "./DescendView";
+import { WorkshopView } from "./WorkshopView";
+import { GraphPage, WikiPage } from "./KnowledgePages";
+import { AutoSyncControl } from "./AutoSyncControl";
 import { EnvironmentViewer } from "./EnvironmentsPanel";
 import type { EnvSummary } from "./paperRunUi";
 import { useRunningPaperRuns } from "./useRunningPaperRuns";
 import { clampChatWidth, loadChatWidth, saveChatWidth } from "./chatSize";
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { costReadout } from "../domain/config";
-import { exportJson, importJson } from "../domain/persistence";
 import { noFilters, type Filters, type Sort } from "../domain/query";
 import { hasSampleData, loadSampleData } from "../domain/sample";
 import { addBatch, addKnowledgeNote, currentSession, deleteSession, editMessage, newSession, renameSession, resumeSession, registerSnapshot, saveMessageToNotes, sendMessage, setReview, setSessionMode } from "../domain/store";
-import { emptyState, type SavedMap } from "../domain/types";
+import type { SavedMap } from "../domain/types";
 import type { Polygon } from "geojson";
 import { UPM_MAP } from "../geo/maps";
 import { SampleBadge } from "./Badges";
@@ -30,13 +33,13 @@ import { useLab } from "./useLab";
 import { useSam } from "./useSam";
 import { useSamArea } from "./useSamArea";
 import type { BasemapId, SatelliteMapHandle } from "../geo/sam";
-import { deleteSavedMap, withDefaultMapAreas } from "../domain/maps";
+import { deleteSavedMap } from "../domain/maps";
 import { samePolygon } from "../geo/samArea";
 
-type Tab = "map" | "notes" | "paperrun";
+type Tab = "map" | "notes" | "paperrun" | "descend" | "workshop";
 
 export function App() {
-  const { state, apply, run, replace, notice, setNotice } = useLab();
+  const { state, apply, run, notice, setNotice } = useLab();
   const currentMap = state.maps?.find((map) => map.id === state.activeMapId) ?? UPM_MAP;
   const sam = useSam(currentMap.id);
   const samArea = useSamArea(currentMap.area, currentMap.boundary);
@@ -56,6 +59,11 @@ export function App() {
   const [sidebarExpanded, setSidebarExpanded] = useState(true);
   const [sidebarTab, setSidebarTab] = useState<MapSidebarTab>("environments");
   const [viewEnv, setViewEnv] = useState<EnvSummary | null>(null);
+  const [workshopId, setWorkshopId] = useState<string | null>(null);
+  // A full page for the wiki or the knowledge graph, laid over everything below the header. The map, the chat and the tabs stay mounted underneath.
+  const [page, setPage] = useState<"wiki" | "graph" | null>(null), [pageTop, setPageTop] = useState(0), headerRef = useRef<HTMLElement>(null);
+  const openPage = (next: "wiki" | "graph") => { setPageTop(headerRef.current?.getBoundingClientRect().bottom ?? 0); setPage(current => current === next ? null : next); };
+  useEffect(() => { if (!page) return; const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setPage(null); }; window.addEventListener("keydown", onKey); return () => window.removeEventListener("keydown", onKey); }, [page]);
   const [layerHost, setLayerHost] = useState<HTMLDivElement | null>(null);
   const openSidebar = (panel: MapSidebarTab) => { setSidebarTab(panel); setSidebarExpanded(true); if (panel !== "snapshots" && panel !== "knowledge" && panel !== "environments") { setTab("map"); setComparing(false); } };
   const [addMapView, setAddMapView] = useState<Omit<SavedMap, "id" | "name"> | null>(null);
@@ -81,7 +89,6 @@ export function App() {
   useEffect(() => { const frame = requestAnimationFrame(() => window.dispatchEvent(new Event("resize"))); return () => cancelAnimationFrame(frame); }, [chatWidth, chatFull, chatExpanded]);
   useEffect(() => { if (!chatFull) return; const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setChatFull(false); }; window.addEventListener("keydown", onKey); return () => window.removeEventListener("keydown", onKey); }, [chatFull]);
   const [mapFocusRequest, setMapFocusRequest] = useState(0);
-  const fileRef = useRef<HTMLInputElement>(null);
 
   const scope = useMemo(() => snapshotScope(state, filters.batch), [state, filters.batch]);
   const sessionId = state.sessions.some((s) => s.id === viewSession) ? viewSession : (currentSession(state) ?? state.sessions.at(-1))?.id;
@@ -152,41 +159,6 @@ export function App() {
     mapAreas.current[map.id] = area;
     apply((saved) => { const maps = [...(saved.maps ?? [])]; maps.splice(Math.min(index, maps.length), 0, map); return { ...saved, maps, ...(wasActive ? { activeMapId: map.id } : {}) }; });
     setDeletedMap(null);
-  };
-
-  const download = () => {
-    const blob = new Blob([exportJson(state)], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `lab-export-${new Date().toISOString().slice(0, 10)}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
-    setNotice({ kind: "info", text: "Exported all maps, sessions, batches and items as JSON." });
-  };
-
-  const onImport = async (file: File | undefined) => {
-    if (!file) return;
-    const result = importJson(await file.text());
-    if (!result.ok) {
-      setNotice({ kind: "error", text: `Import refused: ${result.errors.slice(0, 3).join(" ")}` });
-      return;
-    }
-    const nonEmpty = state.items.length + state.sessions.length + state.batches.length + (state.maps?.length ?? 0) > 0;
-    if (nonEmpty && !window.confirm("Replace the current Lab data with the imported file?")) return;
-    const imported = withDefaultMapAreas(result.state);
-    replace(imported);
-    setDeletedMap(null);
-    setAddingMap(false);
-    mapAreas.current = {};
-    const importedMap = imported.maps?.find((map) => map.id === imported.activeMapId) ?? UPM_MAP;
-    samArea.restore(importedMap.area ?? null, importedMap.boundary);
-    setBasemap(importedMap.basemap);
-    setMapFocusRequest((n) => n + 1);
-    setFilters(noFilters());
-    setSelectedId(undefined);
-    setViewSession(undefined);
-    setNotice({ kind: "info", text: `Imported ${result.state.items.length} items in ${result.state.batches.length} batches.` });
   };
 
   const goNotes = () => {
@@ -269,44 +241,22 @@ export function App() {
 
   return (
     <div className="app">
-      <header className="top">
+      <header className="top" ref={headerRef}>
         <h1>Lab</h1>
         <span className="subtitle">{currentMap.name} · {currentMap.id === "upm" ? "CHMv2 window" : "Satellite map"}</span>
         {sample && <SampleBadge />}
         <span className="spacer" />
-        <div className="data-actions" role="group" aria-label="Data">
-          <button type="button" className="btn small" disabled={sample} onClick={() => apply(loadSampleData)} title={sample ? "Sample data is already loaded" : "Add clearly marked sample sessions, batches and items"}>
-            Load sample data
-          </button>
-          <button type="button" className="btn small" onClick={download}>Export JSON</button>
-          <button type="button" className="btn small" onClick={() => fileRef.current?.click()}>Import JSON</button>
-          <button
-            type="button"
-            className="btn small"
-            onClick={() => {
-              if (window.confirm("Delete all Lab data in this browser? Export first if you want to keep it.")) {
-                replace(emptyState());
-                setDeletedMap(null);
-                setAddingMap(false);
-                openSidebar("maps");
-                mapAreas.current = {};
-                samArea.restore(null);
-                setBasemap("esri");
-                setMapFocusRequest((n) => n + 1);
-                setFilters(noFilters());
-                setSelectedId(undefined);
-              }
-            }}
-          >
-            Reset
-          </button>
-          <input ref={fileRef} type="file" accept="application/json,.json" hidden aria-label="Import JSON file" onChange={(e) => { void onImport(e.target.files?.[0]); e.target.value = ""; }} />
+        <div className="data-actions" role="group" aria-label="Knowledge">
+          <button type="button" className="btn small" aria-pressed={page === "wiki"} onClick={() => openPage("wiki")}>WikiLLM</button>
+          <button type="button" className="btn small" aria-pressed={page === "graph"} onClick={() => openPage("graph")}>Knowledge graph</button>
         </div>
+        <AutoSyncControl />
         <span className="readout off" title="SAM and Muse run only when requested">
           <i aria-hidden="true" />
           {chat.busy ? "Muse working" : sam.loadingRunId ? "Loading SAM result" : sam.busy ? "SAM 3.1 running" : sam.configured ? "SAM 3.1 ready" : costReadout()}
         </span>
       </header>
+      {page && <div className="full-page" style={{ top: pageTop }}>{page === "wiki" ? <WikiPage onClose={() => setPage(null)} /> : <GraphPage onClose={() => setPage(null)} />}</div>}
 
       {notice && (
         <div className={`notice ${notice.kind}`} role={notice.kind === "error" ? "alert" : "status"}>
@@ -324,6 +274,8 @@ export function App() {
               <button type="button" role="tab" aria-selected={tab === "map"} onClick={() => { setTab("map"); setComparing(false); }}>Map</button>
               <button type="button" role="tab" aria-selected={tab === "notes"} onClick={goNotes}>Notes</button>
               <button type="button" role="tab" aria-selected={tab === "paperrun"} onClick={() => { setTab("paperrun"); setComparing(false); setSidebarExpanded(false); }}>PaperRun{runningRuns > 0 && <svg className="tab-spinner" role="img" aria-label={`${runningRuns} run${runningRuns === 1 ? " is" : "s are"} working`} viewBox="0 0 16 16" width="14" height="14"><title>{runningRuns === 1 ? "A run is working" : `${runningRuns} runs are working`}</title><circle cx="8" cy="8" r="6" fill="none" stroke="currentColor" strokeOpacity=".3" strokeWidth="2.5" /><path d="M8 2a6 6 0 0 1 6 6" fill="none" stroke="#ff6a52" strokeWidth="2.5" strokeLinecap="round" /></svg>}</button>
+              <button type="button" role="tab" aria-selected={tab === "descend"} onClick={() => { setTab("descend"); setComparing(false); setSidebarExpanded(false); }}>Descendance</button>
+              <button type="button" role="tab" aria-selected={tab === "workshop"} onClick={() => { setTab("workshop"); setComparing(false); setSidebarExpanded(false); }}>Workshop</button>
             </div>
             <span className="summary">
               {comparing
@@ -332,6 +284,10 @@ export function App() {
                   ? mapSummary(mapSnapshots, basemap, currentMap)
                   : tab === "paperrun"
                     ? "Reproduce a stored paper with Muse or an external agent"
+                    : tab === "descend"
+                      ? "Explore what a finished replication makes possible"
+                      : tab === "workshop"
+                        ? "Test the ideas from a report, in code you write in your own IDE or agent"
                     : `Knowledge library · ${state.batches.length} batches · ${state.items.length} items`}
             </span>
           </div>
@@ -354,6 +310,10 @@ export function App() {
                   />
                 ) : tab === "paperrun" ? (
                   <PaperRunView />
+                ) : tab === "workshop" ? (
+                  <WorkshopView openId={workshopId} />
+                ) : tab === "descend" ? (
+                  <DescendView onOpenWorkshop={(id) => { setWorkshopId(id); setTab("workshop"); setComparing(false); setSidebarExpanded(false); }} onDiscuss={(text) => { if (chat.busy) { setNotice({ kind: "info", text: "Muse is busy. Try again when it has finished." }); return; } const out = run((s) => newSession(s, "take-notes")); if (!out) return; setViewSession(out.session.id); setChatExpanded(true); apply(s => sendMessage(s, out.session.id, text)); void chat.send(out.session, text); }} />
 ) : tab === "map" ? null : (
                   <NotesView
                     state={state}

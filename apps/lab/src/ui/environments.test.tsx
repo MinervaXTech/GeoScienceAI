@@ -2,6 +2,7 @@ import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/re
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { EnvironmentsPanel, EnvironmentsSidebar, EnvironmentViewer, EnvPreview } from "./EnvironmentsPanel";
 import type { EnvSummary } from "./paperRunUi";
+import { CodeSourcesNote } from "./CodeSourcesNote";
 afterEach(() => { cleanup(); vi.unstubAllGlobals(); });
 const env = (over: Partial<EnvSummary> = {}): EnvSummary => ({ id: "env-simple-aaaa", name: "ACO paper, Simple environment", description: "A simple map.", origin: "digitised", status: "approved", version: 1, hash: "h", source: { paperTitle: "ACO paper", figure: "Fig. 9a", note: "Digitised at 24x24." }, kind: "fixed", rows: 4, cols: 4, start: [0, 0], goal: [3, 3], targets: [], dynamicObstacles: [], assumptions: ["Resolution chosen by me."], solvable: true, checkNotes: ["Leg 1 shortest route: 4.2 cells."], createdBy: "app", createdAt: "2026-11-04T00:00:00Z", ascii: ["....", ".##.", "....", "...."], ...over });
 describe("EnvPreview", () => {
@@ -75,5 +76,24 @@ describe("Environments in the Map tab", () => {
     expect(screen.getByText(/Source:/)).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: "Back to map" }));
     expect(onClose).toHaveBeenCalled();
+  });
+});
+
+describe("CodeSourcesNote", () => {
+  const link = { url: "https://github.com/lab/aco", host: "github.com", kind: "repository" as const, ownCode: true, inReferences: false, quote: "q", page: 3 };
+  it("lists the authors' repository as a link and says it was not opened", () => {
+    render(<CodeSourcesNote sources={{ status: "link", links: [link], statements: [] }} />);
+    const a = screen.getByRole("link", { name: "https://github.com/lab/aco" }) as HTMLAnchorElement; expect(a.href).toBe("https://github.com/lab/aco"); expect(a.rel).toContain("noopener");
+    expect(screen.getByText(/states where its code is/)).toBeTruthy(); expect(screen.getByText(/likely the authors' own · page 3/)).toBeTruthy(); expect(screen.getByText(/was not opened/)).toBeTruthy();
+  });
+  it("shows an availability statement, 'none' when nothing is stated, and nothing when there is no information", () => {
+    const { container, rerender } = render(<CodeSourcesNote sources={{ status: "on_request", links: [], statements: [{ kind: "on_request", quote: "Code is available on request." }] }} />);
+    expect(screen.getByText(/Code available on request/)).toBeTruthy();
+    rerender(<CodeSourcesNote sources={{ status: "none", links: [], statements: [] }} />); expect(screen.getByText(/states no code repository/)).toBeTruthy();
+    rerender(<CodeSourcesNote />); expect(container.innerHTML).toBe("");
+  });
+  it("does not make a link out of an unsafe address", () => {
+    render(<CodeSourcesNote sources={{ status: "mentioned", links: [{ ...link, url: "javascript:alert(1)", ownCode: false }], statements: [] }} />);
+    expect(screen.queryByRole("link")).toBeNull();
   });
 });

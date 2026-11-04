@@ -1,6 +1,6 @@
-import { randomBytes } from "node:crypto";
-import { appendFile, mkdir, readdir, readFile, rename, rm, stat, writeFile } from "node:fs/promises";
-import { basename, dirname, join, normalize } from "node:path";
+import { createHash, randomBytes } from "node:crypto";
+import { appendFile, lstat, mkdir, readdir, readFile, realpath, rename, rm, stat, symlink, writeFile } from "node:fs/promises";
+import { basename, dirname, join, normalize, relative } from "node:path";
 import { codexPrompt, replicationMarkdown, type ReplicationSpec, type SpecMeta } from "./knowledgeReplication.ts";
 import { runSandboxed } from "./paperrunSandbox.ts";
 import type { StepCoverage } from "../src/domain/replicationScore.ts";
@@ -16,7 +16,9 @@ export interface RunRecord {
   id: string; paperId: string; title: string; mode: RunMode; status: RunStatus; createdAt: string; updatedAt: string; model: string;
   rounds: { max: number; used: number; repairs?: number }; tokens: { cap: number; used: number };
   stages: RunStage[]; assumptions: { gapId: string; decision: "accepted" | "changed"; proposal: string }[];
-  results?: ResultRow[]; summary?: string; error?: string; review?: string; stepCoverage?: StepCoverage[]; stepCount?: number; parentId?: string; environments?: AttachedEnvironment[]; envPolicy?: EnvPolicy; createdEnvironments?: string[];
+  results?: ResultRow[]; summary?: string; error?: string; review?: string; stepCoverage?: StepCoverage[]; stepCount?: number; parentId?: string; environments?: AttachedEnvironment[]; envPolicy?: EnvPolicy; createdEnvironments?: string[]; finishNote?: string;
+  /** Method coverage is a judgement about the code, so it records which code it judged: a fingerprint of the Python files, and the run that judged it. */
+  coverageCode?: string; coverageFrom?: string;
 }
 /** What the user allows the agent to do about environments: pick from the library by its own judgement, and extend the library or create a new one (as a candidate that needs approval). */
 export interface EnvPolicy { pick: boolean; create: boolean }
@@ -64,11 +66,45 @@ export const contractText = `RESULTS CONTRACT
 - Only Python standard library, numpy, scipy, matplotlib and pandas are available. There is no network. The script must finish within 10 minutes and write files only inside the code folder.
 - Use fixed random seeds and say which in the note.`;
 
+/**
+ * One replication of a paper has at most two code folders: one for Muse and one for external agents. Every run of that kind sees its folder as its own `code`,
+ * while its results, rounds, events and report stay in its own run folder.
+ */
+export function sharedCodeDir(root: string, paperId: string, mode: RunMode = "external"): string {
+  if (!/^[A-Za-z0-9][A-Za-z0-9_-]{0,79}$/.test(paperId)) throw Error("Invalid paper id.");
+  return join(root, mode === "muse" ? "_code-muse" : "_code", paperId);
+}
+export async function linkSharedCode(root: string, runId: string, paperId: string, mode: RunMode = "external"): Promise<void> {
+  const shared = sharedCodeDir(root, paperId, mode), link = join(runDirectory(root, runId), "code");
+  await mkdir(shared, { recursive: true });
+  await symlink(relative(dirname(link), shared), link, "dir");
+}
+/**
+ * Brings runs made before the shared folder existed into line. The newest external run of a paper donates its code folder as the shared one;
+ * an older run's own folder is renamed to code-before-shared, not deleted, and the run then points at the shared folder.
+ */
+export async function migrateSharedCode(root: string): Promise<void> {
+  for (const run of await listRuns(root)) {
+    const link = join(runDirectory(root, run.id), "code"), info = await lstat(link).catch(() => null);
+    if (!info || info.isSymbolicLink() || !info.isDirectory()) continue;
+    const shared = sharedCodeDir(root, run.paperId, run.mode), existing = await readdir(shared).catch(() => [] as string[]);
+    if (!existing.length) { await mkdir(dirname(shared), { recursive: true }); await rm(shared, { recursive: true, force: true }); await rename(link, shared); }
+    else await rename(link, join(runDirectory(root, run.id), "code-before-shared"));
+    await linkSharedCode(root, run.id, run.paperId, run.mode);
+    await appendEvent(root, run.id, "shared-code", existing.length ? "This run now uses the replication's one shared code folder. Its own earlier code was kept in code-before-shared." : "This run's code became the replication's one shared code folder.");
+  }
+}
+/** Whether another external run of the same paper still lists this environment, so its file must stay in the shared folder. */
+async function environmentUsedElsewhere(root: string, run: RunRecord, envId: string): Promise<boolean> {
+  return (await listRuns(root)).some(r => r.id !== run.id && r.mode === run.mode && r.paperId === run.paperId && (r.environments ?? []).some(e => e.id === envId));
+}
+
 export interface CreateRunInput { paperId: string; title: string; mode: RunMode; model: string; maxRounds: number; tokenCap: number; spec: ReplicationSpec; meta: SpecMeta; python?: string }
 /** Creates a run folder holding the spec, the brief for an external agent, and an empty code folder. Nothing is ever overwritten. */
 export async function createRun(root: string, input: CreateRunInput, now = new Date()): Promise<RunRecord> {
   const id = `run-${stamp(now)}-${randomBytes(2).toString("hex")}`, dir = runDirectory(root, id);
-  await mkdir(join(dir, "code"), { recursive: true }); await mkdir(join(dir, "rounds"), { recursive: true });
+  await mkdir(dir, { recursive: true }); await mkdir(join(dir, "rounds"), { recursive: true });
+  await linkSharedCode(root, id, input.paperId, input.mode);
   const at = now.toISOString();
   const record: RunRecord = {
     id, paperId: input.paperId, title: input.title, mode: input.mode, status: input.mode === "external" ? "waiting_external" : "queued", createdAt: at, updatedAt: at, model: input.model,
@@ -78,7 +114,7 @@ export async function createRun(root: string, input: CreateRunInput, now = new D
   };
   await atomic(join(dir, "spec.json"), { spec: input.spec, meta: input.meta });
   await atomic(join(dir, "spec.md"), replicationMarkdown(input.spec, input.meta));
-  await atomic(join(dir, "brief.md"), `${codexPrompt(input.spec, input.meta)}\n\n${contractText}\n`);
+  await atomic(join(dir, "brief.md"), `${codexPrompt(input.spec, input.meta, "run code folder")}\n\n${contractText}\n`);
   await atomic(join(dir, "run.json"), record); await writeFile(join(dir, "events.jsonl"), "");
   await appendEvent(root, id, "created", `${input.mode === "external" ? "Prepared for an external agent" : "Started with Muse"} (${record.rounds.max} repair rounds, ${record.tokens.cap} token cap).`, now);
   return record;
@@ -119,6 +155,18 @@ export async function listCodeFiles(root: string, id: string): Promise<{ path: s
   const base = join(runDirectory(root, id), "code"), out: { path: string; bytes: number }[] = [];
   const walk = async (dir: string, prefix: string) => { for (const entry of await readdir(dir, { withFileTypes: true }).catch(() => [])) { if (entry.name.startsWith(".") || entry.name === "__pycache__") continue; const rel = prefix ? `${prefix}/${entry.name}` : entry.name; if (entry.isDirectory()) await walk(join(dir, entry.name), rel); else if (entry.isFile()) out.push({ path: rel, bytes: (await stat(join(dir, entry.name))).size }); } };
   await walk(base, ""); return out.sort((a, b) => a.path.localeCompare(b.path));
+}
+/** A short fingerprint of the method code (the Python files). Notes, audits and data files do not change what the method is. */
+export async function codeFingerprint(root: string, id: string): Promise<string> {
+  const hash = createHash("sha256");
+  for (const f of (await listCodeFiles(root, id)).filter(x => x.path.endsWith(".py") && x.path !== RESULTS_FILE)) hash.update(`${f.path}\0${await readCodeFile(root, id, f.path).catch(() => "")}\0`);
+  return hash.digest("hex").slice(0, 16);
+}
+/** The run's method coverage while it still describes the code, or undefined once the code has changed since it was assessed. A coverage with no recorded code is trusted, as runs made before this check existed. */
+export async function currentCoverage(root: string, run: RunRecord): Promise<StepCoverage[] | undefined> {
+  if (!run.stepCoverage?.length) return undefined;
+  if (run.coverageCode && run.coverageCode !== await codeFingerprint(root, run.id)) return undefined;
+  return run.stepCoverage;
 }
 export async function writeCodeFile(root: string, id: string, relative: string, content: string) {
   if (typeof content !== "string" || Buffer.byteLength(content) > MAX_FILE_BYTES) throw Error(`A file may be at most ${MAX_FILE_BYTES} bytes.`);
@@ -169,7 +217,8 @@ export async function runTests(root: string, id: string, round: number, python: 
   await mkdir(roundDir, { recursive: true }); await rm(join(dir, "code", RESULTS_FILE), { force: true });
   const files = await listCodeFiles(root, id);
   if (!files.some(f => f.path === TEST_ENTRY)) { const rows = compareResults(spec.reportedResults, null); return { round, code: null, timedOut: false, stdout: "", stderr: "", rows, ranTests: false, error: `${TEST_ENTRY} was not written.` }; }
-  const result = await runSandboxed({ python, runDir: dir, cwd: "code", script: TEST_ENTRY, timeoutMs, ...(signal ? { signal } : {}) });
+  const run = await readRun(root, id), shared = [await realpath(sharedCodeDir(root, run.paperId, run.mode)).catch(() => sharedCodeDir(root, run.paperId, run.mode))];
+  const result = await runSandboxed({ python, runDir: dir, cwd: "code", script: TEST_ENTRY, timeoutMs, ...(shared.length ? { extraDirs: shared } : {}), ...(signal ? { signal } : {}) });
   await writeFile(join(roundDir, "stdout.txt"), result.stdout); await writeFile(join(roundDir, "stderr.txt"), result.stderr);
   let parsed: unknown = null, error: string | undefined;
   try { parsed = JSON.parse(await readFile(join(dir, "code", RESULTS_FILE), "utf8")); await writeFile(join(roundDir, RESULTS_FILE), JSON.stringify(parsed, null, 2)); } catch { error = result.timedOut ? "The tests hit the time limit before writing results." : result.code ? `The tests exited with code ${result.code} without writing ${RESULTS_FILE}.` : `${RESULTS_FILE} was not written or is not valid JSON.`; }
@@ -189,12 +238,14 @@ export function environmentsBlock(envs: AttachedEnvironment[], policy?: EnvPolic
   const permissions = policy && (policy.pick || policy.create) ? `ENVIRONMENT PERMISSIONS FROM THE USER\n${policy.pick ? "- You may pick environments from the library yourself: call paperrun_list_environments, then paperrun_use_environment with this run id for the ones that fit what the paper needs.\n" : ""}${policy.create ? "- You may extend the library or create a new environment when none fits: call paperrun_save_environment (it becomes a candidate the user approves; say how you built it and what you assumed), then paperrun_use_environment with this run id.\n" : ""}` : "";
   if (!envs.length && !permissions) return "";
   const attachedText = envs.length ? `ENVIRONMENTS ATTACHED (use these worlds; they are files in the code folder, loaded with json.load)\n${envs.map(e => `- ${e.name} (${e.id}, version ${e.version}, ${e.status}): ${e.file}\n  ${ORIGIN_TEXT[e.origin as keyof typeof ORIGIN_TEXT] ?? e.origin}. ${e.kind === "fixed" ? `A fixed ${e.rows}x${e.cols} map.` : `${e.instances} pre-generated ${e.rows}x${e.cols} random maps, each with its seed.`} Source: ${e.source}`).join("\n")}\nFile format: "ascii" is a list of rows where "#" is blocked and "." is free; "start", "goal" and "targets" are [row, col]; "instances" lists {"seed", "ascii"}. Do not invent your own maps when one of these fits. Say in each result note which environment, version and seeds were used. A result measured on a world that is not the paper's own (see Source) must be marked "comparable": false.\n` : "";
-  return `\n\n<!-- environments -->\n${attachedText}${permissions}<!-- /environments -->\n`;
+  const candidates = envs.some(e => e.status === "candidate");
+  const how = envs.length || policy?.pick || policy?.create ? `HOW TO CHOOSE A MAP, IN THIS ORDER\n1. Use the attached maps whose Source names the same figure as the result you are measuring (for example the Fig. 9 maps for the four static environments).\n2. If none of them fits and picking is allowed, pick another from the library.\n3. Create or extend a map only when no library map fits, and only if creating is allowed. Say how you built it and what you assumed.\nResults on a map the paper does not show (for example a grid described only by its size) have no digitised map: they are not on the paper's own world, so mark them "comparable": false.\n${candidates ? "Maps marked candidate are not approved by the user yet. Results measured on a candidate map must be marked \"comparable\": false until the user approves it. Do not mark your own digitisation as comparable.\n" : ""}` : "";
+  return `\n\n<!-- environments -->\n${attachedText}${how}${permissions}<!-- /environments -->\n`;
 }
 /** Takes an environment back out of a run: its file leaves the code folder, and the record and the brief no longer list it. */
 export async function detachEnvironment(root: string, runId: string, envId: string): Promise<void> {
   const run = await readRun(root, runId), entry = (run.environments ?? []).find(e => e.id === envId); if (!entry) return;
-  await rm(join(runDirectory(root, runId), "code", "environments", `${envId}.json`), { force: true });
+  if (!(await environmentUsedElsewhere(root, run, envId))) await rm(join(runDirectory(root, runId), "code", "environments", `${envId}.json`), { force: true });
   const next = await updateRun(root, runId, r => { r.environments = (r.environments ?? []).filter(e => e.id !== envId); if (!r.environments.length) delete r.environments; });
   const briefPath = join(runDirectory(root, runId), "brief.md"), brief = await readFile(briefPath, "utf8").catch(() => "");
   if (brief) await atomic(briefPath, `${brief.replace(ENV_BLOCK, "").trimEnd()}${environmentsBlock(next.environments ?? [], next.envPolicy)}`);
@@ -220,4 +271,10 @@ export async function setEnvPolicy(root: string, runId: string, policy: EnvPolic
   const briefPath = join(runDirectory(root, runId), "brief.md"), brief = await readFile(briefPath, "utf8").catch(() => "");
   if (brief) await atomic(briefPath, `${brief.replace(ENV_BLOCK, "").trimEnd()}${environmentsBlock(run.environments ?? [], policy)}`);
   await appendEvent(root, runId, "environment", `Environment permissions: ${policy.pick ? "the agent may pick" : "no picking"}, ${policy.create ? "may extend or create" : "no creating"}.`);
+}
+
+/** How many files each of a paper's two code folders holds. */
+export async function codeFolderSizes(root: string, paperId: string): Promise<{ muse: number; external: number }> {
+  const count = async (dir: string): Promise<number> => { let n = 0; for (const entry of await readdir(dir, { withFileTypes: true }).catch(() => [])) { if (entry.name.startsWith(".") || entry.name === "__pycache__") continue; n += entry.isDirectory() ? await count(join(dir, entry.name)) : 1; } return n; };
+  return { muse: await count(sharedCodeDir(root, paperId, "muse")), external: await count(sharedCodeDir(root, paperId, "external")) };
 }

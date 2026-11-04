@@ -1,13 +1,16 @@
+import { CodeSourcesNote } from "./CodeSourcesNote";
+import type { CodeSources } from "../domain/codeSources";
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import type { KnowledgeEntry } from "../domain/knowledge";
 import { assessReplication, RATING_RULES, ratingTone, replicationScore, type GapInfo } from "../domain/replicationScore";
 import { ChatMarkdown } from "./ChatMarkdown";
+import { SaveToKnowledge } from "./SaveToWiki";
 import { EnvironmentsPanel, PolicyChoices } from "./EnvironmentsPanel";
 import { formatDateTime } from "./format";
 import { clock, filterRuns, filtersActive, mcpSnippets, NO_FILTERS, policyText, POLICY_CREATE, POLICY_PICK, repairsDone, RESULT_TEXT, RUN_ACTIVE, RUN_FINISHED, STALL_SECONDS, statusTone, STATUS_TEXT, TOKEN_CAPS, tokenShare, type EnvPolicy, type EnvSummary, type McpConfig, type RunFilters, type RunSummary, type WorkingRun } from "./paperRunUi";
 
 interface Status { working?: WorkingRun[]; root: string; ready: boolean; problem: string | null; configured: boolean; mcp: McpConfig; running: string[] }
-interface Detail { gaps?: GapInfo[]; run: RunSummary; events: { at: string; kind: string; message: string }[]; files: { path: string; bytes: number }[]; report: string | null; active: boolean; directory: string }
+interface Detail { coverageStale?: boolean; codeSources?: CodeSources; gaps?: GapInfo[]; run: RunSummary; events: { at: string; kind: string; message: string }[]; files: { path: string; bytes: number }[]; report: string | null; active: boolean; directory: string }
 const api = async (path: string, body?: unknown, signal?: AbortSignal) => { const response = await fetch(path, { ...(body === undefined ? {} : { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) }), ...(signal ? { signal } : {}) }); const data = await response.json(); if (!response.ok) throw Error(data.error ?? "PaperRun request failed."); return data; };
 /** Shows that a run is alive: the current step, how long it has been in it, and the latest log line, with a moving bar. Muse calls can be silent for a minute. */
 function Activity({ run, events }: { run: RunSummary; events: { at: string; message: string }[] }) {
@@ -51,19 +54,22 @@ function RunEnvironments({ run, library, locked, busy, onApply }: { run: RunSumm
   </details>;
 }
 
-function SummaryCard({ connect, run, files, gaps, canAssess, canContinue, busy, onAssess, onContinue, onHandOver, onCopyNext }: { connect?: ReactNode; run: RunSummary; files: number; gaps: GapInfo[]; canAssess: boolean; canContinue: boolean; busy: boolean; onAssess(): void; onContinue(rounds: number): void; onHandOver(): void; onCopyNext(text: string): void }) {
+function SummaryCard({ coverageStale, connect, run, files, gaps, canAssess, canContinue, busy, onAssess, onContinue, onHandOver, onCopyNext }: { coverageStale?: boolean; connect?: ReactNode; run: RunSummary; files: number; gaps: GapInfo[]; canAssess: boolean; canContinue: boolean; busy: boolean; onAssess(): void; onContinue(rounds: number): void; onHandOver(): void; onCopyNext(text: string): void }) {
   const [rounds, setRounds] = useState(2);
   const results = run.results ?? [], total = results.length;
   const stepTotal = run.stepCount ?? (run.stepCoverage?.length ? Math.max(...run.stepCoverage.map(c => c.n)) : 0);
   const score = replicationScore(results, stepTotal, run.stepCoverage as never);
   const concerns = (run.review ?? "").split("\n").filter(Boolean), high = concerns.filter(l => l.startsWith("[high]"));
-  const assessment = assessReplication({ results, stepCount: stepTotal, ...(run.stepCoverage ? { coverage: run.stepCoverage as never } : {}), gaps, concerns });
-  const agentPrompt = `Continue PaperRun ${run.id} using the paperrun tools. Start with paperrun_get_brief, then paperrun_list_files and paperrun_read_file to see your earlier code. Work the next steps below in order, run the tests with paperrun_run_tests after each change, and call paperrun_finish when done.\n\n${assessment.actions.map((a, i) => `${i + 1}. [${a.priority}] ${a.text}`).join("\n")}`;
+  const assessment = assessReplication({ results, stepCount: stepTotal, ...(run.stepCoverage ? { coverage: run.stepCoverage as never } : {}), gaps, concerns, ...(run.environments?.length ? { mapsAttached: run.environments.length } : {}) });
+  const agentPrompt = `Work PaperRun ${run.id} using the paperrun tools. Start with paperrun_get_brief, then paperrun_list_files and paperrun_read_file to see the code that is already there. This paper has one code folder shared by all its external runs, so improve those files in place; do not create another run or a second implementation. Work the next steps below in order, run the tests with paperrun_run_tests after each change, and call paperrun_finish when done.\n\n${assessment.actions.map((a, i) => `${i + 1}. [${a.priority}] ${a.text}`).join("\n")}`;
   const nextText = `Next steps for PaperRun ${run.id} (${run.title}), rated "${assessment.label}":\n${assessment.actions.map((a, i) => `${i + 1}. [${a.priority}] ${a.text}`).join("\n")}`;
   return <section className="pr-summary" aria-label="Replication summary">
     <h3>Replication summary</h3>
     <p className="pr-ran">{run.mode === "muse" ? "Muse" : "An external agent"} wrote {files} file{files === 1 ? "" : "s"} and ran the tests {run.rounds.used} time{run.rounds.used === 1 ? "" : "s"}{run.mode === "muse" ? ` (${repairsDone(run)} repair round${repairsDone(run) === 1 ? "" : "s"})` : ""}{run.status === "done" ? "." : ` and is ${(STATUS_TEXT[run.status] ?? run.status).toLowerCase()}.`}</p>
-    {!total ? <p className="hint">No results have been compared yet.</p> : <>
+    {!total ? <>
+      <p className="hint">No results have been compared yet.</p>
+      {run.mode === "external" && !RUN_FINISHED.has(run.status) && <><div className="session-action-buttons"><button type="button" className="btn small primary" onClick={() => onCopyNext(agentPrompt)}>Copy prompt for my agent</button></div><p className="hint">Paste it into your coding agent. It needs the paperrun MCP server registered once, see Connect your coding agent below. The brief it reads already holds the memory and next steps from the earlier runs.</p></>}
+    </> : <>
       <div className="pr-verdict"><span className={`pr-chip ${ratingTone(assessment.rating)}`}>{assessment.label}</span> <details className="pr-rules"><summary>How this is rated</summary><ul>{RATING_RULES.map(r => <li key={r}>{r}</li>)}</ul></details></div>
       <div className="pr-scores">
         <div className="pr-score"><strong>{score.withinPercent}%</strong><span>of reported results within 10% of the paper ({score.counts.match + score.counts.within_tolerance} of {total})</span></div>
@@ -71,16 +77,18 @@ function SummaryCard({ connect, run, files, gaps, canAssess, canContinue, busy, 
       </div>
       <div className="pr-bar" role="img" aria-label={SEGMENTS.map(([key, label]) => `${score.counts[key]} ${label.toLowerCase()}`).join(", ")}>{SEGMENTS.map(([key]) => score.counts[key] ? <span key={key} className={`pr-seg ${key}`} style={{ flexGrow: score.counts[key] }} /> : null)}</div>
       <ul className="pr-legend">{SEGMENTS.map(([key, label]) => <li key={key}><span className={`pr-swatch ${key}`} aria-hidden="true" />{label} {score.counts[key]}</li>)}</ul>
+      {coverageStale && <p className="hint">The code has changed since the method was last assessed, so the old coverage is not counted. Assess it again.</p>}
       <h4>Why</h4><ul className="pr-facts">{assessment.reasons.map(s => <li key={s}>{s}</li>)}</ul>
       {assessment.actions.length > 0 && <><h4>What to do next</h4><ol className="pr-actions">{assessment.actions.map((a, i) => <li key={i}><span className={`pr-prio ${a.priority}`}>{a.priority}</span> {a.text}</li>)}</ol></>}
       <div className="session-action-buttons">
         {canAssess && score.steps.percent === null && <button type="button" className="btn small" disabled={busy} onClick={onAssess}>Assess method coverage with Muse</button>}
         {canContinue && <><label className="pr-rounds">More repair rounds <select aria-label="More repair rounds" value={rounds} onChange={e => setRounds(Number(e.target.value))}>{[1, 2, 3].map(n => <option key={n} value={n}>{n}</option>)}</select></label><button type="button" className="btn small primary" disabled={busy} onClick={() => onContinue(rounds)}>Continue repair with Muse</button></>}
         {canContinue && <button type="button" className="btn small" disabled={busy} onClick={onHandOver}>Continue in an external agent</button>}
-        {run.mode === "external" && RUN_FINISHED.has(run.status) && <button type="button" className="btn small primary" onClick={() => onCopyNext(agentPrompt)}>Copy prompt for my agent</button>}
+        {run.mode === "external" && RUN_FINISHED.has(run.status) && <button type="button" className="btn small primary" disabled={busy} onClick={onHandOver}>Continue on the same code</button>}
+        {run.mode === "external" && !RUN_FINISHED.has(run.status) && <button type="button" className="btn small primary" onClick={() => onCopyNext(agentPrompt)}>Copy prompt for my agent</button>}
         <button type="button" className="btn small" onClick={() => onCopyNext(nextText)}>Copy next steps</button>
       </div>
-      {run.mode === "external" && RUN_FINISHED.has(run.status) && <p className="hint">An external agent carries on in its own session, so there is no Continue button here. Paste this prompt into the same agent: it reopens this run, works the next steps above, and the progress appears here live. The agent needs the paperrun MCP server registered once; the setup is below.</p>}
+      {run.mode === "external" && RUN_FINISHED.has(run.status) && <p className="hint">This run is finished, so an agent cannot add to it. Continue on the same code starts a new run in the history with empty results, and it uses the same code folder: this paper has one code folder for all its external runs. Then copy the prompt for the new run. The agent needs the paperrun MCP server registered once; the setup is below.</p>}
       {run.mode === "external" && RUN_FINISHED.has(run.status) && connect}
       {canContinue && <p className="hint">Or hand it to Codex, Claude Code or Cursor: that makes a new run with Muse's code, results, review and these next steps copied in, so the agent carries on from here and can read the paper's figures. This run stays as it is.</p>}
       {canContinue && <p className="hint">Muse works on the weak steps and review concerns above, then reviews again. Adds {rounds} round{rounds === 1 ? "" : "s"} and 150,000 tokens to the cap (about 60,000 to 150,000 used).</p>}
@@ -98,19 +106,19 @@ const Chip = ({ status, text }: { status: string; text: string }) => <span class
 
 /** The PaperRun workspace: start a reproduction run, watch it live, and read its report. Everything lives on disk under paperruns/. */
 export function PaperRunView() {
-  const [status, setStatus] = useState<Status | null>(null), [runs, setRuns] = useState<RunSummary[]>([]), [papers, setPapers] = useState<KnowledgeEntry[]>([]);
+  const [status, setStatus] = useState<Status | null>(null), [runs, setRuns] = useState<RunSummary[]>([]), [folders, setFolders] = useState<Record<string, { muse: number; external: number }>>({}), [memories, setMemories] = useState<Record<string, string>>({}), [papers, setPapers] = useState<KnowledgeEntry[]>([]);
   const [selected, setSelected] = useState<string | null>(null), [detail, setDetail] = useState<Detail | null>(null), [error, setError] = useState("");
   const [form, setForm] = useState({ paper: "", mode: "muse" as "muse" | "external", rounds: 4, tokenCap: 400000, model: "muse-wonder-1.0" }), [starting, setStarting] = useState(false);
   const [environments, setEnvironments] = useState<EnvSummary[]>([]), [showEnvs, setShowEnvs] = useState(false), [envPolicy, setEnvPolicy] = useState<EnvPolicy>({ pick: false, create: false }), [chosenEnvs, setChosenEnvs] = useState<string[]>([]), [filters, setFilters] = useState<RunFilters>(NO_FILTERS), [viewer, setViewer] = useState<{ path: string; content: string } | null>(null), [notice, setNotice] = useState(""), [busy, setBusy] = useState(false);
-  const alive = useRef(true); useEffect(() => { alive.current = true; return () => { alive.current = false; }; }, []);
+  const looked = useRef(false), alive = useRef(true); useEffect(() => { alive.current = true; return () => { alive.current = false; }; }, []);
 
   const refresh = useCallback(async () => {
-    try { const [s, r] = await Promise.all([api("/api/paperrun/status"), api("/api/paperrun")]); if (!alive.current) return; setStatus(s); setRuns(r.runs); } catch (e) { if (alive.current) setError(e instanceof Error ? e.message : "PaperRun is unavailable."); }
+    try { const [s, r] = await Promise.all([api("/api/paperrun/status"), api("/api/paperrun")]); if (!alive.current) return; setStatus(s); setRuns(r.runs); if (!looked.current) { looked.current = true; const live = (s.working ?? [])[0]; if (live) setSelected(cur => cur ?? live.id); } setFolders(r.folders ?? {}); setMemories(r.memory ?? {}); } catch (e) { if (alive.current) setError(e instanceof Error ? e.message : "PaperRun is unavailable."); }
   }, []);
   const loadEnvironments = useCallback(async () => { try { const d = await api("/api/environments"); if (alive.current) setEnvironments(d.environments); } catch { /* the library simply shows as empty */ } }, []);
   useEffect(() => { void loadEnvironments(); }, [loadEnvironments]);
   useEffect(() => { void refresh(); const timer = setInterval(() => { void refresh(); }, 3000); return () => clearInterval(timer); }, [refresh]);
-  useEffect(() => { void fetch("/api/knowledge").then(r => r.json()).then(d => { if (alive.current && Array.isArray(d.entries)) { const stored = (d.entries as KnowledgeEntry[]).filter(e => e.status === "stored"); setPapers(stored); setForm(f => f.paper || !stored[0] ? f : { ...f, paper: stored[0].id }); } }).catch(() => {}); }, []);
+  useEffect(() => { void fetch("/api/knowledge").then(r => r.json()).then(d => { if (alive.current && Array.isArray(d.entries)) { const stored = (d.entries as KnowledgeEntry[]).filter(e => e.status === "stored" && !e.origin); setPapers(stored); setForm(f => f.paper || !stored[0] ? f : { ...f, paper: stored[0].id }); } }).catch(() => {}); }, []);
   const loadDetail = useCallback(async (id: string) => { try { const d = await api(`/api/paperrun/${id}`); if (alive.current) { setDetail(d); setRuns(list => list.map(r => r.id === d.run.id ? d.run : r)); } } catch (e) { if (alive.current) setError(e instanceof Error ? e.message : "Could not load the run."); } }, []);
   useEffect(() => { if (!selected) { setDetail(null); return; } setViewer(null); void loadDetail(selected); const timer = setInterval(() => { void loadDetail(selected); }, 2000); return () => clearInterval(timer); }, [selected, loadDetail]);
 
@@ -137,6 +145,7 @@ export function PaperRunView() {
   const live = new Map((status?.working ?? []).map(w => [w.id, w.kind]));
   const label = (r: RunSummary) => live.get(r.id) === "agent" && r.status === "waiting_external" ? { status: "running", text: "Agent working" } : { status: r.status, text: STATUS_TEXT[r.status] ?? r.status };
   const shown = filterRuns(runs, filters);
+  const threads = shown.reduce<{ paperId: string; title: string; runs: RunSummary[] }[]>((all, r) => { const found = all.find(t => t.paperId === r.paperId); if (found) found.runs.push(r); else all.push({ paperId: r.paperId, title: r.title, runs: [r] }); return all; }, []);
   return <div className="paperrun-frame"><section className="paperrun" aria-label="PaperRun">
     <div className="pr-side">
       <form className="pr-new" onSubmit={e => { e.preventDefault(); void start(); }}>
@@ -172,7 +181,10 @@ export function PaperRunView() {
         </div>}
         {!runs.length && <p className="empty">No runs yet.</p>}
         {runs.length > 0 && !shown.length && <p className="empty">No runs match these filters.</p>}
-        <ul>{shown.map(r => <li key={r.id}><button type="button" className={`pr-run ${r.mode}${selected === r.id ? " selected" : ""}`} aria-pressed={selected === r.id} onClick={() => { setSelected(r.id); setShowEnvs(false); }}><span className="pr-run-top"><ModeBadge mode={r.mode} /><Chip status={label(r).status} text={label(r).text} /></span><strong>{r.title}</strong><span className="hint">{formatDateTime(r.createdAt)}{r.parentId ? " · continues an earlier run" : ""}</span>{r.summary && <span className="hint">{r.summary}</span>}</button></li>)}</ul>
+        {threads.map(t => <section key={t.paperId} className="pr-thread" aria-label={`Replication of ${t.title}`}>
+          <header><strong>{t.title}</strong><span className="pr-thread-folders"><span className="pr-chip" title="One code folder for every Muse run of this paper">Muse code · {folders[t.paperId]?.muse ?? 0} files</span><span className="pr-chip" title="One code folder for every external agent run of this paper">External agent code · {folders[t.paperId]?.external ?? 0} files</span></span><span className="hint">{t.runs.length} run{t.runs.length === 1 ? "" : "s"}</span>{memories[t.paperId] && <details className="pr-memory"><summary>Memory for the next run <span className="hint">· {memories[t.paperId]!.length.toLocaleString("en")} characters, kept short</span></summary><pre>{memories[t.paperId]}</pre></details>}</header>
+          <ul>{t.runs.map(r => <li key={r.id}><button type="button" className={`pr-run ${r.mode}${selected === r.id ? " selected" : ""}`} aria-pressed={selected === r.id} aria-label={`${r.title}, ${r.mode === "muse" ? "Muse" : "External agent"} run started ${formatDateTime(r.createdAt)}`} onClick={() => { setSelected(r.id); setShowEnvs(false); }}><span className="pr-run-top"><ModeBadge mode={r.mode} /><Chip status={label(r).status} text={label(r).text} /></span><strong>{formatDateTime(r.createdAt)}</strong>{r.parentId && <span className="hint">continues an earlier run</span>}{r.summary && <span className="hint">{r.summary}</span>}</button></li>)}</ul>
+        </section>)}
       </div>
     </div>
     <div className="pr-main">
@@ -182,6 +194,7 @@ export function PaperRunView() {
       </> : !run ? <p className="empty">Select a run, or start a new one.</p> : <>
         <header className="pr-head"><div><h2>{run.title}</h2><p className="hint"><ModeBadge mode={run.mode} /> {run.mode === "muse" ? `(${run.model})` : ""} · started {formatDateTime(run.createdAt)}{run.parentId && <> · continues <button type="button" className="linklike" onClick={() => setSelected(run.parentId ?? null)}>an earlier run</button></>}</p></div><Chip status={label(run).status} text={label(run).text} /></header>
         {run.error && <p className="sam-error" role="alert">{run.error}</p>}
+        <CodeSourcesNote sources={detail?.codeSources} />
         <RunEnvironments run={run} library={environments} locked={!!working || !!detail?.active || (run.mode === "muse" && !RUN_FINISHED.has(run.status))} busy={busy} onApply={(ids, policy) => { void applyEnvironments(run.id, ids, policy); }} />
         {(working || detail?.active) && <Activity run={run} events={detail?.events ?? []} />}
         {run.mode === "muse" && <div className="pr-meter"><span>Repair rounds {repairsDone(run)} of {run.rounds.max}</span><span>Tokens {run.tokens.used.toLocaleString("en")} of {run.tokens.cap.toLocaleString("en")}</span><progress max={100} value={tokenShare(run.tokens)} aria-label="Token use" /></div>}
@@ -189,15 +202,17 @@ export function PaperRunView() {
           {(working || detail?.active) && <button type="button" className="btn small" disabled={busy} onClick={() => { void act(`/api/paperrun/${run.id}/cancel`); }}>Cancel run</button>}
           {run.mode === "external" && !RUN_FINISHED.has(run.status) && <><button type="button" className="btn small" disabled={busy || working} onClick={() => { void act(`/api/paperrun/${run.id}/run-tests`); }}>Run tests now</button><button type="button" className="btn small" disabled={busy || working} onClick={() => { void act(`/api/paperrun/${run.id}/finish`, { summary: "Finished from the app." }); }}>Finish run</button></>}
           {detail?.report && <button type="button" className="btn small primary" onClick={() => { window.dispatchEvent(new CustomEvent("lab-save-note", { detail: { entryId: run.paperId, paperTitle: run.title, label: "PaperRun", title: `PaperRun report: ${run.title}`.slice(0, 120), body: detail.report } })); setNotice("Report saved to Notes."); }}>Save report to Notes</button>}
+          {detail?.report && RUN_FINISHED.has(run.status) && <SaveToKnowledge kind="replication" id={run.id} />}
         </div>
         {notice && <p className="hint" role="status">{notice}</p>}
         {run.mode === "external" && status && !RUN_FINISHED.has(run.status) && connectGuide}
-        <SummaryCard connect={run.mode === "external" && RUN_FINISHED.has(run.status) ? connectGuide : null} run={run} files={detail?.files.length ?? 0} gaps={detail?.gaps ?? []} canAssess={!!status?.configured && !working && !!detail?.files.length} canContinue={run.mode === "muse" && RUN_FINISHED.has(run.status) && !!status?.configured && !!status?.ready && !!detail?.files.length} busy={busy} onAssess={() => { void act(`/api/paperrun/${run.id}/assess`); }} onContinue={rounds => { void act(`/api/paperrun/${run.id}/continue`, { rounds }); }} onHandOver={() => { void handOver(run.id); }} onCopyNext={text => { void copy(text, "Next steps"); }} />
+        <SummaryCard connect={run.mode === "external" && RUN_FINISHED.has(run.status) ? connectGuide : null} run={detail?.coverageStale ? { ...run, stepCoverage: undefined } : run} coverageStale={!!detail?.coverageStale} files={detail?.files.length ?? 0} gaps={detail?.gaps ?? []} canAssess={!!status?.configured && !working && !!detail?.files.length} canContinue={run.mode === "muse" && RUN_FINISHED.has(run.status) && !!status?.configured && !!status?.ready && !!detail?.files.length} busy={busy} onAssess={() => { void act(`/api/paperrun/${run.id}/assess`); }} onContinue={rounds => { void act(`/api/paperrun/${run.id}/continue`, { rounds }); }} onHandOver={() => { void handOver(run.id); }} onCopyNext={text => { void copy(text, "Next steps"); }} />
         <h3>Stages</h3>
         <ol className="pr-stages">{run.stages.map(s => <li key={s.name} className={`pr-stage ${s.status}`}><span className="pr-dot" aria-hidden="true" /><span><strong>{s.name}</strong> <span className="hint">{s.status}{s.note ? ` · ${s.note}` : ""}</span></span></li>)}</ol>
         {run.results && <><h3>Results against the paper</h3><div className="pr-table"><table><thead><tr><th>ID</th><th>What</th><th>Reported</th><th>Reproduced</th><th>Error</th><th>Status</th></tr></thead>{run.results.map(r => <tbody key={r.id}><tr><td>{r.id}</td><td>{r.description}</td><td>{r.reported}</td><td>{r.reproduced || "none"}</td><td>{r.relError === undefined ? "" : `${(r.relError * 100).toFixed(1)}%`}</td><td><Chip status={r.status} text={RESULT_TEXT[r.status] ?? r.status} /></td></tr>{r.note && <tr className="pr-note"><td /><td colSpan={5}>{r.note}</td></tr>}</tbody>)}</table></div><p className="hint">Statuses are computed by the app from the number the code produced and the number the paper reports.</p></>}
         {detail?.report && <><h3>Report</h3><ChatMarkdown text={detail.report} /></>}
         <h3>Files</h3>
+        {run.mode === "external" && <p className="hint">One code folder for this paper, shared by all its external runs. Each run keeps its own results, rounds and report.</p>}
         {detail && !detail.files.length ? <p className="empty">No code yet.</p> : <ul className="pr-files">{detail?.files.map(f => <li key={f.path}><button type="button" className="linklike" onClick={() => { void open(`code/${f.path}`); }}>{f.path}</button> <span className="hint">{f.bytes} bytes</span></li>)}{detail && detail.run.rounds.used > 0 && Array.from({ length: detail.run.rounds.used }, (_, i) => <li key={i}><span className="hint">Round {i + 1} output:</span> <button type="button" className="linklike" onClick={() => { void open(`rounds/${i + 1}/stdout.txt`); }}>stdout</button> <button type="button" className="linklike" onClick={() => { void open(`rounds/${i + 1}/stderr.txt`); }}>stderr</button></li>)}</ul>}
         {viewer && <div className="pr-viewer"><div className="pr-snippet-head"><strong>{viewer.path}</strong><button type="button" className="btn small" onClick={() => setViewer(null)}>Close</button></div><pre>{viewer.content || "(empty)"}</pre></div>}
         <h3>Log</h3>

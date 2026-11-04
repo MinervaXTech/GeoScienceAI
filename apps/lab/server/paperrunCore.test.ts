@@ -1,10 +1,10 @@
 // @vitest-environment node
 import { afterEach, describe, expect, it } from "vitest";
 import { existsSync } from "node:fs";
-import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { lstat, mkdir, mkdtemp, readdir, readFile, readlink, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
-import { attachEnvironment, compareResults, createRun, listCodeFiles, listRuns, numberIn, readCodeFile, readEvents, readRun, runTests, summarise, updateRun, validRunId, writeCodeFile, codePath, setStage } from "./paperrunCore";
+import { environmentsBlock, codeFolderSizes, detachEnvironment, linkSharedCode, migrateSharedCode, sharedCodeDir, attachEnvironment, compareResults, createRun, listCodeFiles, listRuns, numberIn, readCodeFile, readEvents, readRun, runTests, summarise, updateRun, validRunId, writeCodeFile, codePath, setStage } from "./paperrunCore";
 import { validateReplicationSpec } from "./knowledgeReplication";
 import { saveEnvironment } from "./environments";
 const python = resolve(__dirname, "../paperruns/.venv/bin/python");
@@ -139,5 +139,68 @@ describe("attaching environments", () => {
     const { root, run } = await make(); const envRoot = join(root, "..", "envs"); const a = await saveEnvironment(envRoot, map("A"), { createdBy: "app" }), b = await saveEnvironment(envRoot, map("B"), { createdBy: "app" });
     await attachEnvironment(root, run.id, envRoot, a.id); await attachEnvironment(root, run.id, envRoot, b.id);
     expect((await readRun(root, run.id)).environments!.map(e => e.name)).toEqual(["A", "B"]); await expect(attachEnvironment(root, run.id, envRoot, "env-missing-0000")).rejects.toThrow("Unknown environment");
+  });
+});
+
+describe("one code folder per paper for external runs", () => {
+  const external = async (root: string, paperId = "paper-0001") => createRun(root, { paperId, title: "ACO study", mode: "external", model: "m", maxRounds: 0, tokenCap: 50000, spec, meta });
+  it("gives every external run of a paper the same code folder, while each keeps its own history", async () => {
+    const root = await mkdtemp(join(tmpdir(), "paperruns-")); dirs.push(root);
+    const a = await external(root), b = await external(root), other = await external(root, "paper-0002");
+    expect((await lstat(join(root, a.id, "code"))).isSymbolicLink()).toBe(true); expect(await readlink(join(root, a.id, "code"))).toBe(`../_code/paper-0001`);
+    await writeCodeFile(root, a.id, "impl.py", "x = 1\n"); expect(await readCodeFile(root, b.id, "impl.py")).toBe("x = 1\n"); expect((await listCodeFiles(root, b.id)).map(f => f.path)).toEqual(["impl.py"]);
+    await writeCodeFile(root, b.id, "impl.py", "x = 2\n"); expect(await readCodeFile(root, a.id, "impl.py")).toBe("x = 2\n"); expect(await listCodeFiles(root, other.id)).toEqual([]);
+    await updateRun(root, a.id, r => { r.summary = "first run"; }); expect((await readRun(root, b.id)).summary).toBeUndefined(); expect(await readEvents(root, b.id)).not.toEqual(await readEvents(root, a.id));
+    const museA = await createRun(root, { paperId: "paper-0001", title: "ACO study", mode: "muse", model: "m", maxRounds: 4, tokenCap: 400000, spec, meta }), museB = await createRun(root, { paperId: "paper-0001", title: "ACO study", mode: "muse", model: "m", maxRounds: 4, tokenCap: 400000, spec, meta });
+    expect(await readlink(join(root, museA.id, "code"))).toBe("../_code-muse/paper-0001"); await writeCodeFile(root, museA.id, "muse_impl.py", "m = 1\n"); expect(await readCodeFile(root, museB.id, "muse_impl.py")).toBe("m = 1\n"); expect((await listCodeFiles(root, a.id)).map(f => f.path)).toEqual(["impl.py"]); // two folders at most: one for Muse, one for external agents
+    expect(await codeFolderSizes(root, "paper-0001")).toEqual({ muse: 1, external: 1 });
+    expect((await listRuns(root)).map(r => r.id).sort()).toEqual([a.id, b.id, other.id, museA.id, museB.id].sort()); expect(sharedCodeDir(root, "paper-0001")).toBe(join(root, "_code", "paper-0001"));
+    expect(() => sharedCodeDir(root, "../x")).toThrow("Invalid paper id");
+  });
+  it("moves runs made before the shared folder into it: the newest keeps its code as the shared folder, older code is kept aside", async () => {
+    const root = await mkdtemp(join(tmpdir(), "paperruns-")); dirs.push(root);
+    const old = await external(root), recent = await external(root); // start as shared, then rebuild the old layout by hand
+    for (const r of [old, recent]) { await rm(join(root, r.id, "code")); await mkdir(join(root, r.id, "code"), { recursive: true }); }
+    await rm(join(root, "_code"), { recursive: true, force: true });
+    await writeFile(join(root, old.id, "code", "impl.py"), "old\n"); await writeFile(join(root, recent.id, "code", "impl.py"), "new\n"); await writeFile(join(root, recent.id, "code", "extra.py"), "extra\n");
+    await updateRun(root, old.id, r => { r.createdAt = "2026-11-03T01:00:00.000Z"; }); await updateRun(root, recent.id, r => { r.createdAt = "2026-11-03T02:00:00.000Z"; });
+    await migrateSharedCode(root);
+    expect((await readdir(sharedCodeDir(root, "paper-0001"))).sort()).toEqual(["extra.py", "impl.py"]); expect(await readCodeFile(root, old.id, "impl.py")).toBe("new\n");
+    expect(await readFile(join(root, old.id, "code-before-shared", "impl.py"), "utf8")).toBe("old\n"); expect((await lstat(join(root, recent.id, "code"))).isSymbolicLink()).toBe(true);
+    expect((await readEvents(root, old.id)).at(-1)?.message).toContain("code-before-shared");
+    await migrateSharedCode(root); expect(await readCodeFile(root, recent.id, "extra.py")).toBe("extra\n"); // running it again changes nothing
+  });
+  it("keeps an environment file in the shared folder while another run of the paper still lists it", async () => {
+    const root = await mkdtemp(join(tmpdir(), "paperruns-")); dirs.push(root); const envRoot = join(root, "..", `lib-${Math.random().toString(16).slice(2, 6)}`); dirs.push(envRoot);
+    const env = await saveEnvironment(envRoot, { name: "Four", description: "", origin: "digitised", source: { note: "Fig. 9a" }, grid: { rows: 4, cols: 4, ascii: ["....", ".##.", "....", "...."] }, start: [0, 0], goal: [3, 3] }, { createdBy: "app" });
+    const a = await external(root), b = await external(root); await attachEnvironment(root, a.id, envRoot, env.id); await attachEnvironment(root, b.id, envRoot, env.id);
+    await detachEnvironment(root, a.id, env.id); expect((await listCodeFiles(root, b.id)).map(f => f.path)).toContain(`environments/${env.id}.json`);
+    await detachEnvironment(root, b.id, env.id); expect((await listCodeFiles(root, b.id)).map(f => f.path)).not.toContain(`environments/${env.id}.json`);
+  });
+  it.skipIf(!sandboxed)("runs the shared code in the sandbox for each run and keeps each run's results separate", async () => {
+    const root = await mkdtemp(join(tmpdir(), "paperruns-")); dirs.push(root); const a = await external(root), b = await external(root);
+    await writeCodeFile(root, a.id, "run_tests.py", "import json\njson.dump({'results': [{'id': 'R1', 'reproduced': 23, 'tolerance': 0.2, 'note': 'x'}]}, open('results.json', 'w'))\n");
+    expect(await runTests(root, a.id, 1, python)).toMatchObject({ ranTests: true, code: 0 }); expect((await readRun(root, a.id)).results?.[0]).toMatchObject({ id: "R1", status: "match" }); expect((await readRun(root, b.id)).results).toBeUndefined();
+    await writeCodeFile(root, b.id, "run_tests.py", "import json\njson.dump({'results': [{'id': 'R1', 'reproduced': 40, 'tolerance': 0.2, 'note': 'y'}]}, open('results.json', 'w'))\n");
+    expect(await runTests(root, b.id, 1, python)).toMatchObject({ ranTests: true, code: 0 }); expect((await readRun(root, b.id)).results?.[0]?.status).toBe("mismatch"); expect((await readRun(root, a.id)).results?.[0]?.status).toBe("match");
+    expect(JSON.parse(await readFile(join(root, a.id, "rounds/1/compared.json"), "utf8"))[0].status).toBe("match");
+  });
+  it("links a fresh folder when asked", async () => { const root = await mkdtemp(join(tmpdir(), "paperruns-")); dirs.push(root); const a = await external(root); await rm(join(root, a.id, "code")); await linkSharedCode(root, a.id, "paper-0001"); expect(await readlink(join(root, a.id, "code"))).toBe("../_code/paper-0001"); });
+});
+
+describe("the brief's rules about maps", () => {
+  const env = (status: "candidate" | "approved") => ({ id: "env-a-1111", name: "Fig 9 simple", version: 1, hash: "h", status, origin: "digitised", kind: "fixed" as const, rows: 4, cols: 4, source: "Fig. 9", file: "environments/env-a-1111.json" });
+  it("says in what order to choose a map, that unshown maps are not comparable, and that a candidate cannot be marked comparable", () => {
+    const text = environmentsBlock([env("candidate")], { pick: true, create: true });
+    expect(text).toContain("HOW TO CHOOSE A MAP, IN THIS ORDER"); expect(text.indexOf("1. Use the attached maps")).toBeLessThan(text.indexOf("2. If none of them fits")); expect(text.indexOf("2. If none of them fits")).toBeLessThan(text.indexOf("3. Create or extend"));
+    expect(text).toContain("Results on a map the paper does not show"); expect(text).toContain("must be marked \"comparable\": false until the user approves it"); expect(text).toContain("Do not mark your own digitisation as comparable");
+    const approved = environmentsBlock([env("approved")]); expect(approved).toContain("HOW TO CHOOSE A MAP"); expect(approved).not.toContain("are not approved by the user yet");
+    expect(environmentsBlock([])).toBe(""); expect(environmentsBlock([], { pick: false, create: false })).toBe("");
+  });
+  it("tells a run to work in its own code folder, not in a new one, while the Papers tab prompt keeps its wording", async () => {
+    const root = await mkdtemp(join(tmpdir(), "paperruns-")); dirs.push(root);
+    const run = await createRun(root, { paperId: "paper-0001", title: "ACO study", mode: "external", model: "m", maxRounds: 0, tokenCap: 50000, spec, meta });
+    const brief = await readFile(join(root, run.id, "brief.md"), "utf8"); expect(brief).toContain("Work only inside this run's code folder"); expect(brief).not.toContain("Work in a new folder");
+    const { codexPrompt } = await import("./knowledgeReplication"); expect(codexPrompt(spec, meta)).toContain("Work in a new folder");
   });
 });
