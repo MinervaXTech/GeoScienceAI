@@ -18,8 +18,10 @@ There is no separate pre-event dependency to install and no baseline tag, becaus
 | `a0df4e7` | 2026-11-03 00:45 | feat: enhance session management and message editing capabilities |
 | `64ebe13` | 2026-11-03 02:00 | feat: add road reference handling and planning clusters UI |
 | `1258df5` | 2026-11-03 14:28 | Add knowledge management features and related tests |
+| `27f7628` | 2026-11-03 21:23 | Add tests for PaperRunView, ReplicationPanel, and useRunningPaperRuns hook |
+| `c6b2c06` | 2026-11-04 17:35 | Add Descendance, Workshop, wiki and graph sync, and shared PaperRun code and memory |
 
-All six commits are inside the event window. The paper knowledge base, PaperRun, the environment library and the Map tab environment viewer were still uncommitted when this draft was written, so they are not yet visible in this history.
+All eight commits are inside the event window. The first is a one line README, so commit times show when files entered this repository, not when the code was first written. The last commit holds most of the work described in section 4 after the paper knowledge base: PaperRun's shared code and memory, Descendance, the Workshop, the wiki and graph sync, and auto-sync.
 
 ## 3. Imported from the sibling project (OpenPalm AI)
 
@@ -103,6 +105,5 @@ On 2026-11-04 the suite had 631 tests passing and 1 skipped, and the typecheck a
 ## 10. For the author to confirm before submitting
 
 - That the 1 Nov copy date and the source paths in section 3 match what you did.
-- Commit the uncommitted work, then update section 2.
 - That the WikiLLM attribution in section 7 is the idea you meant. It rests on web search results, not on the original post, so read the original and correct the wording if it differs.
 - The one line for the video: what existed before (nothing in this repository; some code and data imported from an unsubmitted sibling project built in the same week) and what was built.
