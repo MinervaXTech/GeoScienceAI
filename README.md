@@ -1,5 +1,7 @@
 # GeoScienceAI
 
+[![DOI](https://zenodo.org/badge/1440980399.svg)](https://doi.org/10.5281/zenodo.23955762)
+
 A map and paper workspace for geoscience research, built for the Meta AI Developer Hackathon. The app lives in `apps/lab`.
 
 - **Map:** saved satellite maps, SAM 3.1 segmentation, canopy height (CHMv2), planning points and clusters, route snapshots, and a Muse chat agent that can control the map.
