@@ -31,11 +31,10 @@ export function AddMapForm({ view, basemap, onBasemap, onLocate, onReadView, are
   const [error, setError] = useState("");
   return <form className="add-map-form" aria-label="Add map" onSubmit={(event) => {
     event.preventDefault();
-    if (source === "search" && !selected) { setError("Search for a place and choose a result first."); return; }
     if (!area || drawing) { setError("Draw and finish the map boundary before saving."); return; }
     const currentView = onReadView?.();
     if (source !== "coordinates" && onReadView && !currentView) { setError("Wait for the map to load before saving this view."); return; }
-    const location = source === "search" ? currentView ?? selected! : source === "view" ? currentView ?? view : { center: [Number(longitude), Number(latitude)] as [number, number], zoom: Number(zoom) };
+    const location = source === "search" ? currentView ?? selected ?? view : source === "view" ? currentView ?? view : { center: [Number(longitude), Number(latitude)] as [number, number], zoom: Number(zoom) };
     if (!location) { setError("Wait for the map to load or enter coordinates."); return; }
     const map: SavedMap = {
       id: `map-${crypto.randomUUID()}`, name: name.trim(), basemap,
@@ -78,6 +77,6 @@ export function AddMapForm({ view, basemap, onBasemap, onLocate, onReadView, are
     }}>{drawing ? "Restart map boundary" : area ? "Redraw map boundary" : "Draw map boundary"}</button>
     <p className="hint">{drawing ? "Click corners on the map, then right-click to finish." : area ? `Boundary ready · ${area.coordinates[0]!.length - 1} corners. This shape will be the default SAM area.` : "Draw the boundary to save this map. You can select a smaller SAM region afterward."}</p>
     {error && <p role="alert">{error}</p>}
-    <div className="add-map-actions"><button className="btn primary" type="submit" disabled={!area || drawing || (source === "search" && !selected)}>Save map</button><button className="btn" type="button" onClick={onCancel}>Cancel</button></div>
+    <div className="add-map-actions"><button className="btn primary" type="submit" disabled={!area || drawing}>Save map</button><button className="btn" type="button" onClick={onCancel}>Cancel</button></div>
   </form>;
 }

@@ -66,6 +66,8 @@ export interface SamResult {
 export type CaptureMap = (signal: AbortSignal) => Promise<SamImage>;
 export interface SatelliteMapHandle {
   getView(): MapLocation | null;
+  /** The ground area currently visible in the canvas, as a closed polygon (follows a rotated view). */
+  getViewArea(): Polygon | null;
   locate(location: MapLocation): boolean;
   capture(signal: AbortSignal, area: Polygon): Promise<SamImage>;
   fitOutput(result: SamResult): void;

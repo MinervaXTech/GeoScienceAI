@@ -255,7 +255,13 @@ export function SatelliteMap({ savedMap, boundaryShown, canopyUrl, canopyCorners
     };
   }, [retry, basemap, initialMap]);
 
-  useImperativeHandle(captureRef, () => ({ getView: () => map && instance.current === map ? { center: map.getCenter().toArray(), zoom: map.getZoom() } : null, locate: (location) => {
+  useImperativeHandle(captureRef, () => ({ getView: () => map && instance.current === map ? { center: map.getCenter().toArray(), zoom: map.getZoom() } : null, getViewArea: () => {
+    if (!map || instance.current !== map) return null;
+    const { clientWidth: w, clientHeight: h } = map.getCanvas();
+    if (!w || !h) return null;
+    const ring = ([[0, 0], [w, 0], [w, h], [0, h]] as [number, number][]).map(point => map.unproject(point).toArray() as [number, number]);
+    return { type: "Polygon", coordinates: [[...ring, ring[0]!]] };
+  }, locate: (location) => {
     if (!map || instance.current !== map) return false;
     map.jumpTo({ center: location.center, zoom: location.zoom, bearing: 0 });
     return true;

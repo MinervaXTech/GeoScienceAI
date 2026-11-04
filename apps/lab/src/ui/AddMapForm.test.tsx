@@ -52,7 +52,15 @@ describe("Add map", () => {
     fireEvent.submit(screen.getByRole("form", { name: "Add map" }));
     expect(onSave).toHaveBeenCalledWith(expect.objectContaining({ ...adjustedView, name: "Kluang", boundary: drawn, area: drawn }));
     fireEvent.change(screen.getByLabelText("Search place"), { target: { value: "Johor Bahru" } });
-    expect((screen.getByRole("button", { name: "Save map" }) as HTMLButtonElement).disabled).toBe(true);
+    expect((screen.getByRole("button", { name: "Save map" }) as HTMLButtonElement).disabled).toBe(false);
+  });
+  it("saves the current map view when no search result was chosen", () => {
+    const onSave = vi.fn(), adjustedView = { center: [103.22867, 2.06403] as [number, number], zoom: 17 };
+    render(<AddMapForm {...areaProps} basemap="google" onBasemap={() => {}} view={view} onLocate={() => true} onReadView={() => adjustedView} onSave={onSave} onCancel={() => {}} />);
+    fireEvent.change(screen.getByLabelText("Map name"), { target: { value: "Test" } });
+    expect((screen.getByRole("button", { name: "Save map" }) as HTMLButtonElement).disabled).toBe(false);
+    fireEvent.submit(screen.getByRole("form", { name: "Add map" }));
+    expect(onSave).toHaveBeenCalledWith(expect.objectContaining({ ...adjustedView, name: "Test", basemap: "google", boundary: drawn, area: drawn }));
   });
   it("shows empty results without saving or moving the map", async () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: true, json: async () => ({ places: [] }) }));

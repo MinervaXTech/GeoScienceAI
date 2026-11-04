@@ -33,7 +33,7 @@ import { useLab } from "./useLab";
 import { useSam } from "./useSam";
 import { useSamArea } from "./useSamArea";
 import type { BasemapId, SatelliteMapHandle } from "../geo/sam";
-import { deleteSavedMap } from "../domain/maps";
+import { deleteSavedMap, savedMapError } from "../domain/maps";
 import { samePolygon } from "../geo/samArea";
 
 type Tab = "map" | "notes" | "paperrun" | "descend" | "workshop";
@@ -202,7 +202,18 @@ export function App() {
       }
       if (call.action === "open_sidebar") { if (p.tab === "collapse") setSidebarExpanded(false); else openSidebar(p.tab as MapSidebarTab); }
       else if (call.action === "open_map") { if (sam.busy || addingMap) throw Error("Finish the current map operation first."); if (![UPM_MAP, ...(state.maps ?? [])].some(map => map.id === p.id)) throw Error("That saved map does not exist."); openMap(p.id as string); }
-      else if (call.action === "add_map") { if (sam.busy || addingMap) throw Error("Finish the current map operation first."); changeAddingMap(true); return "Add map form opened. Waiting for the user to enter a name, location and boundary, then Save map."; }
+      else if (call.action === "add_map") {
+        if (sam.busy || addingMap) throw Error("Finish the current map operation first.");
+        if (typeof p.name === "string") {
+          // Saves what the user sees in the canvas right now: the map's centre and zoom, and the visible ground area as its boundary.
+          const view = mapRef.current?.getView(), boundary = mapRef.current?.getViewArea();
+          if (!view || !boundary) throw Error("Wait for the map to load.");
+          const created: SavedMap = { id: `map-${crypto.randomUUID()}`, name: p.name.trim(), basemap, center: view.center, zoom: view.zoom, boundary, area: boundary };
+          const problem = savedMapError(created); if (problem) throw Error(problem);
+          openMap(created.id, created);
+          return `Saved the map "${created.name}" at the current view. Its boundary is the area visible in the canvas, not a hand-drawn shape. The user can delete or replace it from the Maps tab.`;
+        }
+        changeAddingMap(true); return "Add map form opened. Waiting for the user to enter a name, location and boundary, then Save map."; }
       else if (call.action === "delete_map") { if (sam.busy || addingMap) throw Error("Finish the current map operation first."); const map = state.maps?.find(map => map.id === p.id); if (!map) throw Error("That map cannot be deleted."); setDeleteMapId(map.id); return `Waiting for the user to type ${map.name} in the existing delete confirmation dialog. No map was deleted.`; }
       else if (call.action === "locate_map") { if (sam.busy || samArea.drawing) throw Error("Finish the current operation first."); if (!mapRef.current?.locate({ center: [p.longitude as number, p.latitude as number], zoom: p.zoom as number })) throw Error("Wait for the map to load."); }
       else { if (!agentRef.current) throw Error("Open the Map view before using map tools."); return agentRef.current.execute(call, signal, model); }
