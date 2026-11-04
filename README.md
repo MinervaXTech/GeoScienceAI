@@ -59,3 +59,7 @@ If you use this software, or ideas or results taken from it, please cite it.
 ```
 
 Contact: hello@minerva-x-tech.com, lamghai.lim@monash.edu. Third-party software used here keeps its own licence and credit, listed in `HACKATHON.md`.
+
+## Licence
+
+Apache License 2.0, see `LICENSE`. Anyone who redistributes this code must keep the copyright notice and the `NOTICE` file, which carries the citation request above.

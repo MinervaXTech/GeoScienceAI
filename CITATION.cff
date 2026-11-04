@@ -6,6 +6,7 @@ type: software
 version: 0.1.0
 date-released: 2026-11-05
 doi: 10.5281/zenodo.23955762
+license: Apache-2.0
 repository-code: "https://github.com/MinervaXTech/GeoScienceAI"
 authors:
   - family-names: Lee
